@@ -4,7 +4,7 @@
 
 WallacePOS uses the power of the modern web to provide an easy to use & extensible POS system.
 
-It's with standard POS hardware including receipt printers, cashdraws and barcode scanners.
+It supports standard POS hardware including receipt printers, cashdraws and barcode scanners.
 
 With a rich administration dashboard and reporting features, WallacePOS brings benefits to managers and staff alike.
 
