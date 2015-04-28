@@ -1,0 +1,95 @@
+/* Bootstrap style sheet for jQuery Keypad v2.0.0. */
+.keypad-popup {
+	display: none;
+	z-index: 2000;
+	margin: 0;
+	padding: 5px;
+	background-color: #fff;
+	color: #000;
+	-moz-border-radius: 0.25em;
+	-webkit-border-radius: 0.25em;
+	border-radius: 0.25em;
+    border: solid 1px #ccc;
+    -moz-box-shadow:    3px 3px 4px 5px #ccc;
+    -webkit-box-shadow: 3px 3px 4px 5px #ccc;
+    box-shadow:         3px 3px 4px 5px #ccc;
+    width: 165px !important;
+}
+.keypad-keyentry {
+	display: none;
+}
+.keypad-space {
+	display: inline-block;
+    margin: 0.125em;
+	width: 2.5em;
+}
+.keypad-half-space {
+	display: inline-block;
+	margin: 0.125em;
+	width: 1.25em;
+}
+.keypad-key, .keypad-special, .keypad-key:focus {
+    background-image: none !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    display: inline-block;
+    filter:progid:DXImageTransform.Microsoft.gradient(enabled=false) !important;
+    margin: 0.125em;
+    width: 2.5em;
+    padding: 1px 5px;
+    font-size: 12px;
+    line-height: 1.5;
+    position: relative;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25) !important;
+    transition: all 0.15s ease 0s;
+    vertical-align: middle;
+    background-color: #428BCA !important;
+    border-color: #428BCA !important;
+    color: #FFFFFF;
+    white-space: nowrap;
+    box-sizing: border-box;
+
+
+}
+
+.keypad-key:hover {
+    background-color: #1B6AAA !important;
+    border-color: #428BCA;
+}
+
+.keypad-back, .keypad-close, .keypad-clear {
+    display: inline-block;
+    margin: 0.125em;
+    width: 4em;
+}
+
+.keypad-start, .keypad-end {
+    display: inline-block;
+    margin: 0;
+    width: 2em;
+}
+.keypad-start {
+    margin-left: 0
+}
+.keypad-clear {
+    background-color: #D15B47 !important;
+    border-color: #D15B47 !important;
+}
+.keypad-clear:hover {
+    background-color: #B74635 !important;
+    border-color: #D15B47 !important;
+}
+.keypad-back, .keypad-start, .keypad-end {
+	background-color: #ABBAC3 !important;
+}
+.keypad-back:hover, .keypad-start:hover, .keypad-end:hover {
+    background-color: #8B9AA3 !important;
+    border-color: #ABBAC3 !important;
+}
+.keypad-close {
+    background-color: #5CB85C !important;
+}
+.keypad-close:hover {
+    background-color: #629B58 !important;
+    border-color: #87B87F !important;
+}

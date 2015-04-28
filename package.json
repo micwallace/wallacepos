@@ -1,0 +1,17 @@
+{
+  "name": "wpos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "/app/api/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "WallaceIT",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "socket.io": "~0.9.x"
+  },
+  "engines": {
+    "node": "0.10.x"
+  }
+}

@@ -1,0 +1,6 @@
+Options +FollowSymlinks
+Options -MultiViews
+RewriteEngine on
+RewriteBase /customerapi/
+RewriteCond %{REQUEST_URI} !customerapi.php
+RewriteRule ^(.*)$ customerapi.php?a=$1 [L,NS,QSA]

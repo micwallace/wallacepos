@@ -1,0 +1,102 @@
+#modaldiv {
+    position:absolute;
+    left:0px;
+    top:0px;
+    bottom: 0px;
+    right: 0px;
+    width:100%;
+    height:100%;
+}
+#loginbox {
+    width: 400px;
+    height: 380px;
+    left:50%;
+    margin-left:-200px;
+    margin-top: 20px;
+    text-align: center;
+}
+#reportcontain {
+    width: 650px;
+    position: relative;
+    margin: 0 auto;
+    border: solid 1px #ccc;
+    -moz-box-shadow: 3px 3px 5px 6px #ccc;
+    -webkit-box-shadow: 3px 3px 5px 6px #ccc;
+    box-shadow: 3px 3px 5px 6px #ccc;
+    min-height: 800px;
+    overflow-x: auto !important;
+}
+
+.table_wrapper {
+    width: 100%;
+    overflow-x: auto !important;
+}
+.fixedlabel {
+    min-width:90px !important;
+}
+.smfixedlabel {
+    min-width:60px !important;
+}
+.permcb {
+    vertical-align: top;
+}
+.tags {
+    width: 410px !important;
+}
+.tags .tag {
+    display: inline-block !important;
+}
+.tags input {
+    display: inline-block !important;
+    width: auto !important;
+    padding-left: 10px;
+}
+.tags .email-input {
+    display: none !important;
+}
+
+/* #Media Queries
+================================================== */
+
+/* Smaller than standard 960 (devices and browsers) */
+@media only screen and (max-width: 959px) {
+
+}
+
+/* Tablet Portrait size to standard 960 (devices and browsers) */
+@media only screen and (min-width: 768px) and (max-width: 959px) {
+
+}
+
+/* All Mobile Sizes (devices and browser) */
+@media only screen and (max-width: 767px) {
+
+}
+
+/* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
+@media only screen and (min-width: 480px) and (max-width: 767px) {
+    #reportcontain {
+        width: 480px;
+    }
+    #loginbox {
+        width: 350px;
+        margin-left:-175px;
+    }
+}
+
+/* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
+@media only screen and (max-width: 479px) {
+    #reportcontain {
+        width: 480px;
+    }
+    #loginbox {
+        width: 100%;
+        left: 0;
+        padding: 5px;
+        margin-left: 0;
+    }
+    .dataTables_filter {
+        float:left;
+    }
+}
+

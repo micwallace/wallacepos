@@ -1,0 +1,7 @@
+AddType application/x-httpd-php .appcache
+<IfModule mod_expires.c>
+  <Files *.appcache>
+      ExpiresActive On
+      ExpiresDefault "access plus 0 seconds"
+  </Files>
+</IfModule>

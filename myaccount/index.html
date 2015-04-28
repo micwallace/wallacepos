@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>My Account</title>
+        <meta name="copyright" content="Copyright (c) 2014 WallaceIT <micwallace@gmx.com> <https://www.gnu.org/licenses/lgpl.html>" />
+        <meta name="description" content="overview &amp; stats" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <link rel="shortcut icon" href="/assets/images/favicon.ico">
+        <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/assets/images/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/apple-touch-icon-114x114.png">
+		<!-- basic styles -->
+
+		<link href="/admin/assets/css/bootstrap.min.css" rel="stylesheet" />
+
+		<link rel="stylesheet" href="/admin/assets/css/font-awesome.min.css" />
+
+		<!-- fonts -->
+
+		<link rel="stylesheet" href="/admin/assets/css/ace-fonts.css" />
+
+		<!-- ace styles -->
+
+		<link rel="stylesheet" href="/admin/assets/css/ace.min.css" />
+		<link rel="stylesheet" href="/admin/assets/css/ace-rtl.min.css" />
+		<link rel="stylesheet" href="/admin/assets/css/ace-skins.min.css" />
+
+		<!--[if lte IE 8]>
+		  <link rel="stylesheet" href="/admin/assets/css/ace-ie.min.css" />
+		<![endif]-->
+
+		<!-- inline styles related to this page -->
+
+		<!-- ace settings handler -->
+
+		<script src="/admin/assets/js/ace-extra.min.js"></script>
+
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+
+		<!--[if lt IE 9]>
+		<script src="/admin/assets/js/html5shiv.js"></script>
+		<script src="/admin/assets/js/respond.min.js"></script>
+		<![endif]-->
+
+        <!-- Styles used on most pages ->
+        <!-- page specific plugin styles -->
+        <link rel="stylesheet" href="/admin/assets/css/jquery-ui-1.10.3.full.min.css" />
+
+        <link rel="stylesheet" href="/admin/assets/css/bootstrap-datepicker.min.css" />
+        <link rel="stylesheet" href="/admin/assets/js/select2/select2.css" />
+
+        <link rel="stylesheet" href="/admin/assets/css/wposadmin.css" />
+	</head>
+
+	<body>
+		<div class="navbar navbar-default" id="navbar">
+			<script type="text/javascript">
+				try{ace.settings.check('navbar' , 'fixed')}catch(e){}
+			</script>
+
+			<div class="navbar-container" id="navbar-container">
+				<div class="pull-left">
+					<a class="navbar-brand" style="padding: 5px;">
+						<small>
+							<img style="width:35px;" src="/assets/images/icon.png"/>
+							My <span id="headerbizname"></span> Account
+						</small>
+					</a><!-- /.brand -->
+				</div><!-- /.navbar-header -->
+                <div style="position: absolute; right: 0;">
+                    <button class="btn" style="height: 45px;" onclick="WPOS.logout();">Logout</button>
+                </div>
+			</div><!-- /.container -->
+		</div>
+
+		<div class="main-container" id="main-container">
+			<script type="text/javascript">
+				try{ace.settings.check('main-container' , 'fixed')}catch(e){}
+			</script>
+
+			<div class="main-container-inner">
+				<a class="menu-toggler" id="menu-toggler" href="#">
+					<span class="menu-text"></span>
+				</a>
+
+				<div class="sidebar" id="sidebar">
+					<script type="text/javascript">
+						try{ace.settings.check('sidebar' , 'fixed')}catch(e){}
+					</script>
+
+					<ul class="nav nav-list">
+						<li id="menudashboard" class="active">
+							<a href="#!dashboard" class="privmenuitem">
+								<i class="icon-dashboard"></i>
+								<span class="menu-text"> Dashboard </span>
+							</a>
+						</li>
+
+                        <li id="menuinvoices" class="privmenuitem">
+                            <a href="#!transactions" class="dropdown-toggle">
+                                <i class="icon-dollar"></i>
+                                <span class="menu-text"> Transactions </span>
+                            </a>
+                        </li>
+
+                        <li id="menucustomers" class="privmenuitem">
+                            <a href="#!mydetails" class="dropdown-toggle">
+                                <i class="icon-male"></i>
+                                <span class="menu-text"> My Account</span>
+                            </a>
+                        </li>
+
+						<li>
+							<a class="dropdown-toggle">
+								<i class="icon-file-alt"></i>
+
+								<span class="menu-text">Help and Support</span>
+
+								<b class="arrow icon-angle-down"></b>
+							</a>
+
+							<ul class="submenu">
+								<li>
+									<a href="#!contact">
+										<i class="icon-double-angle-right"></i>
+										Contact Us
+									</a>
+								</li>
+							</ul>
+						</li>
+					</ul><!-- /.nav-list -->
+
+					<div class="sidebar-collapse" id="sidebar-collapse">
+						<i class="icon-double-angle-left" data-icon1="icon-double-angle-left" data-icon2="icon-double-angle-right"></i>
+					</div>
+
+					<script type="text/javascript">
+						try{ace.settings.check('sidebar' , 'collapsed')}catch(e){}
+					</script>
+				</div>
+
+				<div class="main-content">
+					<div class="breadcrumbs" id="breadcrumbs">
+						<script type="text/javascript">
+							try{ace.settings.check('breadcrumbs' , 'fixed')}catch(e){}
+						</script>
+
+						<ul class="breadcrumb">
+							<li>
+								<i class="icon-home home-icon"></i>
+								<a onclick="WPOS.goToHome();">Home</a>
+							</li>
+						</ul><!-- .breadcrumb -->
+					</div>
+
+					<div id="maincontent" class="page-content">
+
+					</div><!-- /.page-content -->
+				</div><!-- /.main-content -->
+
+
+			</div><!-- /.main-container-inner -->
+
+			<a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse">
+				<i class="icon-double-angle-up icon-only bigger-110"></i>
+			</a>
+		</div><!-- /.main-container -->
+        <div id="modaldiv" class="login-layout" style="background-color:#000000; z-index: 2000;">
+            <div id="loginbox" class="login-box widget-box visible no-border">
+                <div class="widget-main">
+                    <h2 class="header blue lighter bigger">
+                        <img style="height: 40px; margin-top: -5px;" src="/assets/images/apple-touch-icon-72x72.png">&nbsp;My Account
+                    </h2>
+                    <div class="space-6"></div>
+                    <div class="space-6"></div>
+                    <div id="logindiv" style="display: none; height: 240px;">
+                        <label class="block clearfix">
+                    <span class="block input-icon input-icon-right">
+                        <input class="form-control" id="loguser" type="text" placeholder="Username"/>
+                        <i class="icon-user"></i>
+                    </span>
+                        </label>
+                        <label class="block clearfix">
+                    <span class="block input-icon input-icon-right">
+                        <input class="form-control" id="logpass" onkeypress="if(event.keyCode == 13){WPOS.login();}" type="password"  placeholder="Password"/>
+                        <i class="icon-lock"></i>
+                    </span>
+                        </label>
+                        <div class="space-6"></div>
+                        <button id="loginbutton" onClick="WPOS.login();" class="btn btn-primary width-35">
+                            <i class="icon-key"></i>Login
+                        </button>
+                        <div class="space-6"></div>
+                        <img id="loginbizlogo" style="max-height: 90px;" src="">
+                    </div>
+                    <div id="loadingdiv" style="height: 225px;">
+                        <h3 id="loadingbartxt">Initializing</h3>
+                        <div id="loadingprogdiv" class="progress progress-striped active">
+                            <div class="progress-bar" id="loadingprog" style="width: 100%;"></div>
+                        </div>
+                        <span id="loadingstat"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a style="display: none;" id="dlelem" href=""></a>
+        <div id="edittransdialog" class="hide" style="padding-left: 20px; padding-right: 20px;">
+            <div style="display: inline-block; vertical-align: top; max-width: 600px; min-width: 295px; padding-right: 10px;">
+            </div>
+            <div class="tabbable" style="margin-top: 10px; max-width: 700px; min-width: 400px;">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#transdetails" data-toggle="tab">
+                            <i class="green icon-gift bigger-120"></i>
+                            Details
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#transitems" data-toggle="tab">
+                            <i class="green icon-gift bigger-120"></i>
+                            Items
+                        </a>
+                    </li>
+                    <li class="">
+                        <a href="#transpayments" data-toggle="tab">
+                            <i class="red icon-dollar bigger-120"></i>
+                            Payments
+                        </a>
+                    </li>
+                    <li class="">
+                        <a href="#transoptions" data-toggle="tab">
+                            <i class="blue icon-cogs bigger-120"></i>
+                            Options
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane active in" id="transdetails">
+                        <div class="inline" style="min-width: 250px; vertical-align: top;">
+                            <h4>Transaction Details:</h4>
+                            <label class="fixedlabel">Status:</label> <span id="transstat"></span><br/>
+                            <label class="fixedlabel">ID:</label> <span id="transid"></span><br/>
+                            <label class="fixedlabel">Ref:</label> <span id="transref"></span><br/>
+                            <label class="fixedlabel">Trans DT:</label> <span id="transtime"></span><br/>
+                            <label class="fixedlabel">Process DT:</label> <span id="transptime"></span><br/>
+                        </div>
+                        <div class="inline" style="vertical-align: top;">
+                            <h4>Sale Totals:</h4>
+                            <label class="fixedlabel">Subtotal:</label><span id="transsubtotal"></span><br/>
+                            <div id="transtax">
+                            </div>
+                            <div id="transdisdiv"><label class="fixedlabel">Discount:</label><span id="transdiscount"></span></div>
+                            <label class="fixedlabel">Total:</label><span id="transtotal"></span><br/>
+                            <div id="voidinfo" style="display: none;">
+                                <h4>Void/Refunds:</h4>
+                                <table style="width: 100%" class="table">
+                                    <thead class="table-header">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Time</th>
+                                        <th>View</th>
+                                        <th>Delete</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="transvoidtable" class="ui-widget-content">
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="transitems">
+                        <h4 class="inline">Items:</h4>
+                        <table width="100%" class="table">
+                            <thead class="table-header">
+                            <tr align="left">
+                                <th>Qty</th>
+                                <th>Name</th>
+                                <th>Unit</th>
+                                <th>Tax</th>
+                                <th>Price</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody id="transitemtable" style="overflow:auto;" class="ui-widget-content">
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="transpayments">
+                        <h4 class="inline">Payments:</h4>
+                        <table width="100%" class="table">
+                            <thead class="table-header">
+                            <tr>
+                                <th>Method</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody id="transpaymenttable" class="ui-widget-content">
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="transoptions">
+                        <h4>Options:</h4>
+                        <div style="text-align: center;">
+                            <button onclick="WPOS.transactions.showGenerateDialog();" class="btn btn-sm btn-primary" style="padding: 5px;"><i class="icon-file"></i> Generate Invoice</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="miscdialog" class="hide">
+            <div id="geninvoiceform" style="text-align: center; min-width: 150px;">
+                <h3>View</h3>
+                <button onclick="WPOS.transactions.generateInvoice('html', 0);" class="btn btn-sm btn-primary" style="padding: 5px;">HTML</button>
+                <button onclick="WPOS.transactions.generateInvoice('pdf', 0);" class="btn btn-sm btn-primary" style="padding: 5px;">PDF</button>
+                <h3>Download</h3>
+                <button onclick="WPOS.transactions.generateInvoice('html', 1);" class="btn btn-sm btn-primary" style="padding: 5px;">HTML</button>
+                <button onclick="WPOS.transactions.generateInvoice('pdf', 1);" class="btn btn-sm btn-primary" style="padding: 5px;">PDF</button>
+            </div>
+            <div id="voiddetails">
+                <label class="fixedlabel">Time: </label><span id="reftime"></span><br/>
+                <label class="fixedlabel">User: </label><span id="refuser"></span><br/>
+                <label class="fixedlabel">Device: </label><span id="refdev"></span><br/>
+                <label class="fixedlabel">Location: </label><span id="refloc"></span><br/>
+                <label class="fixedlabel">Reason: </label><span id="refreason"></span><br/>
+
+                <div id="refunddetails">
+                    <label class="fixedlabel">Amount: </label><span id="refamount"></span><br/>
+                    <label class="fixedlabel">Method: </label><span id="refmethod"></span><br/>
+                    <table style="width: 100%;" class="table">
+                        <thead class="table-header">
+                        <tr>
+                            <th>Item ID</th>
+                            <th># Returned</th>
+                        </tr>
+                        </thead>
+                        <tbody id="refitemtable">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="translistdialog" class="hide">
+            <table class="table table-responsive">
+                <thead>
+                <tr>
+                    <th>Ref</th>
+                    <th>Details</th>
+                </tr>
+                </thead>
+                <tbody id="translist">
+
+                </tbody>
+            </table>
+        </div>
+        <!-- basic scripts -->
+
+        <!--[if !IE]> -->
+        <script type="text/javascript">
+            window.jQuery || document.write("<script src='/admin/assets/js/jquery-2.0.3.min.js'>"+"<"+"/script>");
+        </script>
+        <!-- <![endif]-->
+
+        <!--[if IE]>
+        <script type="text/javascript">
+            window.jQuery || document.write("<script src='/admin/assets/js/jquery-1.10.2.min.js'>"+"<"+"/script>");
+        </script>
+        <![endif]-->
+
+        <script type="text/javascript">
+            if('ontouchstart' in document.documentElement) document.write("<script src='/admin/assets/js/jquery.mobile.custom.min.js'>"+"<"+"/script>");
+        </script>
+        <script src="/admin/assets/js/bootstrap.min.js"></script>
+        <!--<script src="assets/js/typeahead"></script>!-->
+
+        <!-- page specific plugin scripts -->
+
+        <!--[if lte IE 8]>
+        <script src="/admin/assets/js/excanvas.min.js"></script>
+        <![endif]-->
+        <script src="/admin/assets/js/typeahead-bs2.min.js"></script>
+        <script src="/admin/assets/js/jquery-ui-1.10.3.full.min.js"></script>
+        <script src="/admin/assets/js/jquery.ui.touch-punch.min.js"></script>
+        <script src="/admin/assets/js/jquery.slimscroll.min.js"></script>
+        <script src="/admin/assets/js/jquery.easy-pie-chart.min.js"></script>
+        <script src="/admin/assets/js/jquery.sparkline.min.js"></script>
+        <script src="/admin/assets/js/flot/jquery.flot.min.js"></script>
+        <script src="/admin/assets/js/flot/jquery.flot.pie.min.js"></script>
+        <script src="/admin/assets/js/flot/jquery.flot.resize.min.js"></script>
+        <script src="/admin/assets/js/flot/jquery.flot.time.min.js"></script>
+        <script src="/admin/assets/js/bootstrap-tag.js"></script>
+
+        <!-- ace scripts -->
+        <script src="/admin/assets/js/ace-elements.min.js"></script>
+        <script src="/admin/assets/js/ace.min.js"></script>
+
+        <!-- Scripts included on many of the pages -->
+        <script src="/admin/assets/js/jquery.dataTables.min.js"></script>
+        <script src="/admin/assets/js/jquery.dataTables.bootstrap.js"></script>
+        <script src="/admin/assets/js/date-time/bootstrap-datepicker.min.js"></script>
+        <script src="/admin/assets/js/select2/select2.min.js"></script>
+        <script src="/admin/assets/js/jquery.hotkeys.min.js"></script>
+        <script src="/admin/assets/js/bootstrap-wysiwyg.min.js"></script>
+        <script src="/admin/assets/js/bootbox.min.js"></script>
+
+        <!-- inline scripts related to this page -->
+        <script src="/myaccount/assets/clientaccess.js"></script>
+        <script src="/myaccount/assets/clienttrans.js"></script>
+        <script src="/assets/js/wpos/utilities.js"></script>
+	</body>
+</html>
+

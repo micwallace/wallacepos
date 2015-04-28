@@ -1,0 +1,275 @@
+/* CSS Document */
+body {
+	margin:auto;
+	background-color:#000;
+}
+#wrapper {
+	margin:auto;
+    height: auto;
+	max-width:900px;
+    min-height: 700px;
+    padding:0px;
+    padding-bottom: 40px;
+    background-color: #FFF;
+    z-index: 1;
+}
+#modaldiv {
+	position:absolute;
+	left:0px;
+	top:0px;
+    bottom: 0px;
+    right: 0px;
+	width:100%;
+	height:100%;
+}
+#loginbox {
+    width: 400px;
+    height: 380px;
+    left:50%;
+    margin-left:-200px;
+    margin-top: 20px;
+    text-align: center;
+}
+#reportcontain {
+    border: solid 1px #ccc;
+    width: 100%;
+    max-width: 550px;
+    min-width: 480px;
+    -moz-box-shadow:    3px 3px 5px 6px #ccc;
+    -webkit-box-shadow: 3px 3px 5px 6px #ccc;
+    box-shadow:         3px 3px 5px 6px #ccc;
+    min-height: 600px;
+    overflow-x: auto !important;
+}
+.totalsbox {
+    display: inline-block;
+    max-width: 400px;
+}
+.totalslabel{
+    display: inline-block;
+    font-weight: bold;
+    font-size: 16px;
+    width: 100px;
+}
+.totalsval {
+    font-size: 16px;
+    width: 120px;
+    display: inline-block;
+}
+.toolbarbtn {
+    width:45px;
+    height:45px;
+    display:inline-block;
+    margin-left:8px;
+    margin-bottom:8px !important;
+    font-size: 14px !important;
+    text-align: center;
+}
+.regbtn {
+    width:75px;
+    height:45px;
+    display:inline-block;
+    margin-left:8px;
+    margin-bottom:8px !important;
+    font-size: 13px !important;
+    text-align: center;
+}
+.small-button {
+    font-size: 14px !important;
+    height: 30px;
+    margin:0;
+}
+.settings-row {
+    margin: 10px;
+}
+.inline {
+    display: inline-block;
+}
+.settings-row label label {
+    display: inline-block;
+}
+.fixedlabel {
+    min-width:80px;
+}
+#regkey-inner {
+    display:inline-block;
+    width:160px;
+    vertical-align:top;
+}
+#regkey-container {
+    display:inline-block;
+    width:160px;
+    vertical-align:top;
+    float: right;
+}
+#ibox {
+    position: absolute;
+    right: 0;
+    top:0;
+    bottom: 0;
+    width: 0;
+    max-width: 450px;
+    margin-top: 44px;
+    margin-bottom: 35px;
+    overflow: visible !important;
+    overflow-x: visible !important;
+}
+#iboxhandle {
+    position: absolute;
+    width: 30px;
+    height: 45px;
+    top:5px;
+    margin-left: -30px;
+    line-height: 45px;
+    text-align: center;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+    cursor: ew-resize;
+}
+#iboxitem_contain {
+    position: relative;
+    min-width: 0;
+    height: 100%;
+    background-color: white;
+    overflow-x: hidden !important;
+}
+#iboxitems {
+    margin: 5px;
+    margin-left: 15px;
+    width: 440px;
+    overflow-x: hidden !important;
+}
+.iboxitem {
+    width: 134px;
+    height: 134px;
+    border: 2px solid #428BCA;
+    border-radius: 4px;
+    display: inline-block;
+    background-color: #C5D0DC;
+    margin: 4px;
+    text-align: center;
+    vertical-align: middle;
+}
+.ui-tabs .ui-tabs-nav li a {
+    height: 44px !important;
+    padding-top: 12px !important;
+}
+.navbar {
+    border-bottom: 0 !important;
+}
+/* For android scanner */
+.rotate {
+    margin-bottom: 60px;
+    behavior: url(-ms-transform.htc);
+    /* Firefox */
+    -moz-transform: rotate(90deg);
+    /* Safari and Chrome */
+    -webkit-transform: rotate(90deg);
+    /* Opera */
+    -o-transform: rotate(90deg);
+    /* IE9 */
+    -ms-transform: rotate(90deg);
+    /* IE6,IE7 */
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+    /* IE8 */
+    -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=1);";
+}
+.field-button {
+    height: 29px !important;
+    margin-bottom: 4px !important;
+}
+.field-button-attach {
+    margin-left: -4px !important;
+}
+#watermark {
+    content : "";
+    display: block;
+    text-align: center;
+    position: absolute;
+    top: 0;
+    background-position: center center;
+    background-repeat: no-repeat;
+    width: 100%;
+    height: 100%;
+    opacity : 0.2;
+    z-index: -1;
+}
+.ui-autocomplete li {
+    overflow-x: hidden !important;
+}
+.ui-autocomplete {
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* #Media Queries
+================================================== */
+
+/* Smaller than standard 960 (devices and browsers) */
+@media only screen and (max-width: 959px) {
+
+}
+
+/* Tablet Portrait size to standard 960 (devices and browsers) */
+@media only screen and (min-width: 768px) and (max-width: 959px) {
+
+}
+
+/* All Mobile Sizes (devices and browser) */
+@media only screen and (max-width: 767px) {
+
+}
+
+/* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
+@media only screen and (min-width: 480px) and (max-width: 767px) {
+    #reportcontain {
+        width: 480px;
+    }
+    .hlabel {
+        width: 100px;
+    }
+    #loginbox {
+        width: 350px;
+        margin-left:-175px;
+    }
+    #ibox {
+        max-width: 300px;
+    }
+    #iboxitems {
+        width: 290px;
+    }
+}
+
+/* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
+@media only screen and (max-width: 479px) {
+    #reportcontain {
+        width: 480px;
+    }
+    .hlabel {
+        width: 95px;
+    }
+    #loginbox {
+        width: 100%;
+        left: 0;
+        padding: 5px;
+        margin-left: 0;
+    }
+    .settings-row label label {
+        min-width: 70px;
+    }
+    #regkey-container {
+        width: 100%;
+        margin-top: 20px;
+        text-align: center;
+    }
+    #ibox {
+        max-width: 160px;
+    }
+    #iboxitems {
+        width: 150px;
+    }
+    .ui-dialog {
+        width: 100% !important;
+    }
+}

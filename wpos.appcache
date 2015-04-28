@@ -1,0 +1,77 @@
+<?php
+/**
+ * Created by PhpStorm
+ * User: michael
+ * Date: 2/06/14
+ * Time: 4:58 PM
+ */
+$_SERVER['APP_ROOT'] = "/";
+if (!isset($_SERVER['DOCUMENT_ROOT'])){
+    $_SERVER['DOCUMENT_ROOT'] = "/app"; // this is what dokku uses as docroot, we can catch it because it ain't defined (not using mod_php)
+}
+$_SERVER['DOCUMENT_ROOT'].= $_SERVER['APP_ROOT'];
+
+header('Content-Type: text/cache-manifest');
+header("Cache-Control: no-cache, must-revalidate");
+
+function create_manifest() {
+    $hashes = "";
+    $list = "";
+    // add the main app file
+    $masterfile = "index.html";
+    // Add masterfile into manifest as /, this is what the client should request.
+    $list.= "/index.html\n";
+    $hashes.= md5_file($_SERVER['DOCUMENT_ROOT'].$masterfile);
+    // Iterate through assets
+    $dir = new RecursiveDirectoryIterator("assets");
+    // Iterate through all the files/folders in the current directory
+    foreach (new RecursiveIteratorIterator($dir) as $file) {
+        $info = pathinfo($file);
+        // If the object is a file and it's not a dotfile, add it to the list
+        if ($file->IsFile() && substr($file->getFilename(), 0, 1)!=".") {
+            // Replace spaces with %20 or it will break
+            $list.= "/" . str_replace(' ', '%20', $file) . "\n";
+            // Add this file's hash to the $hashes string
+            $hashes.= md5_file($_SERVER['DOCUMENT_ROOT'].$file);
+        }
+    }
+    // Iterate through docs
+    $iterator = new RecursiveDirectoryIterator("docs");
+    // Iterate through all the files/folders in the current directory
+    foreach ($iterator as $file) {
+        $info = pathinfo($file);
+        // If the object is a file and it's not a dotfile, add it to the list
+        if ($file->IsFile() && substr($file->getFilename(), 0, 1)!=".") {
+            // Replace spaces with %20 or it will break
+            $list.= "/".str_replace(' ', '%20', $file) . "\n";
+            // Add this file's hash to the $hashes string
+            $hashes.= md5_file($_SERVER['DOCUMENT_ROOT'].$file);
+        }
+    }
+    $hash = md5($hashes);
+    return array($list, $hash);
+}
+
+$list = create_manifest();
+?>
+CACHE MANIFEST
+# v<?php echo($list[1]."\n"); ?>
+
+CACHE:
+<?php echo($list[0]); ?>
+
+NETWORK:
+/api/*
+/wpos.appcache
+http://*
+https://*
+*
+
+FALLBACK:
+/assets/font/cJZKeOuBrn4kERxqtaUH3T8E0i7KZn-EPnyo3HZu7kw.woff assets/font/cJZKeOuBrn4kERxqtaUH3T8E0i7KZn-EPnyo3HZu7kw.woff
+/assets/font/DXI1ORHCpsQm3Vp6mXoaTXhCUOGz7vYGh680lGh-uXM.woff assets/font/DXI1ORHCpsQm3Vp6mXoaTXhCUOGz7vYGh680lGh-uXM.woff
+/assets/font/fontawesome-webfont.woff assets/font/fontawesome-webfont.woff
+/assets/font/fontawesome-webfont.eot assets/font/fontawesome-webfont.eot
+/assets/font/fontawesome-webfont.svg assets/font/fontawesome-webfont.svg
+/assets/font/fontawesome-webfont.ttf assets/font/fontawesome-webfont.ttf
+/assets/font/fonts/FontAwesome.otf assets/font/FontAwesome.otf

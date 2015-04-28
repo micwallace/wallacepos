@@ -1,0 +1,10 @@
+{
+    "extra": {
+        "heroku": {
+            "index-document": "index.html",
+            "engines": {
+                "php": "5.5.9"
+            }
+        }
+    }
+}

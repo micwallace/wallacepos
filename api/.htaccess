@@ -1,0 +1,6 @@
+Options +FollowSymlinks
+Options -MultiViews
+RewriteEngine on
+RewriteBase /api/
+RewriteCond %{REQUEST_URI} !wpos.php
+RewriteRule ^(.*)$ wpos.php?a=$1 [L,NS,QSA]

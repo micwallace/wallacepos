@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+                        QZ INDUSTRIES SIGNED JNLP FILE
+    Author:
+        A. Tres Finocchiaro (tres.finocchiaro@gmail.com)
+    Website:
+        http://qzindustries.com
+    Internal Filename: 
+        qz-print.jar\JNLP-INF\APPLICATION.JNLP
+    External Filename:
+        qz-print_jnlp.jnlp (suppled as "href" below)
+    Important:
+        The internal and external files listed above MUST MATCH IDENTICALLY
+        on a binary level or Java will complain about unsigned jnlp.  Unsigned
+        jnlp files will have their properties ignored to prevent cross-site
+        parameter scripting.
+        
+        To make changes to this JNLP file, you MUST DOWNLOAD AND COMPILE
+        qz-print.  The Ant buld.xml file handles the copying to dist/.
+        
+        -QZ Industries, LLC
+-->
+<jnlp codebase="." href="qz-print_jnlp.jnlp" spec="1.0+">
+        <information>
+		<title>QZ Print Plugin</title>
+		<vendor>WallaceIT - QZ Industries, LLC</vendor>
+                <homepage href="http://qzindustries.com" />
+                <offline-allowed/>
+	</information>
+	<security>
+		<all-permissions/>
+	</security>
+	<resources>
+                <!-- qz-print requires Java 1.5 or higher -->
+		<j2se version="1.5+" />
+		<jar href="qz-print.jar" download="eager" main="true" />
+		<jar href="lib/jssc_qz.jar" download="lazy" />
+		<jar href="lib/pdf-renderer_qz.jar" download="lazy" />
+	</resources>
+	<applet-desc name="QZ Print Plugin" main-class="qz.PrintApplet" width="1" height="1" />
+    <!-- 
+         Update check value of "background" checks for new jar files in the 
+         background, speeding loading time slightly.  If this is causing
+         problems and you need to force a reload of qz-print.jar, Do this:
+             Java Control Panel, General Tab, View, Red X (Delete)
+    -->
+    <update check="background" policy="prompt-update"/>
+</jnlp>

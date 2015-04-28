@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html manifest="/wpos.appcache">
+<head>
+    <meta name="copyright" content="Copyright (c) 2014 WallaceIT <micwallace@gmx.com> <https://www.gnu.org/licenses/lgpl.html>" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WallacePOS</title>
+
+    <link rel="shortcut icon" href="/assets/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/assets/images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/apple-touch-icon-114x114.png">
+    <!-- UI FRAMEWORK STYLES -->
+    <link type="text/css" rel="stylesheet" href="assets/css/wpos.css"/>
+    <link rel="stylesheet" href="/assets/css/jquery-ui-1.10.3.full.min.css"/>
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="/assets/css/font-awesome.min.css"/>
+    <!--[if IE 7]>
+    <link rel="stylesheet" href="/assets/css/font-awesome-ie7.min.css"/>
+    <![endif]-->
+    <!-- fonts -->
+    <link rel="stylesheet" href="/assets/css/ace-fonts.css"/>
+    <!-- ace styles -->
+    <link rel="stylesheet" href="/assets/css/ace.min.css"/>
+    <link rel="stylesheet" href="/assets/css/ace-rtl.min.css"/>
+    <!--[if lte IE 8]>
+    <link rel="stylesheet" href="/assets/css/ace-ie.min.css"/>
+    <![endif]-->
+
+    <!-- UI FRAMEWORK SCRIPTS -->
+    <!--[if !IE]> -->
+    <script type="text/javascript">
+        window.jQuery || document.write("<script src='assets/js/jquery-2.0.3.min.js'>" + "<" + "/script>");
+    </script>
+    <!-- <![endif]-->
+    <!--[if IE]>
+    <script type="text/javascript">
+        window.jQuery || document.write("<script src='assets/js/jquery-1.10.2.min.js'>" + "<" + "/script>");
+    </script>
+    <![endif]-->
+    <script type="text/javascript">
+        if ("ontouchend" in document) document.write("<script src='assets/js/jquery.mobile.custom.min.js'>" + "<" + "/script>");
+    </script>
+    <script src="/assets/js/bootstrap.min.js"></script>
+    <script src="/assets/js/typeahead-bs2.min.js"></script>
+    <script src="/assets/js/jquery-ui-1.10.3.full.min.js"></script>
+
+    <!-- Wpos Libraries -->
+    <script type="text/javascript" src="/assets/js/wpos/core.js"></script>
+    <script type="text/javascript" src="/assets/js/wpos/sales.js"></script>
+    <script type="text/javascript" src="/assets/js/wpos/transactions.js"></script>
+    <script type="text/javascript" src="/assets/js/wpos/reports.js"></script>
+    <script type="text/javascript" src="/assets/js/wpos/print.js"></script>
+    <script type="text/javascript" src="/assets/js/wpos/utilities.js"></script>
+    <!-- Websocket library -->
+    <script type="text/javascript" src="/assets/libs/socketio/socket.io.min.js"></script>
+    <!-- qz-print -->
+    <script type="text/javascript" src="/assets/libs/qz-print/js/deployJava.js"></script>
+    <script type="text/javascript" src="/assets/libs/qz-print/qz-print-wpos.js"></script>
+    <script type="text/javascript" src="/assets/libs/qz-print/js/html2canvas.js"></script>
+    <script type="text/javascript" src="/assets/libs/qz-print/js/jquery.plugin.html2canvas.js"></script>
+    <!-- POS Keypad -->
+    <link type="text/css" href="/assets/libs/jquery-keypad/jquery.keypad.css" rel="stylesheet">
+    <script type="text/javascript" src="/assets/libs/jquery-keypad/jquery.plugin.min.js"></script>
+    <script type="text/javascript" src="/assets/libs/jquery-keypad/jquery.keypad.min.js"></script>
+</head>
+<body style="background-color: #000000; overflow: hidden;">
+<div id="wrapper">
+<ul class="navbar overflow-hidden">
+    <li><a href="#tabs-1">Sales</a></li>
+    <li onclick="WPOS.reports.populateOverview();"><a href="#tabs-2">Reports</a></li>
+    <li><a href="#tabs-3">Settings</a></li>
+    <button onClick="WPOS.logout();" style="float:right; height: 45px;" class="btn">Logout</button>
+</ul>
+<div id="tabs-1" style="padding: 5px; padding-top: 10px;">
+    <div id="sales">
+        <div style="width:100%;">
+            <div id="items" style="height:400px; padding:0; overflow-y: auto; overflow-x: hidden;" class="ui-widget-content">
+                <div style="margin-bottom: 10px;">
+                    <div class="inline">
+                        <div class="inline">
+                            <label><div class="hlabel inline">Stock Code:&nbsp;</div><input style="width: 100px;" id="codeinput" type="text" onkeypress="if(event.keyCode=='13' || event.keyCode=='7'){ WPOS.items.addItemFromStockCode($('#codeinput').val()); }"/></label>
+                            <button class="btn btn-xs field-button field-button-attach" style="vertical-align: top;" onclick="WPOS.items.addItemFromStockCode($('#codeinput').val());">Add</button>
+                        </div>
+                        &nbsp;&nbsp;
+                        <div class="inline">
+                            <label><div class="hlabel inline">Stock Search:&nbsp;</div><input id="itemsearch" type="text"/></label>
+                        </div>
+                    </div>
+                    <div class="wscan-btn inline" style="display: none !important;">
+                        <button class="btn btn-sm inline field-button" onclick="$.wscan.scanOnce();"><i class="icon-barcode" style="vertical-align: top;">&nbsp;x1</i></button>
+                        <button class="btn btn-sm inline field-button" onclick="$.wscan.startScanning();"><i class="icon-barcode" style="vertical-align: top;"></i></button>
+                    </div>
+                </div>
+                <div id="items_contain" style="overflow-x: auto;">
+                <table width="100%" class="table table-striped table-bordered">
+                    <thead class="table-header">
+                    <tr style="text-align: left">
+                        <th>Qty</th>
+                        <th>Name</th>
+                        <th>Desc</th>
+                        <th>Unit</th>
+                        <th>Tax</th>
+                        <th>Price</th>
+                        <th style="text-align: center;">X</th>
+                    </tr>
+                    </thead>
+                    <tbody id="itemtable" style="overflow:auto;">
+
+                    </tbody>
+                </table>
+                </div>
+                <div id="watermark"></div>
+                <span id="invaliditemnotice" style="float: left; display: none;" class="text-warning bigger-110 red"><i
+                        class="icon-warning-sign"></i>Invalid items marked in red will not be added to the sale</span>
+                <button style="float:right; font-size: 14px !important;" class="btn btn-sm btn-primary" onClick="WPOS.items.addManualItemRow();">Add Item</button>
+            </div>
+            <div id="totals" style="display:inline-block; width:100%; margin-top:10px;">
+                <div style="display:inline-block; max-width:450px; vertical-align:top;">
+                    <div class="totalsbox">
+                        <div>
+                            <div class="totalslabel">Subtotal:</div>
+                            <div class="totalsval"><span id="subtotal">$0.00</span></div>
+                        </div>
+                        <div>
+                            <div class="totalslabel">Discount:</div>
+                            <div class="totalsval"><input onChange="WPOS.sales.updateDiscount();" size="2" id="salediscount" type="text" class="numpad" value="0" autocomplete="off"/><strong>%</strong>&nbsp;<span id="discounttxt">($0.00)</span></div>
+                        </div>
+                    </div>
+                    <div class="totalsbox">
+                        <div>
+                            <div class="totalslabel">Tax:</div>
+                            <div class="totalsval"><span id="totaltax">$0.00</span></div>
+                        </div>
+                        <div>
+                            <div class="totalslabel">Total:</div>
+                            <div class="totalsval"><span id="total">$0.00</span></div>
+                        </div>
+                    </div>
+                    <table style="margin-top: 10px; margin-bottom: 10px; width: 100%; text-align: left;" class="ui-widget-content">
+                        <tr>
+                            <th>Customer Email:</th>
+                            <td>
+                                <input id="custemail" type="email" onchange="WPOS.items.processNewEmail();" autocomplete="off"/>
+                                <input id="custid" type="hidden" value="0" />
+                                <button class="btn btn-xs btn-primary field-button field-button-attach" onclick="WPOS.items.openCustomerDialog($('#custid').val());">
+                                    Details
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Email Receipt:</th>
+                            <td>
+                                <input type="checkbox" id="emailreceipt" disabled="disabled" autocomplete="off" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Notes:</th>
+                            <td><textarea id="salenotes" name="salenotes" autocomplete="off"></textarea></td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="regkey-container">
+                        <div id="regkey-inner">
+                        <div id="registerkeydiv">
+                            <button class="regbtn btn btn-success" onClick="WPOS.sales.showPaymentDialog();">Process
+                            </button>
+                            <button class="regbtn btn btn-danger" onClick="WPOS.sales.userAbortSale();">Abort</button>
+                            <button class="regbtn btn" onclick="WPOS.print.openCashDraw();">Till</button>
+                            <button class="regbtn btn" onclick="WPOS.trans.recallLastTransaction();">Recall</button>
+                        </div>
+                        <div>
+                            <button onclick="WPOS.trans.showTransactionDialog();" class="regbtn btn btn-primary"
+                                    style="width:153px; height:50px; display:inline-block;">Transactions
+                            </button>
+                        </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="ibox" class="widget-body">
+        <div id="iboxhandle" class="header-color-blue"><i class="icon-chevron-left white"></i></div>
+        <div id="iboxitem_contain">
+            <div class="row">
+            <div id="iboxitems">
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="tabs-2">
+    <div class="row">
+    <div class="col-md-8">
+        <div class="widget-box transparent">
+            <div class="widget-header widget-header-flat">
+                <h4 class="lighter">
+                    <i class="icon-list"></i>
+                    Reports
+                </h4>
+            </div>
+            <div class="widget-body" style="padding-top: 10px; text-align: center;">
+                <div style="text-align: left;">
+                    <div id="reportbuttons" class="inline hide" style="margin-right: 20px;">
+                        <button class="btn btn-primary btn-sm" onclick="WPOS.reports.generateTakingsReport();">Takings Count</button>
+                        <button class="btn btn-primary btn-sm" onclick="WPOS.reports.generateWhatsSellingReport();">What's Selling</button>
+                    </div>
+                    <div id="tyroreports" class="hide" style="display: inline-block;">
+                        <select id="tyroreptype" style="height: 34px; vertical-align: bottom;">
+                            <option value="summary" selected>Summary</option>
+                            <option value="detail">Detailed</option>
+                        </select>
+                        <button class="btn btn-success btn-sm" onclick="WPOS.reports.generateTyroReport();">Tyro Report</button>
+                    </div>
+                </div>
+                <hr>
+                <div style="overflow-x: auto; padding: 10px; padding-top: 0;">
+                    <button class="btn btn-primary btn-xs" style="margin-bottom: 10px; float: left;" onclick="WPOS.print.printCurrentReport();"><i class="icon-print"></i>&nbsp;Print</button><br/>
+                    <div id="reportcontain">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="widget-box transparent">
+            <div class="widget-header widget-header-flat">
+                <h4 class="lighter">
+                    <i class="icon-dollar"></i>
+                    Today's Takings
+                </h4>
+            </div>
+            <div class="widget-body" style="padding-top: 10px; text-align: center;">
+                <div class="infobox infobox-green  ">
+                    <div class="infobox-icon">
+                        <i class="icon-shopping-cart"></i>
+                    </div>
+
+                    <div class="infobox-data">
+                        <span id="rsalesnum" class="infobox-data-number">-</span>
+                        <div class="infobox-content">Sales</div>
+                    </div>
+                    <div id="rsalestotal" class="stat stat-success">-</div>
+                </div>
+
+                <div class="infobox infobox-orange">
+                    <div class="infobox-icon">
+                        <i class="icon-backward"></i>
+                    </div>
+
+                    <div class="infobox-data">
+                        <span id="rrefundsnum" class="infobox-data-number">-</span>
+                        <div class="infobox-content">Refunds</div>
+                    </div>
+
+                    <div id="rrefundstotal" class="stat stat-important">-</div>
+                </div><br/>
+
+                <div class="infobox infobox-red">
+                    <div class="infobox-icon">
+                        <i class="icon-ban-circle"></i>
+                    </div>
+
+                    <div class="infobox-data">
+                        <span id="rvoidsnum" class="infobox-data-number">-</span>
+                        <div class="infobox-content">Voids</div>
+                    </div>
+                    <div id="rvoidstotal" class="stat stat-important">-</div>
+                </div>
+
+                <div class="infobox infobox-blue2">
+                    <div class="infobox-icon">
+                        <i class="icon-dollar"></i>
+                    </div>
+
+                    <div class="infobox-data">
+                        <span id="rtotaltakings" class="infobox-data-number">-</span>
+                        <div class="infobox-content">Takings</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="widget-box transparent">
+            <div class="widget-header widget-header-flat">
+                <h4 class="lighter">
+                    <i class="icon-check"></i>
+                    Cash Reconciliation
+                </h4>
+            </div>
+            <div class="widget-body" style="padding-top: 10px; text-align: center;">
+                <table class="table">
+                    <tbody>
+                    <tr>
+                        <td style="text-align: right;">$100:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom100" value="0"/></td>
+                        <td style="text-align: right;">$50:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom50" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">$20:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom20" value="0"/></td>
+                        <td style="text-align: right;">$10:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom10" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">$5:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom5" value="0"/></td>
+                        <td style="text-align: right;">$2:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom2" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">$1:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom1" value="0"/></td>
+                        <td style="text-align: right;">50c:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom50c" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">20c:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom20c" value="0"/></td>
+                        <td style="text-align: right;">10c:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom10c" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">5c:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recdenom5c" value="0"/></td>
+                        <td style="text-align: right;">Float:</td>
+                        <td><input onchange="WPOS.reports.calcReconcil();" type="text" size="4" id="recfloat" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: right;">Takings - Float:</td>
+                        <td colspan="2"><span id="rectakings"></span></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: right;">Balance:</td>
+                        <td colspan="2"><span id="recbalance"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+<div id="tabs-3">
+    <div class="widget-box transparent">
+        <div class="widget-header widget-header-flat">
+            <h4 class="lighter">
+                <i class="icon-cogs"></i>
+                General
+            </h4>
+        </div>
+        <div class="widget-body" style="padding-top: 10px; text-align: left;">
+            <label>Use On-screen keypad: <input id="keypadset" type="checkbox" style="vertical-align: top;" onclick="WPOS.setLocalConfigValue('keypad', $('#keypadset').is(':checked'))"></label>
+        </div>
+        <div class="widget-header widget-header-flat">
+            <h4 class="lighter">
+                <i class="icon-print"></i>
+                Printing
+            </h4>
+        </div>
+        <div class="widget-body" style="padding-top: 10px; text-align: left;">
+            <div>
+                <h4>Receipts</h4>
+                <div class="settings-row" style="display: inline-block;">
+                    <label>Method:
+                        <select id="printmethod" onchange="WPOS.print.setPrintSetting('printmethod', $(this).val())">
+                            <option value="br">
+                                browser printing
+                            </option>
+                            <option value="wp" class="wp-option">
+                                Web Print ESCP
+                            </option>
+                            <option value="qz" class="qz-option">
+                                qz-print ESCP (Depreciated)
+                            </option>
+                            <option value="ht" class="ht-option">
+                                Android HTTP ESCP
+                            </option>
+                        </select>
+                    </label>
+                </div>
+                <div class="advprintoptions settings-row" style="display: inline-block;">
+                    <label style="margin-right: 20px;">Type:
+                        <select id="rectype"  onchange="WPOS.print.setPrintSetting('rectype', $(this).val())">
+                            <option value="serial">
+                                Serial
+                            </option>
+                            <option value="raw">
+                                Raw
+                            </option>
+                        </select>
+                    </label>
+
+                    <div id="rawoptions" style="display: inline-block;">
+                        <label>Printer:
+                            <select id="recprinter" onchange="WPOS.print.setPrintSetting('recprinter',$(this).val());">
+
+                            </select>
+                            <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePrinters();"><i class="icon-refresh"></i></button>
+                        </label>
+                    </div>
+                    <div id="serialoptions" style="display: inline-block;">
+                        <label>Port:
+                            <select id="recport" onchange="WPOS.print.setPrintSetting('recport',$(this).val());">
+
+                            </select>
+                            <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePorts();"><i class="icon-refresh"></i></button>
+                        </label>
+                        <label>Baud:
+                            <select id="recbaud" onchange="WPOS.print.setPrintSetting('recbaud', $(this).val());">
+                                <option value="4800">4800</option>
+                                <option value="9600">9600</option>
+                                <option value="19200">19200</option>
+                                <option value="38400">38400</option>
+                                <option value="57600">57600</option>
+                                <option value="115200">115200</option>
+                            </select>
+                        </label>
+                        <label>Data Bits:
+                            <select id="recdatabits" onchange="WPOS.print.setPrintSetting('recdatabits', $(this).val());">
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                            </select>
+                        </label>
+                        <label>Stop Bits:
+                            <select id="recstopbits" onchange="WPOS.print.setPrintSetting('recstopbits', $(this).val());">
+                                <option value="1">1</option>
+                                <option value="0">0</option>
+                            </select>
+                        </label>
+                        <label>Parity:
+                            <select id="recparity" onchange="WPOS.print.setPrintSetting('recparity', $(this).val());">
+                                <option value="none">none</option>
+                                <option value="even">even</option>
+                                <option value="odd">odd</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-row printoptions" style="display: inline-block;">
+                    <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.testReceiptPrinter();">Test</button>
+                    <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.printQrCode();">Print QR</button>
+                </div>
+                <div class="settings-row cashdrawoptions">
+                    <label>Cash Draw Connected: <input onchange="WPOS.print.setPrintSetting('cashdraw', $('#cashdraw').is(':checked'));" id="cashdraw"  type="checkbox" style="margin-right:20px; vertical-align:top;" /></label>
+                    <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.openCashDraw();">Test</button>
+                </div>
+                <div class="settings-row">
+                    <label>Ask to print: <select id="recask" onchange="WPOS.print.setPrintSetting('recask', $('#recask option:selected').val());">
+                            <option value="ask">Always Ask</option>
+                            <option value="email">Ask if not emailed</option>
+                            <option value="print">Always Print</option>
+                        </select></label>
+                </div>
+            </div>
+            <div>
+                <h4>Reports</h4>
+                <div class="settings-row" style="display: inline-block;">
+                    <label>Method:
+                    <select id="docmethod" onchange="WPOS.print.setPrintSetting('docmethod', $(this).val())">
+                        <option value="br">
+                            browser printing
+                        </option>
+                        <option value="wp" class="wp-option">
+                            Web Print
+                        </option>
+                        <option value="qz" class="qz-option">
+                            qz-print (Depreciated)
+                        </option>
+                    </select></label>
+                </div>
+                <div id="docprint-options" class="settings-row" style="display: inline-block;">
+                    <label>Printer:
+                        <select id="docprinter" onchange="WPOS.print.setPrintSetting('docprinter',$(this).val());">
+
+                        </select>
+                        <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePrinters();"><i class="icon-refresh"></i></button>
+                    </label>
+                </div>
+            </div>
+            <div class="printserviceoptions">
+                <h4>Print Service (WebPrint/Android options):</h4>
+                <div class="settings-row" style="display: inline-block;">
+                    <label>IP Address: <input id="recip" type="text" onchange="WPOS.print.setPrintSetting('recip', $(this).val());" value="127.0.0.1"></label>
+                    <label>Port: <input id="rectcpport" type="text" onchange="WPOS.print.setPrintSetting('rectcpport', $(this).val());" value="8080"></label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="statusbar" style="width:100%; position:absolute; bottom:0; height:40px; background-color:#666666; padding-top: 10px;">
+    <div id="printstat" style="float:left; height: 40px; vertical-align: middle; margin-left: 5px; margin-right: 5px;">
+        <i class="icon-print icon-large white"></i>&nbsp;<span id="printstattxt" class="white">Initializing...</span>
+    </div>
+    <div id="wposstat" style="float:right; height: 40px; vertical-align: middle;"><span id="wposstattxt" class="white">WPOS is Online</span>
+    <span id="wposstaticon" class="badge badge-success" style="margin-left: 5px; margin-right: 5px;"><i class="icon-ok"></i></span></div>
+</div>
+</div>
+<div id="modaldiv" class="login-layout" style="background-color:#000000; z-index: 1000;">
+    <div id="loginbox" class="login-box widget-box visible no-border">
+        <div class="widget-main">
+            <h2 class="header blue lighter bigger">
+                <img style="height: 40px; margin-top: -5px;" src="/assets/images/apple-touch-icon-72x72.png">&nbsp;WallacePOS
+            </h2>
+            <div class="space-6"></div>
+            <div class="space-6"></div>
+            <div id="logindiv" style="display: none; height: 240px;">
+                <label class="block clearfix">
+                    <span class="block input-icon input-icon-right">
+                        <input class="form-control" id="username" name="username" type="text" placeholder="Username"/>
+                        <i class="icon-user"></i>
+                    </span>
+                </label>
+                <label class="block clearfix">
+                    <span class="block input-icon input-icon-right">
+                        <input class="form-control" id="password" name="password" onkeypress="if(event.keyCode == 13){WPOS.userLogin();}" type="password"  placeholder="Password"/>
+                        <i class="icon-lock"></i>
+                    </span>
+                </label>
+                <div class="space-6"></div>
+                <div class="space-6"></div>
+                <button id="loginbutton" onClick="WPOS.userLogin();" class="btn btn-primary width-35" disabled>
+                    <i class="icon-key"></i>Login
+                </button>
+                <div class="space-6"></div>
+            </div>
+            <div id="loadingdiv" style="height: 225px;">
+                <h3 id="loadingbartxt">Initializing</h3>
+                <div id="loadingprogdiv" class="progress progress-striped active">
+                    <div class="progress-bar" id="loadingprog" style="width: 100%;"></div>
+                </div>
+                <span id="loadingstat"></span>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="paymentsdiv" style="display:none; padding:5px;" title="Complete Sale">
+    <table width="100%" class="ui-widget-content">
+        <tr>
+            <td><strong style="width: 60px; display: inline-block;">Total:</strong><span id="salestotal">$0.00</span></td>
+            <td><strong style="width: 80px; display: inline-block;">Payments:</strong><span id="paymentstotal">$0.00</span></td>
+        </tr>
+        <tr>
+            <td><strong style="width: 60px; display: inline-block;">Balance:</strong><span id="salesbalance">$0.00</span></td>
+            <td><strong style="width: 80px; display: inline-block;">Change:</strong><span id="saleschange">$0.00</span></td>
+        </tr>
+    </table>
+    <div style="height:250px; overflow:auto; padding:0;">
+        <table style="width: 100%; text-align: left;" class="table table-striped table-bordered table-hover">
+            <thead class="table-header">
+            <tr>
+                <th>Method</th>
+                <th>Amount</th>
+                <th>X</th>
+            </tr>
+            </thead>
+            <tbody id="paymentstable">
+
+            </tbody>
+        </table>
+        <div style="text-align: center;">
+            <button id="eftpospaybtn" class="btn btn-sm btn-success" onclick="WPOS.sales.startEftposPayment();">Start Eftpos</button>
+        </div>
+        <div style="margin-top: 20px;">
+            <button class="btn btn-xs btn-primary" onclick="WPOS.sales.addPayment('cash');">Cash</button>
+            <button class="btn btn-xs btn-primary" onclick="WPOS.sales.addPayment('credit');">Credit</button>
+            <button class="btn btn-xs btn-primary" onclick="WPOS.sales.addPayment('eftpos');">Eftpos</button>
+            <button class="btn btn-xs btn-primary" onclick="WPOS.sales.addPayment('cheque');">Cheque</button>
+            <button style="float: right;" class="btn btn-xs btn-primary" onclick="WPOS.sales.addAdditionalPayment();">Add Payment</button>
+        </div>
+    </div>
+    <button id="endsalebtn" class="btn btn-success" onclick="WPOS.sales.processSale();">Complete</button>
+    <button id="savesalebtn" class="btn btn-primary" onclick="WPOS.sales.saveOrder();">Add Order</button>
+    <button class="btn btn-danger" onClick="$('#paymentsdiv').dialog('close');">Cancel</button>
+</div>
+<div id="custdiv" style="display:none;" title="Customer Details">
+    <form id="custform">
+    <label style="width: 80px;">Name:</label><input onchange="WPOS.sales.setUpdateCust();" type="text" id="custname"/><br/>
+    <label style="width: 80px;">Phone:</label><input onchange="WPOS.sales.setUpdateCust();" type="text" id="custphone"/><br/>
+    <label style="width: 80px;">Mobile:</label><input onchange="WPOS.sales.setUpdateCust();" type="text" id="custmobile"/><br/>
+    <label style="width: 80px;">Address:</label><input onchange="WPOS.sales.setUpdateCust();" type="text" id="custaddress"/><br/>
+    <label style="width: 80px;">Suburb:</label><input onchange="WPOS.sales.setUpdateCust();" type="text" id="custsuburb"/><br/>
+    <label style="width: 80px;">Postcode:</label><input onchange="WPOS.sales.setUpdateCust();" type="text" id="custpostcode"/><br/>
+    <label style="width: 80px;">Country:</label><input onchange="WPOS.sales.setUpdateCust();" type="text" id="custcountry"/><br/>
+    </form>
+    <div style="text-align: center; margin-top: 10px;">
+        <button class="btn btn-primary" onclick="$('#custdiv').dialog('close');">Close</button>
+    </div>
+</div>
+<div id="transactiondiv" style="display:none; padding: 4px;" title="Recent Transactions">
+    <div id="transdivcontain" style="width: 100%;">
+    <div id="transactiontable" style="width: 100%; margin: 0; padding:0;">
+        <div id="transearch">
+            <input type="hidden" autofocus="autofocus" />
+            <label>Local Search: <input id="transearchquery" type="text" onkeypress="if(event.keyCode == 13){WPOS.trans.searchTransactions();}"/></label>
+            <button onclick="WPOS.trans.searchTransactions();" class="btn btn-sm btn-primary">Go</button>
+            <button onclick="WPOS.trans.clearSearch();" class="btn btn-sm btn-warning">X</button>
+            <button onclick="WPOS.trans.openRemoteSearchBox();" class="btn btn-sm btn-success">Lookup All</button>
+        </div>
+        <div id="remtransearch" style="display: none;">
+            <label>Ref: <input id="remsearchref" type="text"/></label>
+            <button onclick="WPOS.trans.searchRemote();" class="btn btn-sm btn-primary">Go</button>
+            <button onclick="WPOS.trans.clearSearch(true);" class="btn btn-sm btn-warning">X</button>
+        </div>
+        <div style="overflow: auto; max-height: 550px;">
+        <table style="text-align: left;" class="table table-striped table-bordered table-hover">
+            <thead class="table-header">
+            <tr>
+                <th>GID</th>
+                <th>Ref</th>
+                <th>Device / Location</th>
+                <th>#Items</th>
+                <th>Total</th>
+                <th>Sale Time</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody id="transtable" class="ui-widget-content">
+            </tbody>
+        </table>
+        </div>
+    </div>
+    <div id="transactioninfo" style="display:none; margin: 0; padding: 0">
+        <div style="margin: 0; padding:0; width:100%;">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <button style="float: left;" onClick="WPOS.trans.showTransactionTable();" class="btn btn-xs btn-primary"><i class="icon-backward"></i>Back</button>
+                <h4 style="width: auto; display: inline-block;  margin-top: 5px; margin-left:-56px;">Transaction Details:</h4>
+            </div>
+            <div style="display: inline-block; margin: 0; width: 49%; min-width: 250px; padding: 0 10px 10px 10px;">
+                <label class="fixedlabel">Status:</label> <span id="transstat"></span><br/>
+                <label class="fixedlabel">ID:</label> <span id="transid"></span><br/>
+                <label class="fixedlabel">Ref:</label> <span id="transref"></span><br/>
+                <label class="fixedlabel">Sale DT:</label> <span id="transtime"></span><br/>
+            </div>
+            <div style="display: inline-block; margin: 0; width: 50%; min-width: 250px; padding: 0 10px 10px 10px;">
+                <label class="fixedlabel">Process DT:</label> <span id="transptime"></span><br/>
+                <label class="fixedlabel">User:</label> <span id="transuser"></span><br/>
+                <label class="fixedlabel">Device:</label> <span id="transdev"></span><br/>
+                <label class="fixedlabel">Location:</label> <span id="transloc"></span><br/>
+            </div>
+            <div style="display: inline-block; margin: 0; width: 49%; min-width: 250px; padding: 0 10px 10px 10px;">
+                <label style="vertical-align: top;" class="fixedlabel">Notes:
+                    <textarea style="margin-left: 38px;" id="transnotes"></textarea><br/>
+                    <button style="float: right;" class="btn btn-xs btn-primary" onclick="WPOS.trans.updateSaleNotes($('#transref').text(), $('#transnotes').text());">Save</button>
+                </label>
+            </div>
+            <div id="transoptions" style="text-align: center; margin: 20px 0 0; display: inline-block; width: 50%; min-width: 250px; vertical-align: top; padding: 0 10px 10px 10px;">
+                <div id="voidbuttons" style="display: inline-block;">
+                    <button class="btn btn-danger" onclick="WPOS.sales.openVoidDialog($('#transref').text());"><i class="icon-ban-circle"></i>&nbsp;Void</button>
+                    <button class="btn btn-warning" onclick="WPOS.sales.openRefundDialog($('#transref').text());"><i class="icon-backward"></i>&nbsp;Refund</button>
+                </div>
+                <div id="orderbuttons" style="display: inline-block;">
+                    <button class="btn btn-success" onclick="WPOS.sales.loadOrder($('#transref').text());"><i class="icon-check"></i>&nbsp;Complete</button>
+                    <button class="btn btn-danger" onclick="WPOS.sales.removeOrder($('#transref').text());"><i class="icon-trash"></i>&nbsp;Remove</button>
+                </div>
+                <button class="btn btn-primary" onclick="WPOS.print.printReceipt($('#transref').text());"><i class="icon-print"></i>&nbsp;Print</button>
+            </div>
+        </div>
+
+        <div class="tabbable" style="margin-top: 10px;">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="#transdetails" data-toggle="tab">
+                        <i class="green icon-gift bigger-120"></i>
+                        Details
+                    </a>
+                </li>
+                <li>
+                    <a href="#transitems" data-toggle="tab">
+                        <i class="green icon-gift bigger-120"></i>
+                        Items
+                    </a>
+                </li>
+                <li class="">
+                    <a href="#transpayments" data-toggle="tab">
+                        <i class="red icon-dollar bigger-120"></i>
+                        Payments
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane active in" id="transdetails">
+                    <div class="inline" style="vertical-align: top; width: 49%; min-width: 250px;">
+                        <h4>Sale Totals:</h4>
+                        <label class="fixedlabel">Subtotal:</label><span id="transsubtotal"></span><br/>
+                        <div id="transtax">
+                        </div>
+                        <div id="transdisdiv"><label class="fixedlabel">Discount:</label><span id="transdiscount"></span></div>
+                        <label class="fixedlabel">Total:</label><span id="transtotal"></span><br/>
+                    </div>
+                    <div class="inline" style="vertical-align: top; width: 50%; min-width: 250px;">
+                        <div id="voidinfo" style="display: none;">
+                            <h4>Void/Refunds:</h4>
+                            <table style="width: 100%" class="table">
+                                <thead class="table-header">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Time</th>
+                                    <th>View</th>
+                                </tr>
+                                </thead>
+                                <tbody id="transvoidtable" class="ui-widget-content">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="transitems">
+                    <h4 class="inline">Items:</h4>
+                    <table style="width: 100%;" class="table">
+                        <thead class="table-header">
+                        <tr style="text-align: left;">
+                            <th>Qty</th>
+                            <th>Name</th>
+                            <th>Unit</th>
+                            <th>Tax</th>
+                            <th>Price</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody id="transitemtable" style="overflow:auto;" class="ui-widget-content">
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="tab-pane" id="transpayments">
+                    <h4 class="inline">Payments:</h4>
+                    <table style="width: 100%;" class="table">
+                        <thead class="table-header">
+                        <tr>
+                            <th>Method</th>
+                            <th>Amount</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody id="transpaymenttable" class="ui-widget-content">
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+<div id="voiddiv" style="display:none; padding:5px;" title="Void Details">
+    <label class="fixedlabel">Time: </label><span id="transreftime"></span><br/>
+    <label class="fixedlabel">User: </label><span id="transrefuser"></span><br/>
+    <label class="fixedlabel">Device: </label><span id="transrefdev"></span><br/>
+    <label class="fixedlabel">Location: </label><span id="transrefloc"></span><br/>
+    <label class="fixedlabel">Reason: </label><span id="transrefreason"></span><br/>
+    <div id="refunddetails">
+        <label class="fixedlabel">Amount: </label><span id="transrefamount"></span>
+        <div class="space-4"></div>
+        <label class="fixedlabel">Method: </label><span id="transrefmethod"></span>
+        <button onclick="WPOS.trans.showPaymentInfo(this);" id="refpaydtlbtn" class="btn btn-xs btn-primary" style="display: inline-block; float: right;">Details</button>
+        <div class="space-4"></div>
+        <table style="width: 100%;" class="table">
+            <thead class="table-header">
+            <tr>
+                <th>Item ID</th>
+                <th># Returned</th>
+            </tr>
+            </thead>
+            <tbody id="transrefitemtable">
+
+            </tbody>
+        </table>
+    </div>
+</div>
+<div id="setupdiv" style="display:none; padding:5px; z-index: 3100;" title="Initial Device Setup">
+    <div style="display: inline-block; margin-bottom: 10px;">
+        Select a device to merge with or enter a new device name<br/>
+        <label>Existing device:</label><br/>
+        <select id="posdevices" onchange="$('#newposdevice').val('');">
+            <option value="" selected></option>
+        </select><br/><br/>
+
+        <label>New device name:</label><br/>
+        <input id="newposdevice" type="text" onchange="$('#posdevices>option:eq(0)').prop('selected', true);"/>
+    </div>
+    <div style="display: inline-block;">
+        Select an existing location for the device or enter a new location<br/>
+        <label>Existing location:</label><br/>
+        <select id="poslocations" onchange="$('#newposlocation').val('');">
+            <option value="" selected></option>
+        </select><br/><br/>
+        <label>New location name:</label><br/>
+        <input id="newposlocation" type="text" onchange="$('#poslocations>option:eq(0)').prop('selected', true);"/>
+    </div>
+    <div style="text-align: center; margin-top: 10px;">
+        <button class="btn btn-primary btn-sm" onclick="WPOS.deviceSetup();">Register</button>
+    </div>
+</div>
+<div id="formdiv" style="display:none; padding:5px; z-index: 1100;" title="">
+    <div id="voidform">
+        <input id="voidref" type="hidden" value=""/>
+        <label>Reason:
+        <textarea id="voidreason"></textarea></label>
+    </div>
+    <div id="refundform" style="margin-bottom: 20px;">
+        <input id="refundref" type="hidden" value=""/>
+        <label>Reason:
+        <textarea id="refundreason"></textarea></label>
+        <table class="table">
+            <thead class="table-header">
+            <tr>
+                <th># Returned</th>
+                <th>Item</th>
+            </tr>
+            </thead>
+            <tbody id="refunditems">
+
+            </tbody>
+        </table>
+        <label>Refund Amount:
+        <input id="refundamount" class="numpad" type="text" value="0" autocomplete="off" onclick="alert('Please be careful when manually specifying the refund amount!');"/></label><br/>
+        <div style="text-align: center;">
+            <button style="margin:5px; margin-bottom:10px;" id="eftposrefundbtn" class="btn btn-sm btn-success" onclick="WPOS.eftpos.startEftposRefund($('#refundamount').val());">Start Eftpos Refund</button>
+        </div>
+        <label>Refund Payment Type:
+        <select id="refundmethod">
+            <option value="cash">Cash</option>
+            <option value="credit">Credit</option>
+            <option value="cheque">Cheque</option>
+        </select></label>
+    </div>
+    <button id="procvoidbtn" class="btn btn-success" onclick="">Process</button>
+    <button class="btn" onclick="$('#formdiv').dialog('close');">Cancel</button>
+</div>
+<div id="codialog" class="hide" title="Cashout">
+    <input type="hidden" autofocus="autofocus" />
+    <label>Cashout: <input id="cashoutamount" type="text" onclick="$(this).focus();" class="numpad"/></label>
+</div>
+<div id="eftdetailsdialog" class="hide" title="Payment Details">
+    <div>
+        <div>
+            <label>Reference: <span id="efttransref" style="margin-right: 20px;"></span></label>
+            <label>Card Type: <span id="efttranscard"></span></label>
+        </div>
+    </div>
+    <div>
+        <div style="width: 250px; display: inline-block; text-align: center; vertical-align: top;">
+            <pre id="eftcustrec"></pre>
+            <button class="btn btn-primary btn-xs" onclick="WPOS.print.printArbReceipt($('#eftcustrec').text())" style="float: left;"><i class="icon-print"></i>&nbsp;Print</button>
+        </div>
+        <div style="width: 250px; display: inline-block; text-align: center; vertical-align: top;">
+            <pre id="eftmerchrec"></pre>
+            <button class="btn btn-primary btn-xs" onclick="WPOS.print.printArbReceipt($('#eftmerchrec').text())" style="float: left;"><i class="icon-print"></i>&nbsp;Print</button>
+        </div>
+    </div>
+</div>
+<div id="resetdialog" class="hide" title="Reset Request">
+    The server has requested restart. This is usually to install an update.<br/>
+    The terminal will restart in <span id="resettimeval">10</span> seconds.<br/><br/>
+    Press Ok to restart now or Cancel to prevent the restart.
+</div>
+<iframe id="dlframe" style="width: 1px;height: 1px; border: 0;"></iframe>
+</body>
+</html>
