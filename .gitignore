@@ -1,0 +1,6 @@
+.idea/*
+.jshintrc
+reset_demo_data.php
+phpinfo.php
+nbproject
+library/wpos/dbconfig.php
