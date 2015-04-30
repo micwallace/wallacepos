@@ -16,7 +16,13 @@ To find out more about WallacePOS, head over to [wallacepos.com](https://wallace
 
 WallacePOS requires:
 
-- A Lamp server with mod_wstunnel installed & activated
+- A Lamp server with PHP>=5.4 and Apache module proxy_wstunnel installed & enabled.
+
+- You can enable proxy_wstunnel by typing the following in your terminal
+
+```
+    sudo a2enmod proxy_wstunnel
+```
 
 - The following snippet in your apache.conf or apache config dir
 
