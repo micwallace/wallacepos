@@ -23,7 +23,7 @@ function wshandler(req, res) {
 var devices = {};
 var sessions = {};
 
-var hashkey = "0798f20c2c513da7cad1af28ffa3012cdafd0e799e41912f006e6d46c8e99327"; // private key for php interaction
+var hashkey = "0798f20c2c513da7cad1af28ffa3012cdafd0e799e41912f006e6d46c8e99327"; // key for php interaction, provides extra security
 
 io.sockets.on('connection', function (socket) {
     // START AUTHENTICATION
@@ -50,7 +50,7 @@ io.sockets.on('connection', function (socket) {
     // check for hashkey (for php authentication)
     if (cookies == null) {
         if (socket.handshake.query.hasOwnProperty('hashkey')) {
-            if (hashkey == socket.handshake.query.hashkey) {
+            if ((hashkey == socket.handshake.query.hashkey) && (socket.handshake.address.address=="127.0.0.1")) {
                 authed = true;
                 console.log("Authorised by hashkey: " + socket.handshake.query.hashkey);
             }

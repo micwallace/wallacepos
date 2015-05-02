@@ -37,34 +37,31 @@ $result = ["errorCode" => "OK", "error" => "OK", "data" => ""];
 
 $auth = new Auth();
 // Check for auth request
-if ($_REQUEST['a'] == "auth") {
+if ($_REQUEST['a'] == "auth" || $_REQUEST['a'] == "authrenew") {
     $data = json_decode($_REQUEST['data']);
-    if ($data !== false) {
-        if (($authres = $auth->login($data->username, $data->password, isset($data->getsessiontokens))) === true) {
-            $result['data'] = $auth->getUser();
-        } else if ($authres == -1) {
-            $result['errorCode'] = "authdenied";
-            $result['error'] = "Your account has been disabled, please contact your system administrator!";
-        } else {
-            $result['errorCode'] = "authdenied";
-            $result['error'] = "Access Denied!";
-        }
+    if ($_REQUEST['a'] == "auth"){
+        $authres = $auth->login($data->username, $data->password, isset($data->getsessiontokens));
     } else {
-        $result['errorCode'] = "jsondec";
-        $result['error'] = "Error decoding the json request!";
+        $authres = $auth->renewTokenSession($data->username, $data->auth_hash);
     }
-    returnResult($result);
-} else if ($_REQUEST['a'] == "authrenew") {
-    $data = json_decode($_REQUEST['data']);
     if ($data !== false) {
-        if (($authres = $auth->renewTokenSession($data->username, $data->auth_hash)) === true) {
-            $result['data'] = $auth->getUser();
-        } else if ($authres == -1) {
-            $result['errorCode'] = "authdenied";
-            $result['error'] = "Your account has been disabled, please contact your system administrator!";
-        } else {
-            $result['errorCode'] = "authdenied";
-            $result['error'] = "Failed to renew your session, please login again.";
+        switch ($authres){
+            // will be included when elephantIO is upgraded, no reliable exceptions in current version
+            /*case -2: // user authenticated successfully, but could not be authenticated with the feed server, fall through to normal login
+                $result['warning'] = "Warning: Feedserver authentication attempt failed.";*/
+            case true:
+                $result['data'] = $auth->getUser();
+                break;
+
+            case -1:
+                $result['errorCode'] = "authdenied";
+                $result['error'] = "Your account has been disabled, please contact your system administrator!";
+                break;
+
+            case false:
+            default:
+                $result['errorCode'] = "authdenied";
+                $result['error'] = "Access Denied!";
         }
     } else {
         $result['errorCode'] = "jsondec";

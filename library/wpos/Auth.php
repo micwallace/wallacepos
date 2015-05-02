@@ -193,12 +193,15 @@ class Auth{
             if ($getToken!==false)
                 $this->setNewSessionToken($user['id'], $user['hash']);
 
-            // Send to node JS
-            $socket = new WposSocketIO();
-            $socket->sendSessionData(session_id());
             // log data
             Logger::write("Authentication successful for user:".$username, "AUTH");
 
+            // Send to node JS
+            $socket = new WposSocketIO();
+            $socket->sendSessionData(session_id());
+            /*if (!$socket->sendSessionData(session_id())){
+                return -2;
+            }*/
             return true;
         } else{
             // log data
@@ -234,12 +237,15 @@ class Auth{
                 $_SESSION['permissions']  = json_decode($user['permissions'], true);
                 //$this->hash = $user['hash'];
                 $this->setNewSessionToken($user['id'], $user['hash']);
+                // log data
+                Logger::write("Authentication successful for user:".$username, "AUTH");
 
                 // Send to node JS
                 $socket = new WposSocketIO();
                 $socket->sendSessionData(session_id());
-                // log data
-                Logger::write("Authentication successful for user:".$username, "AUTH");
+                /*if (!$socket->sendSessionData(session_id())){
+                    return -2;
+                }*/
                 return true;
             } else {
                 // log data

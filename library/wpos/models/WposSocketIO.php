@@ -25,6 +25,7 @@ use ElephantIO\Client as Elephant;
  * @since      File available since 30/04/14 9:28 PM
  */
 class WposSocketIO {
+
     /**
      * @var ElephantIO\Client|null The elephant IO client
      */
@@ -50,34 +51,46 @@ class WposSocketIO {
      * Sends session updates to the node.js feed server, optionally removing the corresponding session
      * @param $data
      * @param bool $remove
+     * @return bool
      */
     public function sendSessionData($data, $remove = false){
-        $this->elephant->init();
-        $this->elephant->send(
-            ElephantIO\Client::TYPE_EVENT,
-            null,
-            null,
-            json_encode(['name' => 'session', 'args' => ['hashkey'=>$this->hashkey, 'data'=>$data, 'remove'=>$remove]])
-        );
-        $this->elephant->close();
+        try {
+            $this->elephant->init();
+            $this->elephant->send(
+                ElephantIO\Client::TYPE_EVENT,
+                null,
+                null,
+                json_encode(['name' => 'session', 'args' => ['hashkey'=>$this->hashkey, 'data'=>$data, 'remove'=>$remove]])
+            );
+            $this->elephant->close();
+        } catch(Exception $e){
+            return false;
+        }
+        return true;
     }
 
     /**
      * Broadcast a message to all authenticated devices
      * REDUNDANT Is it used anywhere?
      * @param $data
+     * @return bool
      */
     private function sendBroadcastData($data){
         // sends message to all connected devices, even if not authenticate
         // this is redundant because of new session sharing
-        $this->elephant->init();
-        $this->elephant->send(
-            ElephantIO\Client::TYPE_EVENT,
-            null,
-            null,
-            json_encode(['name' => 'broadcast', 'args' => $data])
-        );
-        $this->elephant->close();
+        try {
+            $this->elephant->init();
+            $this->elephant->send(
+                ElephantIO\Client::TYPE_EVENT,
+                null,
+                null,
+                json_encode(['name' => 'broadcast', 'args' => $data])
+            );
+            $this->elephant->close();
+        } catch(Exception $e){
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -86,8 +99,7 @@ class WposSocketIO {
      * @return bool
      */
     public function sendBroadcastMessage($message){
-        $this->sendBroadcastData(['a' => 'msg', 'data' => $message]);
-        return true;
+        return $this->sendBroadcastData(['a' => 'msg', 'data' => $message]);
     }
 
     /**
@@ -97,28 +109,33 @@ class WposSocketIO {
      */
     public function sendResetCommand($devices=null){
         if ($devices==null){
-            $this->sendBroadcastData(['a'=>'reset']);
+           return  $this->sendBroadcastData(['a'=>'reset']);
         } else {
-            $this->sendDataToDevices(['a'=>'reset'], $devices);
+            return $this->sendDataToDevices(['a'=>'reset'], $devices);
         }
-        return true;
     }
 
     /**
      * Send data to the specified devices, if no devices specified then all receive it.
      * @param $data
      * @param null $devices
+     * @return bool
      */
     private function sendDataToDevices($data, $devices=null){
         // sends message to all authenticated devices
-        $this->elephant->init();
-        $this->elephant->send(
-            ElephantIO\Client::TYPE_EVENT,
-            null,
-            null,
-            json_encode(['name' => 'send', 'args' => ['hashkey'=>$this->hashkey, 'include'=>$devices, 'data'=>$data]])
-        );
-        $this->elephant->close();
+        try {
+            $this->elephant->init();
+            $this->elephant->send(
+                ElephantIO\Client::TYPE_EVENT,
+                null,
+                null,
+                json_encode(['name' => 'send', 'args' => ['hashkey'=>$this->hashkey, 'include'=>$devices, 'data'=>$data]])
+            );
+            $this->elephant->close();
+        } catch(Exception $e){
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -129,8 +146,7 @@ class WposSocketIO {
      */
     public function sendMessageToDevices($devices, $message){
         // send message to specified devices
-        $this->sendDataToDevices(['a' => 'msg', 'data' => $message], $devices);
-        return true;
+        return $this->sendDataToDevices(['a' => 'msg', 'data' => $message], $devices);
     }
 
     /**
@@ -140,8 +156,7 @@ class WposSocketIO {
      */
     public function sendItemUpdate($item){
         // item updates get sent to all authenticated clients
-        $this->sendDataToDevices(['a' => 'item', 'data' => $item], null);
-        return true;
+        return $this->sendDataToDevices(['a' => 'item', 'data' => $item], null);
     }
 
     /**
@@ -150,7 +165,7 @@ class WposSocketIO {
      * @param int $senddev
      */
     public function sendCustomerUpdate($customer, $senddev = 0){
-
+        //TODO: Send customer details update
     }
 
     /**
@@ -161,24 +176,26 @@ class WposSocketIO {
      */
     public function sendSaleUpdate($devices=null, $sale){ // device that the record was updated on
 
-        $this->sendDataToDevices(['a' => 'sale', 'data' => $sale], $devices);
-        return true;
+        return $this->sendDataToDevices(['a' => 'sale', 'data' => $sale], $devices);
+
     }
 
     /**
      * Broadcast a configuration update to all connected devices.
      * @param $newconfig
      * @param $type
+     * @return bool
      */
     public function sendConfigUpdate($newconfig, $type){
         switch($type){
             case "general":
-                $this->sendDataToDevices(['a' => 'config', 'type' => "general", 'data' => $newconfig], null);
+                return $this->sendDataToDevices(['a' => 'config', 'type' => "general", 'data' => $newconfig], null);
                 break;
             case "pos":
-                $this->sendDataToDevices(['a' => 'config', 'type' => "pos", 'data' => $newconfig], null);
+                return $this->sendDataToDevices(['a' => 'config', 'type' => "pos", 'data' => $newconfig], null);
                 break;
         }
+        return false;
     }
 
 }
