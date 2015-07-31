@@ -12,6 +12,10 @@ Take your business into the cloud with WallacePOS!
 
 To find out more about WallacePOS, head over to [wallacepos.com](https://wallacepos.com)
 
+If you find that WallacePOS is the perfect companion for your business, please donate to support further development.
+
+[![Donate to WallacePOS](https://www.paypalobjects.com/en_AU/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=783UMXCNZGL68)
+
 ## Server Prerequisites
 
 WallacePOS requires:
