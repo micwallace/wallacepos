@@ -20,7 +20,7 @@ If you find that WallacePOS is the perfect companion for your business, please d
 
 WallacePOS requires:
 
-1. A Lamp server with PHP version>=5.4 and Apache version>=2.4.7 with modules rewrite and proxy_wstunnel.
+1. A Lamp server with PHP version>=5.4, PHP cURL extension and Apache version>=2.4.7 with modules rewrite and proxy_wstunnel.
 
     - You can enable proxy_wstunnel & rewrite by typing the following in your terminal
 
