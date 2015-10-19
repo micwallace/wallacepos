@@ -572,7 +572,7 @@ function WPOSSales() {
         if (getNumSalesItems() && curgrandtotal>0){
             // Show integrated eftpos button if enabled
             var inteftbtn = $("#eftpospaybtn");
-            if (WPOS.eftpos.isEnabledAndReady()){
+            if (WPOS.hasOwnProperty('eftpos') && WPOS.eftpos.isEnabledAndReady()){
                 inteftbtn.show();
                 inteftbtn.text(WPOS.util.capFirstLetter(WPOS.eftpos.getType())+' Eftpos');
             } else {
