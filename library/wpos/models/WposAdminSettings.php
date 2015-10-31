@@ -153,6 +153,7 @@ class WposAdminSettings {
             if ($this->name=="general"){
                 $data->gcontactaval = $data->gcontacttoken!='';
                 unset($data->gcontacttoken);
+                $data->timezone = getenv("WPOS_TIMEZONE");
             } else if ($this->name=="accounting"){
                 // check xero token expiry TODO: Remove when we become xero partner
                 if ($data->xerotoken!='' && $data->xerotoken->expiredt<time()){
@@ -216,6 +217,10 @@ class WposAdminSettings {
                     $conf = $this->curconfig;
                     if ($this->name=="general"){
                         unset($conf->gcontacttoken);
+                        $conf->timezone = $this->data->timezone;
+                        if ($conf->timezone!=getenv("WPOS_TIMEZONE")) {
+                            $this->updateConfigFileValue('timezone', $conf->timezone);
+                        }
                     } else if ($this->name=="accounting"){
                         unset($conf->xerotoken);
                     }
@@ -238,6 +243,19 @@ class WposAdminSettings {
         }
 
         return $result;
+    }
+
+    /**
+     * Updates config.json value
+     * @param $key
+     * @param $value
+     */
+    private function updateConfigFileValue($key, $value){
+        if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/config.json")){
+            $config = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/config.json"));
+            $config->{$key} = $value;
+            file_put_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/config.json", json_encode($config));
+        }
     }
 
     /**

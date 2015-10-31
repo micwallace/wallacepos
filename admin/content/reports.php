@@ -100,7 +100,7 @@
         var rowdata;
         for (var i in repdata){
             rowdata = repdata[i];
-            html += '<tr><td><a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refs+'\');">'+(rowdata.hasOwnProperty('name')?rowdata.name:i)+'</a></td><td>'+rowdata.salenum+'</td><td>'+WPOS.currency()+rowdata.saletotal+'</td><td><a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refundrefs+'\');">'+rowdata.refundnum+'</a></td><td>'+WPOS.currency()+rowdata.refundtotal+'</td><td>'+WPOS.currency()+rowdata.balance+'</td></tr>';
+            html += '<tr><td><a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refs+'\');">'+(rowdata.hasOwnProperty('name')?rowdata.name:i)+'</a></td><td>'+rowdata.salenum+'</td><td>'+WPOS.util.currencyFormat(rowdata.saletotal)+'</td><td><a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refundrefs+'\');">'+rowdata.refundnum+'</a></td><td>'+WPOS.util.currencyFormat(rowdata.refundtotal)+'</td><td>'+WPOS.util.currencyFormat(rowdata.balance)+'</td></tr>';
         }
 
         html += "</tbody></table>";
@@ -114,7 +114,7 @@
         var rowdata;
         for (var i in repdata){
             rowdata = repdata[i];
-            html += '<tr><td><a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refs+'\');">'+rowdata.name+'</a></td><td>'+rowdata.soldqty+'</td><td>'+WPOS.currency()+rowdata.soldtotal+'</td><td>'+rowdata.refundqty+'</td><td>'+WPOS.currency()+rowdata.refundtotal+'</td><td>'+WPOS.currency()+rowdata.balance+'</td></tr>';
+            html += '<tr><td><a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refs+'\');">'+rowdata.name+'</a></td><td>'+rowdata.soldqty+'</td><td>'+WPOS.util.currencyFormat(rowdata.soldtotal)+'</td><td>'+rowdata.refundqty+'</td><td>'+WPOS.util.currencyFormat(rowdata.refundtotal)+'</td><td>'+WPOS.util.currencyFormat(rowdata.balance)+'</td></tr>';
         }
 
         html += "</tbody></table>";
@@ -124,19 +124,19 @@
 
     function populateTax(){
         var html = getReportHeader("Tax Breakdown");
-        html += "<table class='table table-stripped' style='width: 100%'><thead><tr><td>Name</td><td># Items</td><td>Sale Total</td><td>Tax</td><td>Refunded</td><td>Refund Tax</td><td>Total Tax</td></tr></thead><tbody>";
+        html += "<table class='table table-stripped' style='width: 100%'><thead><tr><td>Name</td><td># Items</td><td>Sale Subtotal</td><td>Tax</td><td>Refund Subtotal</td><td>Refund Tax</td><td>Total Tax</td></tr></thead><tbody>";
         var rowdata;
         for (var i in repdata){
             if (i!=0){
                 rowdata = repdata[i];
-                html += '<tr><td><a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refs+'\');">'+rowdata.name+'</a></td><td>'+rowdata.qtyitems+'</td><td>'+WPOS.currency()+rowdata.saletotal+'</td><td>'+WPOS.currency()+rowdata.saletax+'</td><td>'+WPOS.currency()+rowdata.refundtotal+'</td><td>'+WPOS.currency()+rowdata.refundtax+'</td><td>'+WPOS.currency()+rowdata.balance+'</td></tr>';
+                html += '<tr><td><a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refs+'\');">'+rowdata.name+'</a></td><td>'+rowdata.qtyitems+'</td><td>'+WPOS.util.currencyFormat(rowdata.saletotal)+'</td><td>'+WPOS.util.currencyFormat(rowdata.saletax)+'</td><td>'+WPOS.util.currencyFormat(rowdata.refundtotal)+'</td><td>'+WPOS.util.currencyFormat(rowdata.refundtax)+'</td><td>'+WPOS.util.currencyFormat(rowdata.balance)+'</td></tr>';
             }
         }
 
         html += "</tbody></table><br/>";
 
         rowdata = repdata[0];
-        html += '<p style="text-align: center;">Note: <a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refs+'\');">'+rowdata.qty+'</a> sales have been cash rounded to a total amount of '+WPOS.currency()+rowdata.total+'.<br/>Since tax is calculated on a per item level, rounding has not been included in the calculations above.</p>';
+        html += '<p style="text-align: center;">Note: <a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refs+'\');">'+rowdata.qty+'</a> sales have been cash rounded to a total amount of '+WPOS.util.currencyFormat(rowdata.total)+'.<br/>Since tax is calculated on a per item level, rounding has not been included in the calculations above.<br/>Subtotals above have discounts applied.</p>';
 
         $("#reportcontain").html(html);
     }

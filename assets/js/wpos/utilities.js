@@ -117,19 +117,235 @@ function WPOSUtil() {
     this.capFirstLetter = function (string) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     };
-    // TAX CALC
-    this.calcTax = function (itemtotal, taxid) {
-        var tax = parseFloat("0.00").toFixed(2);
-        if (taxid != 1) { // don't calc for no tax
-            // calculate the tax
-            tax = WPOS.getTaxTable()[taxid].calcfunc(itemtotal);
+    // random ids
+    this.getRandomId = function(){
+        return 'xxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);
+        });
+    };
+    // get order number
+    var ordercount = null;
+    this.getSequencialOrderNumber = function(){
+        if (!ordercount){
+            ordercount = localStorage.getItem("wpos_ordercount");
+            if (ordercount<0)
+                ordercount = 0;
         }
+        // increment or reset count
+        if (ordercount<99){
+            ordercount++;
+        }
+        localStorage.setItem("wpos_ordercount", ordercount);
+        // pad order number, include deviceid
+        var orderStr = WPOS.getConfigTable().deviceid.toString();
+        if (ordercount<10)
+            orderStr+="0";
+        return (orderStr+ordercount);
+    };
+    // check if an object is equvalent
+    this.areObjectsEquivalent = function(a, b) {
+        // Create arrays of property names
+        var aProps, bProps;
+        if (typeof a === "object") {
+            aProps = Object.getOwnPropertyNames(a);
+        } else if (typeof a === "array"){
+            aProps = a;
+        }
+        if (typeof b === "object") {
+            bProps = Object.getOwnPropertyNames(b);
+        } else if (typeof b === "array"){
+            bProps = b;
+        }
+        // If number of properties is different,
+        // objects are not equivalent
+        if (aProps.length != bProps.length) {
+            return false;
+        }
+
+        for (var i = 0; i < aProps.length; i++) {
+            var propName = aProps[i];
+            // If values of same property are not equal,
+            // objects are not equivalent
+            if (typeof a[propName] === "object" && typeof b[propName]=== "object"){
+                if (!this.areObjectsEquivalent(a[propName], b[propName])){
+                    return false;
+                }
+            } else {
+                if (a[propName] !== b[propName]) {
+                    return false;
+                }
+            }
+        }
+        // If we made it this far, objects
+        // are considered equivalent
+        return true;
+    };
+    // TAX CALCULATIONS
+    /*this.isTaxInclusive = function(taxruleid){
+        var taxrules = WPOS.getTaxTable().rules;
+        if (!taxrules.hasOwnProperty(taxruleid)) return true;
+        return taxrules[taxruleid].inclusive;
+    };*/
+    this.calcTax = function(taxruleid, itemtotal){
+        var tax = {total:0, values:{}, inclusive:true};
+        if (!WPOS.getTaxTable().rules.hasOwnProperty(taxruleid))
+            return tax;
+        // get the tax rule; taxable total is needed to calculate inclusive tax
+        var rule = WPOS.getTaxTable().rules[taxruleid];
+        tax.inclusive = rule.inclusive;
+        var taxitems = WPOS.getTaxTable().items;
+        var locationid = WPOS.getConfigTable().hasOwnProperty("locationid")?WPOS.getConfigTable().locationid:0;
+        var taxablemulti = rule.inclusive?getTaxableTotal(rule, locationid):0;
+        var tempitem;
+        var tempval;
+        // check in locations, if location rule present get tax totals
+        if (rule.locations.hasOwnProperty(locationid)){
+            for (i=0; i<rule.locations[locationid].length; i++){
+                if (taxitems.hasOwnProperty(rule.locations[locationid][i])){
+                    tempitem = taxitems[rule.locations[locationid][i]];
+                    if (!tax.values.hasOwnProperty(rule.locations[locationid][i])) tax.values[tempitem.id]= 0;
+                    tempval = rule.inclusive ? getIncludedTax(tempitem.multiplier, taxablemulti, itemtotal) : getExcludedTax(tempitem.multiplier, itemtotal);
+                    tax.values[tempitem.id] += tempval;
+                    tax.total += tempval;
+                    if (rule.mode=="single")
+                        return tax; // return if in single mode
+                }
+            }
+        }
+        // apply base tax totals, if rule is single mode, only apply if no matched locations
+        for (var i=0; i<rule.base.length; i++){
+            if (taxitems.hasOwnProperty(rule.base[i])){
+                tempitem = taxitems[rule.base[i]];
+                if (!tax.values.hasOwnProperty(rule.base[i])) tax.values[tempitem.id]= 0;
+                tempval = rule.inclusive ? getIncludedTax(tempitem.multiplier, taxablemulti, itemtotal) : getExcludedTax(tempitem.multiplier, itemtotal);
+                tax.values[tempitem.id] += tempval;
+                tax.total += tempval;
+                if (rule.mode=="single")
+                    break; // only apply one base tax in single mode
+            }
+        }
+
         return tax;
     };
+    // this is used for inclusive tax to workout the total, when multiple tax items are applied, we need this to work out each tax rate total;
+    function getTaxableTotal(rule, locationid){
+        var taxitems = WPOS.getTaxTable().items;
+        var taxable = 0;
+        if (rule.locations.hasOwnProperty(locationid)){
+            for (i=0; i<rule.locations[locationid].length; i++){
+                if (taxitems.hasOwnProperty(rule.locations[locationid][i]))
+                    taxable += parseFloat(taxitems[rule.locations[locationid][i]].multiplier);
+                if (rule.mode=="single")
+                    return Number(taxable.toFixed(2));
+            }
+        }
+        for (var i=0; i<rule.base.length; i++){
+            if (taxitems.hasOwnProperty(rule.base[i]))
+                taxable += parseFloat(taxitems[rule.base[i]].multiplier);
+            if (rule.mode=="single")
+                break;
+        }
+        return Number(taxable.toFixed(2));
+    }
+    function getIncludedTax(multiplier, taxablemulti, value){
+        value = parseFloat(value);
+        var taxable = (value-(value/(parseFloat(taxablemulti)+1)));
+        return Number( ((taxable/taxablemulti)*multiplier).toFixed(2) );
+    }
+    function getExcludedTax(multiplier, value){
+        return Number( (parseFloat(multiplier)*parseFloat(value)).toFixed(2) );
+    }
 
-    this.roundToFiveCents = function (v) {
-        v = (Math.round(v * 20) / 20).toFixed(2);
+    this.roundToNearestCents = function(cents, value){
+        var x = 100 / parseInt(cents);
+        var v = (Math.round(value * x) / x).toFixed(2);
         return v;
+    };
+
+    var curformat = null;
+    var printcursymbol = "";
+    function loadCurrencyValues(){
+        if (curformat==null){
+            printcursymbol = "";
+            curformat = WPOS.getConfigTable().general.currencyformat.split('~');
+            if (WPOS.getConfigTable().pos.reccurrency!="")
+                printcursymbol = String.fromCharCode(parseInt(WPOS.getConfigTable().pos.reccurrency));
+            if (printcursymbol=="" && (curformat[0]=="£" || containsNonLatinCodepoints(curformat[0]))){
+                // check for unicode characters and set default alt character if so
+                printcursymbol = curformat[0]=="£"?String.fromCharCode(156):"$";
+            }
+            setTimeout(function(){ curformat = null; }, 60000);
+        }
+    }
+
+    function containsNonLatinCodepoints(s) {
+        return /[^\u0000-\u00ff]/.test(s);
+    }
+
+    this.getCurrencySymbol = function(){
+        loadCurrencyValues();
+        return curformat[0];
+    };
+
+    this.currencyFormat = function(value, nosymbol, usesymboloverride){
+        loadCurrencyValues();
+        var result = number_format(value, curformat[1], curformat[2], curformat[3]);
+        if (!nosymbol){
+            var cursymbol = ((printcursymbol!="" && usesymboloverride)?printcursymbol:curformat[0]);
+            result = curformat[4]==0 ? (cursymbol + result) : (result + cursymbol);
+        }
+        return result;
+    }
+    // javascript equiv of php's number_format
+    function number_format(number, decimals, dec_point, thousands_sep) {
+        //  discuss at: http://phpjs.org/functions/number_format/
+        // original by: Jonas Raoni Soares Silva (http://www.jsfromhell.com)
+        // improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+        // improved by: davook
+        // improved by: Brett Zamir (http://brett-zamir.me)
+        // improved by: Brett Zamir (http://brett-zamir.me)
+        // improved by: Theriault
+        // improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+        // bugfixed by: Michael White (http://getsprink.com)
+        // bugfixed by: Benjamin Lupton
+        // bugfixed by: Allan Jensen (http://www.winternet.no)
+        // bugfixed by: Howard Yeend
+        // bugfixed by: Diogo Resende
+        // bugfixed by: Rival
+        // bugfixed by: Brett Zamir (http://brett-zamir.me)
+        //  revised by: Jonas Raoni Soares Silva (http://www.jsfromhell.com)
+        //  revised by: Luke Smith (http://lucassmith.name)
+        //    input by: Kheang Hok Chin (http://www.distantia.ca/)
+        //    input by: Jay Klehr
+        //    input by: Amir Habibi (http://www.residence-mixte.com/)
+        //    input by: Amirouche
+
+        number = (number + '')
+            .replace(/[^0-9+\-Ee.]/g, '');
+        var n = !isFinite(+number) ? 0 : +number,
+            prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+            sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+            dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+            s = '',
+            toFixedFix = function(n, prec) {
+                var k = Math.pow(10, prec);
+                return '' + (Math.round(n * k) / k)
+                    .toFixed(prec);
+            };
+        // Fix for IE parseFloat(0.55).toFixed(0) = 0;
+        s = (prec ? toFixedFix(n, prec) : '' + Math.round(n))
+            .split('.');
+        if (s[0].length > 3) {
+            s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+        }
+        if ((s[1] || '')
+            .length < prec) {
+            s[1] = s[1] || '';
+            s[1] += new Array(prec - s[1].length + 1)
+                .join('0');
+        }
+        return s.join(dec);
     }
 
     // KEYPAD
@@ -198,11 +414,10 @@ function WPOSUtil() {
         }
     }
 
-    this.utf8ArrayToStr = function (array) {
+    this.ArrayToByteStr = function (array) {
         var s = '';
         for (var i = 0; i < array.length; i++) {
             s += String.fromCharCode(array[i]);
-            //s += String.fromCharCode(Math.max(0, Math.min(255, array[i])));
         }
         return s;
     };
@@ -431,7 +646,7 @@ function WPOSUtil() {
      code.google.com/p/crypto-js/wiki/License
      */
     this.SHA256 = function(value){
-        return CryptoJS.SHA256(value);
+        return CryptoJS.SHA256(value).toString();
     }
 
     var CryptoJS = CryptoJS || function (h, s) {

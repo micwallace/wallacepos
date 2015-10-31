@@ -412,6 +412,7 @@ class WposTransactions {
      */
     private function generateInvoiceHtml(){
         // copy invoice data, set tax values
+        /** @noinspection PhpUnusedLocalVariableInspection */
         $invoice = $this->trans;
         $taxMdl = new TaxItemsModel();
         $taxdata = $taxMdl->get();
@@ -425,7 +426,10 @@ class WposTransactions {
         $settings->payinst = $config->getSettingsObject("invoice")->payinst;
         // Get customer record
         $custMdl = new CustomerModel();
+        /** @noinspection PhpUnusedLocalVariableInspection */
         $customer = (object) $custMdl->get($this->trans->custid)[0];
+        $utils = new WposAdminUtilities();
+        $utils->setCurrencyFormat($settings->currencyformat);
         // start output buffer and capture template output
         ob_start();
         include $_SERVER['DOCUMENT_ROOT']."/docs/templates/invoice.php";

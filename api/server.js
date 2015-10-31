@@ -2,15 +2,8 @@
  * WPOS Websocket update relay, node.js sever.
  * @type {*}
  */
-
-//var fs = require('fs');
-/*var options = {
-    key: fs.readFileSync('/etc/apache2/certs/wallacepos.com-ssl-wildcard.key').toString(),
-    cert: fs.readFileSync('/etc/apache2/certs/wallacepos-com-ssl-wildcard.crt').toString(),
-    ca: fs.readFileSync('/etc/apache2/certs/sub.class2.code.ca.crt').toString()
-};*/
-var app = require('http').createServer(wshandler);
 var http = require('http');
+var app = http.createServer(wshandler);
 
 app.listen(8080, '127.0.0.1');
 
@@ -69,24 +62,19 @@ io.sockets.on('connection', function (socket) {
 
     // send to certain auth'd devices based on device id's provided.
     socket.on('send', function (data) {
-        // check for hashkey
-        if (hashkey == data.hashkey) {
-            // if device.include is null, send to all auth'd
-            var inclall = data.include == null;
-            for (var i in devices) {
-                if (inclall || (data.include.hasOwnProperty(i) > 0)) {
-                    io.sockets.socket(devices[i].socketid).emit('updates', data.data);
-                } else {
-                    console.log(i + " not in devicelist, " + JSON.stringify(data.include) + "; discarding.");
-                }
+        // if device.include is null, send to all auth'd
+        var inclall = data.include == null;
+        for (var i in devices) {
+            if (inclall || (data.include.hasOwnProperty(i) > 0)) {
+                io.sockets.socket(devices[i].socketid).emit('updates', data.data);
+            } else {
+                console.log(i + " not in devicelist, " + JSON.stringify(data.include) + "; discarding.");
             }
-            // send to the admin dash
-            if (devices.hasOwnProperty(0)) {
-                // send updated device list to admin dash
-                io.sockets.socket(devices[0].socketid).emit('updates', data.data);
-            }
-        } else {
-            console.log("Send request not processed, no valid hashkey!");
+        }
+        // send to the admin dash
+        if (devices.hasOwnProperty(0)) {
+            // send updated device list to admin dash
+            io.sockets.socket(devices[0].socketid).emit('updates', data.data);
         }
     });
 
@@ -107,7 +95,7 @@ io.sockets.on('connection', function (socket) {
         }
     });
 
-    // OLD AUTH
+    // register device details
     socket.on('reg', function (request) {
         // register device
         devices[request.deviceid] = {};

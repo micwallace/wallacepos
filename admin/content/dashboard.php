@@ -310,12 +310,12 @@
         }
         // populate the fields
         $("#salenum").text(totals.salenum);
-        $("#saletotal").text(WPOS.currency()+totals.saletotal);
+        $("#saletotal").text(WPOS.util.currencyFormat(totals.saletotal));
         $("#refundnum").text(totals.refundnum);
-        $("#refundtotal").text(WPOS.currency()+totals.refundtotal);
+        $("#refundtotal").text(WPOS.util.currencyFormat(totals.refundtotal));
         $("#voidnum").text(totals.voidnum);
-        $("#voidtotal").text(WPOS.currency()+totals.voidtotal);
-        $("#takings").text(totals.totaltakings);
+        $("#voidtotal").text(WPOS.util.currencyFormat(totals.voidtotal));
+        $("#takings").text(WPOS.util.currencyFormat(totals.totaltakings, true));
         // Set onclicks
         $(".infobox-sales").on('click', function(){ WPOS.transactions.openTransactionList(totals.salerefs); });
         $(".infobox-refunds").on('click', function(){ WPOS.transactions.openTransactionList(totals.refundrefs); });
@@ -335,7 +335,7 @@
         sort.sort(function(a, b){ return b[1] - a[1]; });
 
         for (i=0; (i<6 && i<sort.length); i++){
-            $("#popularitems").append('<tr><td><b>'+items[sort[i][0]].name+'</b></td><td><b class="blue">'+items[sort[i][0]].soldqty+'</b></td><td><b class="green">'+WPOS.currency()+items[sort[i][0]].soldtotal+'</b></td></tr>');
+            $("#popularitems").append('<tr><td><b>'+items[sort[i][0]].name+'</b></td><td><b class="blue">'+items[sort[i][0]].soldqty+'</b></td><td><b class="green">'+WPOS.util.currencyFormat(items[sort[i][0]].soldtotal)+'</b></td></tr>');
         }
         return true;
     }
@@ -446,11 +446,11 @@
 
         var totals = data['Totals'];
         // Fill total fields
-        $("#piesaletotal").text(WPOS.currency()+totals.saletotal);
+        $("#piesaletotal").text(WPOS.util.currencyFormat(totals.saletotal));
         $("#piesalenum").text(totals.salenum);
-        $("#pierefundtotal").text(WPOS.currency()+totals.refundtotal);
+        $("#pierefundtotal").text(WPOS.util.currencyFormat(totals.refundtotal));
         $("#pierefundnum").text(totals.refundnum);
-        $("#piebalance").text(WPOS.currency()+totals.totaltakings);
+        $("#piebalance").text(WPOS.util.currencyFormat(totals.totaltakings));
 
         return true;
     }
@@ -570,9 +570,9 @@
                     previousPoint = item.seriesIndex;
                     var tip;
                     if (item.series['percent']!=null){
-                        tip = item.series['label'] + " : " + item.series['percent'].toFixed(2)+'% ('+ WPOS.currency() + item.series['data'][0][1]+')';
+                        tip = item.series['label'] + " : " + item.series['percent'].toFixed(2)+'% ('+ WPOS.util.currencyFormat(item.series['data'][0][1])+')';
                     } else {
-                        tip = item.series['label'] + " : "+WPOS.currency()+item.datapoint[1];
+                        tip = item.series['label'] + " : "+WPOS.util.currencyFormat(item.datapoint[1]);
                     }
                     $tooltip.show().children(0).text(tip);
                 }

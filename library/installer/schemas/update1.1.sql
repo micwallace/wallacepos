@@ -10,17 +10,12 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8 */;
 
 --
--- Add additional config set
+-- Add additional config values
 --
 
 INSERT INTO `config` (`id`, `name`, `data`) VALUES
 (4, 'accounting', '{"xeroenabled":0,"xerotoken":"","xeroaccnmap":""}');
 -- --------------------------------------------------------
-
---
--- Update Table structure for table `auth`
---
-ALTER TABLE `auth` ADD `token` varchar(64) NOT NULL AFTER `password`;
 
 --
 -- Update Table structure for table `customers`
@@ -31,3 +26,10 @@ ALTER TABLE `customers` ADD `token` varchar(256) NOT NULL AFTER `pass`;
 ALTER TABLE `customers` ADD `activated` int(1) NOT NULL AFTER `token`;
 ALTER TABLE `customers` ADD `disabled` int(1) NOT NULL AFTER `activated`;
 ALTER TABLE `customers` ADD `lastlogin` datetime NOT NULL AFTER `disabled`;
+
+--
+-- Update Table structure for table `customers`
+--
+
+ALTER TABLE `auth` ADD `token` varchar(64) NOT NULL AFTER `password`;
+

@@ -30,20 +30,23 @@ class TestData {
     private $paymentMethods = ['eftpos','credit','cheque','deposit','cash'];
     private $wposSales;
 
-    public function generateTestData(){
-        $this->purgeRecords();
+    public function generateTestData($purge=false){
+        if ($purge)
+            $this->purgeRecords();
         echo("Purged Data and restored.<br/>");
         $this->insertDemoRecords();
         $this->generate(200, 'invoice');
         $this->generate(800);
         echo("Inserted demo transactions.<br/>");
         // remove logs
-        $this->resetDocuments();
+        if ($purge)
+            $this->resetDocuments();
     }
 
     public function resetDocuments(){
-        exec("rm -r ".$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/");
-        exec("cp -rp ".$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs-template ".$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs");
+        exec("rm -r ".$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/*");
+        exec("cp -rp ".$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs-template/* ".$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs");
+        exec("chmod -R 777 ".$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs");
     }
 
     public function generate($numtransactions, $type='sale'){
@@ -93,19 +96,23 @@ class TestData {
                 $randqty = rand(1, 100);
                 $qty = ($randqty>80?($randqty>95?3:2):1);
                 $totalitemqty+= $qty;
-                $itemtotal = number_format(($item['price']*$qty), 2, '.', '');
-                $total+=floatval($itemtotal);
+                $itemtotal = round(($item['price']*$qty), 2);
 
                 // work out tax and add totals
-                $itemtax = ($item['taxid']>1?(number_format(floatval($itemtotal)/11, 2, '.', '')):0);
-                if ($item['taxid']>1){
-                    $totaltax+= $itemtax;
-                    if (isset($taxes[$item['taxid']])){
-                        $taxes[$item['taxid']]+= $itemtax;
+                $itemtax = WposAdminUtilities::calculateTax($item['taxid'], isset($saleobj->locid)?$saleobj->locid:0, $itemtotal);
+                if (!$itemtax->inclusive){
+                    $itemtotal += $itemtax->total;
+                };
+                $total+=$itemtotal;
+                $totaltax+= $itemtax->total;
+                foreach ($itemtax->values as $key=>$value){
+                    if (isset($taxes[$key])){
+                        $taxes[$key]+= $value;
                     } else {
-                        $taxes[$item['taxid']]= $itemtax;
+                        $taxes[$key]= $value;
                     }
                 }
+
                 $itemObj = new stdClass();
                 $itemObj->ref=$inum+1;
                 $itemObj->sitemid=$item['id'];
@@ -131,8 +138,8 @@ class TestData {
                 $temptotal = $total;
                 $total = round($total / 0.05) * 0.05;
                 $saleobj->rounding = number_format($total - $temptotal , 2, '.', '');
-                if (floatval($saleobj->rounding)!=0)
-                    echo($temptotal." ".$total."<br/>");
+                //if (floatval($saleobj->rounding)!=0)
+                    //echo($temptotal." ".$total."<br/>");
             } else {
                 $saleobj->rounding = 0.00;
             }
@@ -235,8 +242,8 @@ class TestData {
         $authMdl = new AuthModel();
         $this->users = $authMdl->get(null, null, null, false);
         // get locations
-        $devMdl = new DevicesModel();
-        $this->devices = $devMdl->get(null, null, false);
+        $devMdl = new WposPosData();
+        $this->devices = $devMdl->getPosDevices([])['data'];
     }
 
     // Purge all records and set demo data
@@ -280,43 +287,43 @@ class TestData {
             echo("Inserted Suppliers.<br/>");
         }
 
-        $items = json_decode('[{"id": 1,"supplierid": 1,"code": "A","qty": 1,"name": "Apple","description": "Golden Delicious","taxid": "2","price": "0.99"},
-                    {"id": 2,"supplierid": 1,"code": "B","qty": 1,"name": "Bannana","description": "Lady Finger","taxid": "2","price": "3.00"},
-                    {"id": 3,"supplierid": 1,"code": "C","qty": 1,"name": "Coconut","description": "","taxid": "2","price": "3.00"},
-                    {"id": 4,"supplierid": 4,"code": "D","qty": 1,"name": "Doritos","description": "","taxid": "2","price": "2.50"},
-                    {"id": 5, "supplierid": 4,"code": "E","qty": 1,"name": "Energy Drink","description": "","taxid": "2","price": "3.45"},
-                    {"id": 6, "supplierid": 4,"code": "F","qty": 1,"name": "Chocolate Fudge","description": "","taxid": "2","price": "1.55"},
-                    {"id": 7, "supplierid": 5,"code": "G","qty": 1,"name": "Gardening Gloves","description": "","taxid": "2","price": "8.55"},
-                    {"id": 8,"supplierid": 5,"code": "H","qty": 1,"name": "Homewares","description": "","taxid": "1","price": ""},
-                    {"id": 9,"supplierid": 4,"code": "I","qty": 1,"name": "Ice Cream","description": "","taxid": "1","price": "4.65"},
-                    {"id": 10,"supplierid": 5,"code": "J","qty": 1,"name": "Jug","description": "","taxid": "1","price": "11.00"},
-                    {"id": 11,"supplierid": 5,"code": "K","qty": 1,"name": "Kettle","description": "","taxid": "1","price": "15.00"},
-                    {"id": 12,"supplierid": 1,"code": "L","qty": 1,"name": "Lime","description": "","taxid": "1","price": "2.00"},
-                    {"id": 13,"supplierid": 3,"code": "M","qty": 1,"name": "Men\'s Clothing","description": "","taxid": "1","price": ""},
-                    {"id": 14,"supplierid": 4,"code": "N","qty": 1,"name": "Nut mix","description": "","taxid": "1","price": "4.60"},
-                    {"id": 15,"supplierid": 1,"code": "O","qty": 1,"name": "Orange","description": "","taxid": "1","price": "1.50"},
-                    {"id": 16,"supplierid": 1,"code": "P","qty": 1,"name": "Pineapple","description": "","taxid": "1","price": "4.00"},
-                    {"id": 17,"supplierid": 1,"code": "Q","qty": 1,"name": "Quince","description": "","taxid": "1","price": "1.70"},
-                    {"id": 18,"supplierid": 4,"code": "R","qty": 1,"name": "Raviolli","description": "","taxid": "1","price": "7.35"},
-                    {"id": 19,"supplierid": 4,"code": "S","qty": 1,"name": "Shapes Pizza","description": "","taxid": "1","price": "3.00"},
-                    {"id": 20,"supplierid": 5,"code": "T","qty": 1,"name": "Toys","description": "","taxid": "1","price": ""},
-                    {"id": 21,"supplierid": 5,"code": "U","qty": 1,"name": "Ukelele","description": "","taxid": "1","price": "16.90"},
-                    {"id": 22,"supplierid": 3,"code": "V","qty": 1,"name": "Vest","description": "","taxid": "1","price": "47.00"},
-                    {"id": 23,"supplierid": 3,"code": "W","qty": 1,"name": "Women\'s Clothing","description": "","taxid": "1","price": ""},
-                    {"id": 24,"supplierid": 5,"code": "X","qty": 1,"name": "Xylophone","description": "","taxid": "1","price": "200.50"},
-                    {"id": 25,"supplierid": 4,"code": "Y","qty": 1,"name": "Yeast","description": "","taxid": "1","price": "5.80"},
-                    {"id": 26,"supplierid": 1,"code": "Z","qty": 1,"name": "Zuccini","description": "","taxid": "1","price": "1.10"},
-                    {"id": 27,"supplierid": 4,"code": "BEER","qty": 1,"name": "Tasman Bitter","description": "375ml bottle","taxid": "1","price": "2.20"},
-                    {"id": 28,"supplierid": 2,"code": "ROBO3D","qty": 1,"name": "Robo 3d Printer","description": "","taxid": "2","price": "599.00"},
-                    {"id": 29,"supplierid": 2,"code": "PS4","qty": 1,"name": "Sony Playstation 4","description": "","taxid": "2","price": "600.00"},
-                    {"id": 30,"supplierid": 2,"code": "XBOX","qty": 1,"name": "Xbox","description": "","taxid": "2","price": "600.00"}]');
+        $items = json_decode('[{"id": 1,"supplierid": 1,"code": "A","qty": 1,"name": "Apple","description": "Golden Delicious","taxid": "2","price": "0.99", "type":"general", "modifiers":[]},
+                    {"id": 2,"supplierid": 1,"code": "B","qty": 1,"name": "Bannana","description": "Lady Finger","taxid": "2","price": "3.00", "type":"general", "modifiers":[]},
+                    {"id": 3,"supplierid": 1,"code": "C","qty": 1,"name": "Coconut","description": "","taxid": "2","price": "3.00", "type":"general", "modifiers":[]},
+                    {"id": 4,"supplierid": 4,"code": "D","qty": 1,"name": "Doritos","description": "","taxid": "2","price": "2.50", "type":"general", "modifiers":[]},
+                    {"id": 5, "supplierid": 4,"code": "E","qty": 1,"name": "Energy Drink","description": "","taxid": "2","price": "3.45", "type":"general", "modifiers":[]},
+                    {"id": 6, "supplierid": 4,"code": "F","qty": 1,"name": "Chocolate Fudge","description": "","taxid": "2","price": "1.55", "type":"general", "modifiers":[]},
+                    {"id": 7, "supplierid": 5,"code": "G","qty": 1,"name": "Gardening Gloves","description": "","taxid": "2","price": "8.55", "type":"general", "modifiers":[]},
+                    {"id": 8,"supplierid": 5,"code": "H","qty": 1,"name": "Homewares","description": "","taxid": "1","price": "", "type":"general", "modifiers":[]},
+                    {"id": 9,"supplierid": 4,"code": "I","qty": 1,"name": "Ice Cream","description": "","taxid": "1","price": "4.65", "type":"general", "modifiers":[]},
+                    {"id": 10,"supplierid": 5,"code": "J","qty": 1,"name": "Jug","description": "","taxid": "1","price": "11.00", "type":"general", "modifiers":[]},
+                    {"id": 11,"supplierid": 5,"code": "K","qty": 1,"name": "Kettle","description": "","taxid": "1","price": "15.00", "type":"general", "modifiers":[]},
+                    {"id": 12,"supplierid": 1,"code": "L","qty": 1,"name": "Lime","description": "","taxid": "1","price": "2.00", "type":"general", "modifiers":[]},
+                    {"id": 13,"supplierid": 3,"code": "M","qty": 1,"name": "Men\'s Clothing","description": "","taxid": "1","price": "", "type":"general", "modifiers":[]},
+                    {"id": 14,"supplierid": 4,"code": "N","qty": 1,"name": "Nut mix","description": "","taxid": "1","price": "4.60", "type":"general", "modifiers":[]},
+                    {"id": 15,"supplierid": 1,"code": "O","qty": 1,"name": "Orange","description": "","taxid": "1","price": "1.50", "type":"general", "modifiers":[]},
+                    {"id": 16,"supplierid": 1,"code": "P","qty": 1,"name": "Pineapple","description": "","taxid": "1","price": "4.00", "type":"general", "modifiers":[]},
+                    {"id": 17,"supplierid": 1,"code": "Q","qty": 1,"name": "Quince","description": "","taxid": "1","price": "1.70", "type":"general", "modifiers":[]},
+                    {"id": 18,"supplierid": 4,"code": "R","qty": 1,"name": "Raviolli","description": "","taxid": "1","price": "7.35", "type":"general", "modifiers":[]},
+                    {"id": 19,"supplierid": 4,"code": "S","qty": 1,"name": "Shapes Pizza","description": "","taxid": "1","price": "3.00", "type":"general", "modifiers":[]},
+                    {"id": 20,"supplierid": 5,"code": "T","qty": 1,"name": "Toys","description": "","taxid": "1","price": "", "type":"general", "modifiers":[]},
+                    {"id": 21,"supplierid": 5,"code": "U","qty": 1,"name": "Ukelele","description": "","taxid": "1","price": "16.90", "type":"general", "modifiers":[]},
+                    {"id": 22,"supplierid": 3,"code": "V","qty": 1,"name": "Vest","description": "","taxid": "1","price": "47.00", "type":"general", "modifiers":[]},
+                    {"id": 23,"supplierid": 3,"code": "W","qty": 1,"name": "Women\'s Clothing","description": "","taxid": "1","price": "", "type":"general", "modifiers":[]},
+                    {"id": 24,"supplierid": 5,"code": "X","qty": 1,"name": "Xylophone","description": "","taxid": "1","price": "200.50", "type":"general", "modifiers":[]},
+                    {"id": 25,"supplierid": 4,"code": "Y","qty": 1,"name": "Yeast","description": "","taxid": "1","price": "5.80", "type":"general", "modifiers":[]},
+                    {"id": 26,"supplierid": 1,"code": "Z","qty": 1,"name": "Zuccini","description": "","taxid": "1","price": "1.10", "type":"general", "modifiers":[]},
+                    {"id": 27,"supplierid": 4,"code": "BEER","qty": 1,"name": "Tasman Bitter","description": "375ml bottle","taxid": "1","price": "2.20", "type":"general", "modifiers":[]},
+                    {"id": 28,"supplierid": 2,"code": "ROBO3D","qty": 1,"name": "Robo 3d Printer","description": "","taxid": "2","price": "599.00", "type":"general", "modifiers":[]},
+                    {"id": 29,"supplierid": 2,"code": "PS4","qty": 1,"name": "Sony Playstation 4","description": "","taxid": "2","price": "600.00", "type":"general", "modifiers":[]},
+                    {"id": 30,"supplierid": 2,"code": "XBOX","qty": 1,"name": "Xbox","description": "","taxid": "2","price": "600.00", "type":"general", "modifiers":[]}]');
 
         if ($items==false){
             die("Failed to add items");
         } else {
             $itemMdl = new StoredItemsModel();
             foreach($items as $item){
-                $itemMdl->create($item->supplierid, $item->code, $item->qty, $item->name, $item->description, $item->taxid, $item->price);
+                $itemMdl->create($item);
             }
             echo("Inserted Items.<br/>");
         }
@@ -336,19 +343,19 @@ class TestData {
             echo("Inserted Locations.<br/>");
         }
 
-        $devices = json_decode('[{"id": 1, "name":"Register 1", "locationid":1, "dt":"0000-00-00 00:00:00"},
-                        {"id": 2, "name":"Register 2", "locationid":1, "dt":"0000-00-00 00:00:00"},
-                        {"id": 3, "name":"Register 1", "locationid":2, "dt":"0000-00-00 00:00:00"},
-                        {"id": 4, "name":"Register 2", "locationid":2, "dt":"0000-00-00 00:00:00"},
-                        {"id": 5, "name":"Register 1", "locationid":3, "dt":"0000-00-00 00:00:00"},
-                        {"id": 6, "name":"Register 1", "locationid":4, "dt":"0000-00-00 00:00:00"}]');
+        $devices = json_decode('[{"id": 1, "name":"Register 1", "locationid":1, "type":"general_register", "dt":"0000-00-00 00:00:00"},
+                        {"id": 2, "name":"Register 2", "locationid":1, "type":"general_register", "dt":"0000-00-00 00:00:00"},
+                        {"id": 3, "name":"Register 1", "locationid":2, "type":"general_register", "dt":"0000-00-00 00:00:00"},
+                        {"id": 4, "name":"Register 2", "locationid":2, "type":"general_register", "dt":"0000-00-00 00:00:00"},
+                        {"id": 5, "name":"Register 1", "locationid":3, "type":"general_register", "dt":"0000-00-00 00:00:00"},
+                        {"id": 6, "name":"Register 1", "locationid":4, "type":"general_register", "dt":"0000-00-00 00:00:00"}]');
 
         if ($devices==false){
             die("Failed to add devices");
         } else {
             $devMdl = new DevicesModel();
             foreach($devices as $device){
-                $devMdl->create($device->name, $device->locationid);
+                $devMdl->create($device);
             }
             echo("Inserted Devices.<br/>");
         }

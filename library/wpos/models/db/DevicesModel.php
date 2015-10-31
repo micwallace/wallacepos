@@ -39,29 +39,14 @@ class DevicesModel extends DbConfig
     }
 
     /**
-     * @param string $name
-     * @param string $locationid
+     * @param object $data
      *
      * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
      */
-    public function create($name, $locationid)
+    public function create($data)
     {
-        $sql = "INSERT INTO devices (name, locationid) VALUES (:name, :locationid)";
-        $placeholders = [':name'=>$name, ":locationid"=>$locationid];
-
-        return $this->insert($sql, $placeholders);
-    }
-
-    /**
-     * Binds a new UUID to a device
-     * @param $uuid
-     * @param $deviceId
-     * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
-     */
-    public function addUuid($uuid, $deviceId){
-
-        $sql = "INSERT INTO device_map (deviceid, uuid) VALUES (:deviceid, :uuid)";
-        $placeholders = ['uuid'=>$uuid, 'deviceid'=>$deviceId];
+        $sql = "INSERT INTO devices (name, locationid, data) VALUES (:name, :locationid, :data)";
+        $placeholders = [':name'=>$data->name, ":locationid"=>$data->locationid, ":data"=>json_encode($data)];
 
         return $this->insert($sql, $placeholders);
     }
@@ -71,11 +56,12 @@ class DevicesModel extends DbConfig
      * @param null $deviceId
      * @param null $locationId
      * @param null $disabled
+     * @param bool $extractjson
      * @param int $limit
      * @param int $offset
      * @return array|bool Returns false on an unexpected failure, returns an array of devices on success
      */
-    public function get($deviceId = null, $locationId = null, $disabled = null, $limit = 0, $offset = 0)
+    public function get($deviceId = null, $locationId = null, $disabled = null, $extractjson=true, $limit = 0, $offset = 0)
     {
         $sql = 'SELECT d.*, l.name as locationname FROM devices as d LEFT JOIN locations as l on d.locationid=l.id';
         $placeholders = [];
@@ -109,7 +95,24 @@ class DevicesModel extends DbConfig
             $placeholders[':offset'] = $offset;
         }
 
-        return $this->select($sql, $placeholders);
+        $result = $this->select($sql, $placeholders);
+
+        if (!$extractjson)
+            return $result;
+
+        if ($result===false)
+            return false;
+
+        $devices = [];
+        foreach ($result as $device){
+            $data = json_decode($device['data'], true);
+            $data['id'] = $device['id'];
+            $data['disabled'] = $device['disabled'];
+            $data['locationname'] = $device['locationname'];
+            $devices[$device['id']] = $data;
+        }
+
+        return $devices;
     }
 
     /**
@@ -158,11 +161,23 @@ class DevicesModel extends DbConfig
      * @return array|bool Returns false on an unexpected failure, returns an array of uuid records on success
      */
     public function getUuidInfo($uuid){
-        $sql = 'SELECT m.uuid as uuid, d.id as deviceid, d.name as devicename, l.id as locationid, l.name as locationname, d.disabled as disabled FROM device_map as m LEFT JOIN devices as d ON m.deviceid=d.id LEFT JOIN locations as l ON d.locationid=l.id WHERE m.uuid= :uuid';
+        $sql = 'SELECT m.uuid as uuid, d.id as deviceid, d.name as devicename, d.data as data, l.id as locationid, l.name as locationname, d.disabled as disabled FROM device_map as m LEFT JOIN devices as d ON m.deviceid=d.id LEFT JOIN locations as l ON d.locationid=l.id WHERE m.uuid= :uuid';
         $placeholders = [];
         $placeholders[':uuid']=$uuid;
 
-        return $this->select($sql, $placeholders);
+        $record = $this->select($sql, $placeholders);
+        if ($record===false){
+            return false;
+        }
+        if (sizeof($record)==0){
+            return null;
+        }
+        $record = $record[0];
+
+        $record['deviceconfig'] = json_decode($record['data']);
+        unset($record['data']);
+
+        return $record;
     }
 
     /**
@@ -172,34 +187,20 @@ class DevicesModel extends DbConfig
      */
     public function setDisabled($deviceId, $disabled = true){
         $sql = "UPDATE devices SET disabled= :disabled WHERE id= :id";
-        $placeholders = ['id'=>$deviceId, ':disabled'=>($disabled===true?1:0)];
+        $placeholders = [':id'=>$deviceId, ':disabled'=>($disabled===true?1:0)];
 
         return $this->update($sql, $placeholders);
     }
 
     /**
      * @param $id
-     * @param $name
-     * @param $locationid
+     * @param $data
      * @return bool|int Returns false on an unexpected failure, number of rows affected on success
      */
-    public function edit($id, $name, $locationid)
+    public function edit($id, $data)
     {
-        $sql = "UPDATE devices SET name= :name, locationid= :locationid WHERE id= :id";
-        $placeholders = ['id'=>$id, ':name'=>$name, ':locationid'=>$locationid];
-
-        return $this->update($sql, $placeholders);
-    }
-
-    /**
-     * @param $id
-     * @param $locationid
-     * @return bool|int Returns false on an unexpected failure, number of rows affected on success
-     */
-    public function updateLocation($id, $locationid)
-    {
-        $sql = "UPDATE devices SET locationid= :locationid WHERE id= :id";
-        $placeholders = ['id'=>$id, ':locationid'=>$locationid];
+        $sql = "UPDATE devices SET name= :name, locationid= :locationid, data= :data WHERE id= :id";
+        $placeholders = [':id'=>$id, ':name'=>$data->name, ':locationid'=>$data->locationid, ':data'=>json_encode($data)];
 
         return $this->update($sql, $placeholders);
     }
@@ -214,7 +215,47 @@ class DevicesModel extends DbConfig
             return false;
         }
         $sql = "DELETE FROM devices WHERE id= :id";
-        $placeholders = ['id'=>$id];
+        $placeholders = [':id'=>$id];
+
+        return $this->delete($sql, $placeholders);
+    }
+
+    /**
+     * Binds a new UUID to a device
+     * @param $uuid
+     * @param $deviceId
+     * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
+     */
+    public function addUuid($uuid, $deviceId){
+
+        $sql = "INSERT INTO device_map (deviceid, uuid, ip, useragent, dt) VALUES (:deviceid, :uuid, :ip, :useragent, NOW())";
+        $placeholders = [':uuid'=>$uuid, ':deviceid'=>$deviceId, ':ip'=>$_SERVER['REMOTE_ADDR'], ':useragent'=>$_SERVER['HTTP_USER_AGENT']];
+
+        return $this->insert($sql, $placeholders);
+    }
+
+    /**
+     * Gets uuids of an associated device
+     * @param $deviceId
+     * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
+     */
+    public function getUuids($deviceId){
+
+        $sql = "SELECT * FROM device_map WHERE deviceid= :deviceid";
+        $placeholders = [':deviceid'=>$deviceId];
+
+        return $this->select($sql, $placeholders);
+    }
+
+    /**
+     * Deletes the specified uuid record
+     * @param $recordId
+     * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
+     */
+    public function removeUuid($recordId){
+
+        $sql = "DELETE FROM device_map WHERE id= :id";
+        $placeholders = [':id'=>$recordId];
 
         return $this->delete($sql, $placeholders);
     }

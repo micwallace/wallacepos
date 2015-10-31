@@ -26,12 +26,12 @@ function WPOSReports() {
         var stats = getOverviewStats();
         // Fill UI
         $("#rsalesnum").text(stats.salesnum);
-        $("#rsalestotal").text(WPOS.currency() + stats.salestotal.toFixed(2));
+        $("#rsalestotal").text(WPOS.util.currencyFormat(stats.salestotal.toFixed(2)));
         $("#rrefundsnum").text(stats.refundnum);
-        $("#rrefundstotal").text(WPOS.currency() + stats.refundtotal.toFixed(2));
+        $("#rrefundstotal").text(WPOS.util.currencyFormat(stats.refundtotal.toFixed(2)));
         $("#rvoidsnum").text(stats.voidnum);
-        $("#rvoidstotal").text(WPOS.currency() + stats.voidtotal.toFixed(2));
-        $("#rtotaltakings").text(WPOS.currency() + stats.totaltakings.toFixed(2));
+        $("#rvoidstotal").text(WPOS.util.currencyFormat(stats.voidtotal.toFixed(2)));
+        $("#rtotaltakings").text(WPOS.util.currencyFormat(stats.totaltakings.toFixed(2)));
 
         showAdditionalReports();
         // generate takings report
@@ -40,7 +40,7 @@ function WPOSReports() {
 
     function showAdditionalReports(){
         // show eftpos reports if available
-        if (WPOS.eftpos.isEnabledAndReady() && WPOS.eftpos.getType()=="tyro"){
+        if (WPOS.hasOwnProperty('eftpos') && WPOS.eftpos.isEnabledAndReady() && WPOS.eftpos.getType()=="tyro"){
             $("#tyroreports").removeClass('hide');
         } else {
             $("#tyroreports").addClass('hide');
@@ -68,8 +68,8 @@ function WPOSReports() {
         calcedtakings = (recdom100 + recdom50 + recdom20 + recdom10 + recdom5 + recdom2 + recdom1 + recdom50c + recdom20c + recdom10c + recdom5c) - recfloat;
         calcedtakings = calcedtakings.toFixed(2);
         balance = (calcedtakings - curcashtakings).toFixed(2);
-        $(rectakings).text(WPOS.currency() + calcedtakings);
-        $(recbalance).text(WPOS.currency() + balance);
+        $(rectakings).text(WPOS.util.currencyFormat(calcedtakings));
+        $(recbalance).text(WPOS.util.currencyFormat(balance));
         if (recbalance === -0.00) {
             recbalance += 0.00;
         }
@@ -266,7 +266,7 @@ function WPOSReports() {
         var html = reportheader("Takings Count Report") + '<table style="width:100%;" class="table table-stripped"><thead><tr><th>Method</th><th># Payments</th><th>Takings</th><th># Refunds</th><th>Refunds</th><th>Balance</th></tr></thead><tbody>';
         var methdenoms = curstats.methodtotals;
         for (var method in methdenoms) {
-            html += '<tr><td>' + WPOS.util.capFirstLetter(method) + '</td><td>' + methdenoms[method].qty + '</td><td>' + WPOS.currency() + methdenoms[method].amount + '</td><td>' + methdenoms[method].refqty + '</td><td>' + WPOS.currency() + methdenoms[method].refamount + '</td><td>' + WPOS.currency() + (parseFloat(methdenoms[method].amount) - parseFloat(methdenoms[method].refamount)).toFixed(2) + '</td></tr>';
+            html += '<tr><td>' + WPOS.util.capFirstLetter(method) + '</td><td>' + methdenoms[method].qty + '</td><td>' + WPOS.util.currencyFormat(methdenoms[method].amount) + '</td><td>' + methdenoms[method].refqty + '</td><td>' + WPOS.util.currencyFormat(methdenoms[method].refamount) + '</td><td>' + WPOS.util.currencyFormat((parseFloat(methdenoms[method].amount) - parseFloat(methdenoms[method].refamount)).toFixed(2)) + '</td></tr>';
         }
         html += '</tbody></table>';
         // put into report window
@@ -279,7 +279,7 @@ function WPOSReports() {
         var item;
         for (var id in stats.items) {
             item = stats.items[id];
-            html += '<tr><td>' + item.name + '</td><td>' + item.qty + '</td><td>' + WPOS.currency() + item.total + '</td></tr>';
+            html += '<tr><td>' + item.name + '</td><td>' + item.qty + '</td><td>' + WPOS.util.currencyFormat(item.total) + '</td></tr>';
         }
 
         html += '</tbody></table>';
@@ -300,9 +300,9 @@ function WPOSReports() {
         //console.log(recon);
         $.each(line, function(i){
             //console.log($(this));
-            html += '<tr><td style="text-align: left;">' + WPOS.util.capFirstLetter($(this).attr('type')) + '</td><td style="text-align: right;">' + WPOS.currency() + $(this).attr('purchases') + '</td><td style="text-align: right;">' + WPOS.currency() + ($(this).attr('cash-out')?$(this).attr('cash-out'):'0.00') + '</td><td style="text-align: right;">' + WPOS.currency() + $(this).attr('refunds') + '</td><td style="text-align: right;">' + WPOS.currency() + $(this).attr('total') + '</td></tr>';
+            html += '<tr><td style="text-align: left;">' + WPOS.util.capFirstLetter($(this).attr('type')) + '</td><td style="text-align: right;">' + WPOS.util.currencyFormat($(this).attr('purchases')) + '</td><td style="text-align: right;">' + WPOS.util.currencyFormat($(this).attr('cash-out')?$(this).attr('cash-out'):'0.00') + '</td><td style="text-align: right;">' + WPOS.util.currencyFormat($(this).attr('refunds')) + '</td><td style="text-align: right;">' + WPOS.util.currencyFormat($(this).attr('total')) + '</td></tr>';
         });
-        html += '<tr><td colspan="4" style="text-align: left;"><strong>Total:</strong></td><td style="text-align: right;">' + WPOS.currency() + xml.find("reconciliation-summary").attr('total') + '</td></tr>';
+        html += '<tr><td colspan="4" style="text-align: left;"><strong>Total:</strong></td><td style="text-align: right;">' +WPOS.util.currencyFormat(xml.find("reconciliation-summary").attr('total')) + '</td></tr>';
         html += '</tbody></table>';
         // put into report window
         $("#reportcontain").html(html);
@@ -313,9 +313,9 @@ function WPOSReports() {
         var html = reportheader("Tyro Eftpos Detail Report") + '<table style="width:100%;" class="table table-stripped"><thead><tr><th>Time</th><th>Type</th><th>Card Type</th><th style="text-align: right;">Cash Out</th><th style="text-align: right;">Total</th></tr></thead><tbody>';
         var line = xml.find("transaction");
         $.each(line, function(i){
-            html += '<tr><td  style="text-align: left;">' + $(this).attr('transaction-local-date-time') + '</td><td style="text-align: left;">' + WPOS.util.capFirstLetter($(this).attr('type')) + '</td><td style="text-align: left;">' + WPOS.util.capFirstLetter($(this).attr('card-type')) + '</td><td style="text-align: right;">' + WPOS.currency() + ($(this).attr('cash-out')?$(this).attr('cash-out'):'0.00') + '</td><td style="text-align: right;">' + WPOS.currency() + $(this).attr('amount') + '</td></tr>';
+            html += '<tr><td  style="text-align: left;">' + $(this).attr('transaction-local-date-time') + '</td><td style="text-align: left;">' + WPOS.util.capFirstLetter($(this).attr('type')) + '</td><td style="text-align: left;">' + WPOS.util.capFirstLetter($(this).attr('card-type')) + '</td><td style="text-align: right;">' + WPOS.util.currencyFormat($(this).attr('cash-out')?$(this).attr('cash-out'):'0.00') + '</td><td style="text-align: right;">' + WPOS.util.currencyFormat($(this).attr('amount')) + '</td></tr>';
         });
-        html += '<tr><td colspan="3" style="text-align: left;"><strong>Total:</strong></td><td style="text-align: right;">' + WPOS.currency() + xml.find("reconciliation-detail").attr('total') + '</td></tr>';
+        html += '<tr><td colspan="3" style="text-align: left;"><strong>Total:</strong></td><td style="text-align: right;">' + WPOS.util.currencyFormat(xml.find("reconciliation-detail").attr('total')) + '</td></tr>';
         html += '</tbody></table>';
         // put into report window
         $("#reportcontain").html(html);

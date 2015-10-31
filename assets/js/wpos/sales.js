@@ -28,7 +28,7 @@ function WPOSItems() {
      */
     this.addManualItemRow = function () {
         // add the row
-        addItemRow(1, "", "", "0.00", 1, 0);
+        addItemRow(1, "", "0.00", 1, 0, {desc:""});
         // focus on qty
         $("#itemtable")
             .children('tr :last')
@@ -103,10 +103,6 @@ function WPOSItems() {
         return results;
     };
 
-    this.addItemRow = function(qty, name, desc, unit, taxid, sitemid){
-        addItemRow(qty, name, desc, unit, taxid, sitemid)
-    };
-
     this.generateItemGrid = function(){
         var iboxitems = $("#iboxitems");
         var items = WPOS.getItemsTable();
@@ -116,7 +112,7 @@ function WPOSItems() {
             price = (items[i].price==""?"??.??":parseFloat(items[i].price).toFixed(2));
             iboxitems.append('<div class="iboxitem" onclick="WPOS.items.addItemFromId('+items[i].id+'); toggleItemBox(false);">' +
                                 '<h6>'+items[i].name+'</h6>'+
-                                '<h5>'+WPOS.currency()+price+'</h5>'+
+                                '<h5>'+WPOS.util.currencyFormat(price)+'</h5>'+
                             '</div>');
         }
     };
@@ -130,46 +126,30 @@ function WPOSItems() {
      * @param {Number} taxid
      * @param {Number} sitemid ; the stored item id to keep track of inventory sales
      */
-    function addItemRow(qty, name, desc, unit, taxid, sitemid) {
+    function addItemRow(qty, name, unit, taxid, sitemid, data) {
         sitemid = (sitemid>0?sitemid:0);
         var disable = (sitemid>0); // disable fields that are filled by the stored item
         var disableprice = (sitemid>0 && WPOS.getConfigTable().pos.priceedit!="always");
-        $("#itemtable")
-            .append(
-                '<tr>' +
-                '<td>' +
-                '<input class="itemid" type="hidden" value="' + sitemid + '" />' +
-                '<input onChange="WPOS.sales.updateSalesTotal();" style="width:50px;" type="text" class="itemqty numpad" value="' + qty + '" />' +
-                '</td>' +
-                '<td>' +
-                '<input '+((disable==true && name!="")?"disabled":"")+' style="width: 100%; min-width: 100px;" type="text" class="itemname" value="' + name + '" onChange="WPOS.sales.updateSalesTotal();" />' +
-                '</td>' +
-                '<td>' +
-                '<input  style="width: 100%; min-width: 100px;" type="text" class="itemdesc" value="' +
-                desc +
-                '" />' +
-                '</td>' +
-                '<td>' +
-                '<input '+((disableprice==true && unit!="")?"disabled":"")+' onChange="WPOS.sales.updateSalesTotal();" style="max-width:50px;" type="text" class="itemunit numpad" value="' + unit + '" />' +
-                '</td>' +
-                '<td>' +
-                '<select '+((disable==true && taxid!=null)?"disabled":"")+' onChange="WPOS.sales.updateSalesTotal();" style="max-width:110px;" class="itemtax" value="'+taxid+'">' +
-                getTaxSelectHTML(taxid) +
-                '</select>' +
-                '<input class="itemtaxval" type="hidden" value="0.00" />' +
-                '</td>' +
-                '<td>' +
-                '<input style="max-width:50px;" type="text" class="itemprice" value="0.00" disabled />' +
-                '</td>' +
-                '<td style="text-align: center;">' +
-                '<button class="btn btn-sm btn-danger" onclick="WPOS.items.removeItem($(this));">' +
-                'X' +
-                '</button>' +
-                '</td>' +
-                '</tr>');
+        var row = $('<tr class="item_row">' +
+            '<td><input class="itemid" type="hidden" value="' + sitemid + '" data-options=\''+JSON.stringify(data)+'\' /><input onChange="WPOS.sales.updateSalesTotal();" style="width:50px;" type="text" class="itemqty numpad" value="' + qty + '" /></td>' +
+            '<td><input '+((disable==true && name!="")?"disabled":"")+' style="width: 100%; min-width: 100px;" type="text" class="itemname" value="' + name + '" onChange="WPOS.sales.updateSalesTotal();" /></td>' +
+            '<td><input '+((disableprice==true && unit!="")?"disabled":"")+' onChange="WPOS.sales.updateSalesTotal();" style="max-width:50px;" type="text" class="itemunit numpad" value="' + unit + '" /></td>' +
+            '<td><button onclick="WPOS.items.openItemModDialog(this);" class="btn btn-primary btn-xs"><i class="icon-list-ul"></i></button><div class="itemmodtext"></div></td>' +
+            '<td><select '+((disable==true && taxid!=null)?"disabled":"")+' onChange="WPOS.sales.updateSalesTotal();" style="max-width:110px;" class="itemtax" value="'+taxid+'">' +getTaxSelectHTML(taxid)+ '</select><input class="itemtaxval" type="hidden" value="0.00" /></td>' +
+            '<td><input style="max-width:50px;" type="text" class="itemprice" value="0.00" disabled /></td>' +
+            '<td style="text-align: center;"><button class="btn btn-sm btn-danger" onclick="WPOS.items.removeItem($(this));">X</button></td>' +
+            '</tr>');
+        if (data.orderid) {
+            row.insertAfter("#order_row_"+data.orderid);
+        } else {
+            $("#itemtable").append(row);
+        }
         // reinitialize keypad & field listeners
         WPOS.initKeypad();
     }
+    this.addItemRow = function(qty, name, unit, taxid, sitemid, data){
+        addItemRow(qty, name, unit, taxid, sitemid, data)
+    };
 
     /**
      * Gets or generates the taxid select HTML depending on input
@@ -178,10 +158,10 @@ function WPOSItems() {
      */
     function getTaxSelectHTML(taxid) {
         var taxselecthtml = "";
-        var taxtable = WPOS.getTaxTable();
-            for (var key in taxtable) {
-                if (taxtable.hasOwnProperty(key)) {
-                    taxselecthtml += "<option id='taxid-" + key + "' value='" + taxtable[key].value + "' "+(taxid==key?"selected='selected'":"")+">" + taxtable[key].name + " (" + taxtable[key].value + "%)</option>";
+        var taxrules = WPOS.getTaxTable().rules;
+            for (var key in taxrules) {
+                if (taxrules.hasOwnProperty(key)) {
+                    taxselecthtml += "<option id='taxrule-" + key + "' value='" + key + "' "+(taxid==key?"selected='selected'":"")+">" + taxrules[key].name + "</option>";
                 }
             }
         return taxselecthtml;
@@ -196,11 +176,11 @@ function WPOSItems() {
         // check if a priced item is already present in the sale and if so increment it's qty
         if (item.price==""){
             // insert item into table
-            addItemRow(1, item.name, item.description, item.price, item.taxid, item.id);
+            addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description});
         } else {
             if (!isItemAdded(item.id, true)){
                 // insert item into table
-                addItemRow(1, item.name, item.description, item.price, item.taxid, item.id);
+                addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description});
             }
         }
         $("#codeinput").val('');
@@ -219,6 +199,146 @@ function WPOSItems() {
         });
         return found;
     }
+
+    var itemrow;
+    this.openItemModDialog = function(elem){
+        itemrow = $(elem).parent().parent();
+        var data = itemrow.find('.itemid').data('options');
+        console.log(data);
+        $("#itemdesc").val(data.desc);
+        // get stored item mods
+        var itemid = itemrow.find('.itemid').val();
+        modtable.html('');
+        if (itemid>0){
+            var itemmods = WPOS.getItemsTable()[itemid].modifiers;
+            if (itemmods!=null && itemmods.length>0){
+                for (var i=0; i<itemmods.length; i++){
+                    zerostr = WPOS.util.currencyFormat(0);
+                    if (itemmods[i].type=="select"){
+                        insertSelectModRow(itemmods[i]);
+                    } else {
+                        insertSimpleModRow(itemmods[i]);
+                    }
+                }
+            }
+            // get mods for current sale item, update the item mods
+            if (data.hasOwnProperty('mod')){
+                var mods = data.mod.items;
+                for (i=0; i<mods.length; i++){
+                    var mod = mods[i];
+                    var row = $("#mod-"+mod.name.replace(/\s/g, ""));
+                    if (row){
+                        var costelem = row.find('.modcost');
+                        if (mod.hasOwnProperty('qty')){
+                            var qtyelem = row.find('.modqty');
+                            qtyelem.text(qtyelem.data('default') + mod.qty);
+                            costelem.data('modqty', mod.qty);
+                            costelem.data('modprice', mod.price);
+                            costelem.text(WPOS.util.currencyFormat(mod.price));
+                        } else {
+                            console.log(mod);
+                            row.find('.modselect').val(mod.value);
+                            costelem.data('modprice', mod.price);
+                            costelem.text(WPOS.util.currencyFormat(mod.price));
+                        }
+                    } else {
+                        // TODO: Handle mods deleted from stored items that are already in the order
+                    }
+                }
+                calculateTotalMods();
+            }
+        }
+        $("#itemoptionsdialog").dialog("open");
+    };
+    var modtable = $("#itemmods");
+    var zerostr = "";
+    function insertSimpleModRow(mod){
+        modtable.append('<tr id="mod-'+mod.name.replace(/\s/g, "")+'">' +
+            '<td><span class="modname">'+mod.name+'</span></td>' +
+            '<td><button onclick="WPOS.items.incrementModQty(this, false);" class="btn btn-primary btn-xs" style="margin-right: 4px;"><i class="icon-arrow-down"></i></button><button onclick="WPOS.items.incrementModQty(this, true);" class="btn btn-primary btn-xs" style="margin-right: 5px;"><i class="icon-arrow-up"></i></button>' +
+            '<span data-min="'+mod.minqty+'" data-max="'+mod.maxqty+'" data-default="'+mod.qty+'" data-price="'+mod.price+'" class="modqty">'+mod.qty+'</span></td>' +
+            '<td><span data-modqty="0" data-modprice="0" class="modcost">'+zerostr+'</span></td></tr>');
+    }
+    this.incrementModQty = function(elem, positive){
+        var row = $(elem).parent().parent();
+        var qtyelem = row.find('.modqty');
+        var defaultqty = qtyelem.data('default');
+        var minqty = qtyelem.data('min');
+        var maxqty = qtyelem.data('max');
+        var price = parseFloat(qtyelem.data('price'));
+        var newqty = parseInt(qtyelem.text()) + (positive?1:-1);
+        if (newqty<minqty || newqty>maxqty){
+            var ismax = newqty>maxqty;
+            alert("Cannot have "+(ismax?"more":"less")+" than "+(ismax?maxqty:minqty)+" "+row.find('.modname').text());
+            return;
+        }
+        var modqty = newqty-defaultqty;
+        var newprice = (modqty*price).toFixed(2);
+        qtyelem.text(newqty);
+        var costelem = row.find('.modcost');
+        costelem.data('modqty', modqty);
+        costelem.data('modprice', newprice);
+        costelem.text(WPOS.util.currencyFormat(newprice));
+        calculateTotalMods();
+    };
+    function insertSelectModRow(mod){
+        var selecthtml = '';
+        var selectdefault;
+        for (var i=0; i<mod.options.length; i++){
+            if (mod.options[i].default) selectdefault = mod.options[i];
+            selecthtml += '<option data-default="'+mod.options[i].default+'" data-price="'+mod.options[i].price+'" value="'+mod.options[i].name+'" '+(mod.options[i].default?'selected="selected"':'')+'>'+mod.options[i].name+'</option>';
+        }
+        modtable.append('<tr id="mod-'+mod.name.replace(/\s/g, "")+'">' +
+            '<td><span class="modname">'+mod.name+'</span></td>' +
+            '<td><select onchange="WPOS.items.modSelectValue(this);" class="modselect">'+selecthtml+'</select></td>' +
+            '<td><span data-moddefault="'+selectdefault.name+'" data-modprice="0" data-defaultprice="'+selectdefault.price+'" class="modcost">'+zerostr+'</span></td></tr>');
+    }
+    this.modSelectValue = function(selectelem){
+        var costfield = $(selectelem).parent().parent().find('.modcost');
+        var newprice = $(selectelem).children('option:selected').data('price');
+        var defaultprice = costfield.data('defaultprice');
+        var moddiffprice = (newprice - defaultprice).toFixed(2);
+        costfield.data('modprice', moddiffprice);
+        costfield.text(WPOS.util.currencyFormat(moddiffprice));
+        calculateTotalMods();
+    };
+    function calculateTotalMods(){
+        var total = 0;
+        modtable.children('tr').each(function(){
+            total += parseFloat($(this).find('.modcost').data('modprice'));
+        });
+        var totalfield = $("#itemmodtotal");
+        totalfield.data('modtotal', total);
+        totalfield.text(WPOS.util.currencyFormat(total));
+        var newunit = parseFloat(itemrow.find('.itemunit').val()) + total;
+        $("#itemmodunit").text(WPOS.util.currencyFormat(newunit));
+    }
+
+    this.saveItemMods = function(){
+        var moddata = {total:$("#itemmodtotal").data('modtotal'), items:[]};
+        modtable.children('tr').each(function(){
+            var dataelem = $(this).find('.modcost');
+            var modqty = dataelem.data('modqty');
+            var moddefault = dataelem.data('moddefault');
+            var modval = $(this).find('.modselect').val();
+            if ((!isNaN(modqty) && modqty!=0) || moddefault!=modval){
+                var mod = {};
+                mod.name = $(this).find('.modname').text();
+                mod.price = dataelem.data('modprice');
+                if (dataelem.attr('data-modqty')){
+                    mod.qty = modqty;
+                } else {
+                    mod.value = modval;
+                }
+                moddata.items.push(mod);
+            }
+        });
+        var data = itemrow.find('.itemid').data('options');
+        data.desc = $("#itemdesc").val();
+        if (moddata.items.length>0) data.mod = moddata;
+        itemrow.find('.itemid').data('options', data);
+        WPOS.sales.updateSalesTotal();
+    };
 
     this.searchCustomers = function(query){
         var results = [];
@@ -329,12 +449,51 @@ $(function () {
             return false;
         }
     });
+
+    $("#itemoptionsdialog").removeClass('hide').dialog({
+        width : 'auto',
+        maxWidth        : 475,
+        modal        : true,
+        closeOnEscape: true,
+        autoOpen     : false,
+        open         : function (event, ui) {
+        },
+        close        : function (event, ui) {
+        },
+        create: function( event, ui ) {
+            // Set maxWidth
+            $(this).css("maxWidth", "475px");
+        },
+        buttons:[
+            {
+                html: "<i class='icon-save bigger-110'></i>&nbsp; Save",
+                "class" : "btn btn-success btn-xs",
+                click: function() {
+                    WPOS.items.saveItemMods();
+                    $(this).dialog( "close" );
+                }
+            }
+            ,
+            {
+                html: "<i class='icon-remove bigger-110'></i>&nbsp; Cancel",
+                "class" : "btn btn-xs",
+                click: function() {
+                    $(this).dialog( "close" );
+                }
+            }
+        ]
+    });
+
+    $("#subtotal").text(WPOS.util.currencyFormat(0));
+    $("#totaltax").text(WPOS.util.currencyFormat(0));
+    $("#discounttxt").text("("+WPOS.util.currencyFormat(0)+")");
+    $("#total").text(WPOS.util.currencyFormat(0));
 });
 
 function WPOSSales() {
     var paymentMethods = ['eftpos', 'credit', 'cash', 'cheque', 'deposit'];
     var cursubtotal = 0.00;
-    var curtax = 0.00;
+    var curtaxtotal = 0.00;
     var curtotal = 0.00;
     var lasttransref = null;
     var curref = null; // reference for the order/sale currently processing, set when a prev order is loaded, cleared when the form is cleared
@@ -353,7 +512,7 @@ function WPOSSales() {
     this.updateSalesTotal = function () {
         var total = 0.00;
         var tempprice = 0.00;
-        curtax = 0.00; // clear last tax
+        curtaxtotal = 0.00; // clear last tax
         // validate records, marks valid records to be used in sale and informs user of invalid records
         // It also calculates item total and checks that its a correct result
         validateSalesItems();
@@ -363,24 +522,16 @@ function WPOSSales() {
                 // get item total
                 tempprice = parseFloat($(element).find(".itemprice").val());
                 // add to total
-                total = total + tempprice;
+                total += tempprice;
                 // get tax amount included with each item
-                if ($(element).find(".itemtax option:selected").attr("id").split("-")[1]!=1){ // skip for no tax;
-                    // get tax
-                    temptax = WPOS.util.calcTax(tempprice, $(element).find(".itemtax option:selected").attr("id").split("-")[1]);
-                    // add to total
-                    curtax+= temptax;
-                } else {
-                    temptax = parseFloat("0.00");
-                }
-                // put into UI for checkout calculations
-                $(element).find(".itemtaxval").val(temptax);
+                var taxtotals = $(element).find(".itemtaxval").data('taxdata');
+                curtaxtotal += taxtotals.total;
         });
         // remove cur tax from the total and we have our subtotal
         curtotal = total;
-        cursubtotal = (total - curtax);
-        $("#subtotal").text(WPOS.currency() + cursubtotal.toFixed(2));
-        $("#totaltax").text(WPOS.currency() + curtax.toFixed(2));
+        cursubtotal = (total - curtaxtotal);
+        $("#subtotal").text(WPOS.util.currencyFormat(cursubtotal.toFixed(2)));
+        $("#totaltax").text(WPOS.util.currencyFormat(curtaxtotal.toFixed(2)));
         this.updateDiscount();
     };
 
@@ -395,16 +546,16 @@ function WPOSSales() {
         var discountobj = $("#salediscount");
         var distxtobj = $("#discounttxt");
         var discount = discountobj.val();
-        curtotal = (parseFloat(cursubtotal) + parseFloat(curtax)); // !important reset total
+        curtotal = (parseFloat(cursubtotal) + parseFloat(curtaxtotal)); // !important reset total
         if (discount === "" || discount == "0" || discount === null) {
             discountobj.val("0");
-            distxtobj.text("("+WPOS.currency()+"0.00)");
+            distxtobj.text("("+WPOS.util.currencyFormat("0.00")+")");
         } else {
             var discountsum = ((discount / 100) * curtotal).toFixed(2);
-            distxtobj.text("(" + WPOS.currency() + discountsum + ")");
+            distxtobj.text("(" + WPOS.util.currencyFormat(discountsum) + ")");
             curtotal = (curtotal - discountsum);
         }
-        $("#total").text(WPOS.currency() + curtotal.toFixed(2));
+        $("#total").text(WPOS.util.currencyFormat(curtotal.toFixed(2)));
     };
 
     /**
@@ -414,10 +565,11 @@ function WPOSSales() {
     var curround = 0;
     var curbalance = 0;
     this.updatePaymentSums = function () {
-        var totalpaid = parseFloat(0);
-        var temppay = parseFloat(0);
-        var temptend = parseFloat(0);
-        var totalchange = parseFloat(0);
+        var roundcents = WPOS.getConfigTable().pos.cashrounding;
+        var totalpaid = 0;
+        var temppay = 0;
+        var temptend = 0;
+        var totalchange = 0;
         var allcash = true;
         var paymentstable = $("#paymentstable");
         // loop through payments, if cash apply rounding to payment amount and find change amount
@@ -426,12 +578,12 @@ function WPOSSales() {
             temppay = parseFloat(paystr);
             if ($(element).find(".paymethod").val()=='cash'){
                 // apply cash rounding
-                temppay = WPOS.util.roundToFiveCents(temppay);
+                temppay = roundcents>0?WPOS.util.roundToNearestCents(roundcents, temppay):temppay;
                 // get tender amount
                 var change, tendfield = $(element).find(".paytender");
                 temptend = parseFloat(tendfield.val()).toFixed(2);
                 // apply cash rounding
-                temptend = WPOS.util.roundToFiveCents(temptend);
+                temptend = roundcents>0?WPOS.util.roundToNearestCents(roundcents, temptend):temptend;
                 $(element).find(".paytender").val(temptend);
                 //tendfield.val(temptend); causes problems with keypad
                 if (temptend>temppay){
@@ -459,15 +611,15 @@ function WPOSSales() {
             curgrandtotal = curtotal;
             curround = 0;
         } else {
-            curgrandtotal = WPOS.util.roundToFiveCents(curtotal);
+            curgrandtotal = roundcents>0?WPOS.util.roundToNearestCents(roundcents, curtotal):curtotal;
             curround = curgrandtotal - curtotal;
         }
         // update payment sums
         var balance = -(curgrandtotal - totalpaid);
-        $("#salestotal").text(WPOS.currency() + parseFloat(curgrandtotal).toFixed(2));
-        $("#paymentstotal").text(WPOS.currency() + parseFloat(totalpaid).toFixed(2));
-        $("#salesbalance").text(WPOS.currency() + balance.toFixed(2));
-        $("#saleschange").text(WPOS.currency() + (balance>=0?totalchange.toFixed(2):0.00));
+        $("#salestotal").text(WPOS.util.currencyFormat(parseFloat(curgrandtotal).toFixed(2)));
+        $("#paymentstotal").text(WPOS.util.currencyFormat(parseFloat(totalpaid).toFixed(2)));
+        $("#salesbalance").text(WPOS.util.currencyFormat(balance.toFixed(2)));
+        $("#saleschange").text(WPOS.util.currencyFormat((balance>=0?totalchange.toFixed(2):0.00)));
         salebalanced = balance == 0;
         curbalance = balance;
     };
@@ -496,26 +648,37 @@ function WPOSSales() {
         }
     };
 
+    this.resetSalesForm = function(){
+        clearSalesForm();
+    };
+
     /**
      *
      */
     function clearSalesForm() {
         // clear sales form
         $("#itemtable").html('');
+        // add a new order row
+        if (WPOS.isOrderTerminal()) {
+            $('<tr class="order_row"><td style="background-color:#438EB9; color:#FFF;" colspan="7"><h4 style="text-align: center; margin: 0;">New Order</h4></td></tr>').appendTo("#itemtable");
+            $("#tablenumber").val(0).prop('readonly', true);
+            $("#radio_takeaway").prop('checked', true);
+        }
         $("#paymentstable").html('');
-        $(".payamount").val("0.00");
+        $(".payamount").val(WPOS.util.currencyFormat(0));
         $("#salenotes").text("").val('');
-        $("#salediscount").val("0");
-        $("#discounttxt").text("($0.00)");
-        $("#totaltax").text("$0.00");
-        $("#subtotal").text("$0.00");
-        $("#total").text("$0.00");
+        $("#salediscount").val(0);
+        $("#discounttxt").text("("+WPOS.util.currencyFormat(0)+")");
+        $("#totaltax").text(WPOS.util.currencyFormat(0));
+        $("#subtotal").text(WPOS.util.currencyFormat(0));
+        $("#total").text(WPOS.util.currencyFormat(0));
         $("#custemail").val("");
-        $("#custid").val("");
+        $("#custid").val(0);
         var emailreccb = $("#emailreceipt");
         emailreccb.prop("checked", false);
         emailreccb.prop("disabled", true);
         $("#custform").trigger('reset');
+        WPOS.sales.clearCustUpdate();
         // zero current totals
         cursubtotal = 0.00;
         curtotal = 0.00;
@@ -531,33 +694,38 @@ function WPOSSales() {
     }
 
     function validateSalesItems(){
-        var qty,name, unit, tempprice;
+        var qty,name, unit, mod, tempprice;
         var numinvalid = 0;
-        $("#itemtable").children("tr").each(function (index, element) {
-            qty = parseInt($(element).find(".itemqty").val());
-            name =  $(element).find(".itemname").val();
-            unit = parseFloat($(element).find(".itemunit").val());
-            tempprice = parseFloat("0.00");
-            if ((qty>0 && name!="") && unit>0){
-                // calculate item total
-                tempprice = qty * unit;
-                if (tempprice>0){
+        $("#itemtable").children(".item_row").each(function (index, element) {
+                qty = parseFloat($(element).find(".itemqty").val());
+                name = $(element).find(".itemname").val();
+                unit = parseFloat($(element).find(".itemunit").val());
+                var itemdata = $(element).find(".itemid").data('options');
+                mod = itemdata.hasOwnProperty('mod') ? itemdata.mod.total : 0;
+                tempprice = parseFloat("0.00");
+                if (qty > 0 && name != "" && unit>0) {
+                    // add item modification total to unit price & calculate item total
+                    tempprice = qty * (unit + mod);
+                    // calculate item tax
+                    var taxruleid = $(element).find(".itemtax").val();
+                    var taxdata = WPOS.util.calcTax(taxruleid, tempprice);
+                    if (!taxdata.inclusive) {
+                        tempprice += taxdata.total;
+                    }
+                    $(element).find(".itemtaxval").data('taxdata', taxdata);
+                    $(element).find(".itemprice").val(tempprice.toFixed(2));
                     // valid item; mark as valid, remove ui indicator class
                     $(element).addClass("valid");
                     $(element).removeClass("danger");
-                    $(element).find(".itemprice").val(tempprice.toFixed(2));
                 } else {
+                    // not a valid record
+                    $(element).removeClass("valid");
+                    $(element).addClass("danger");
+                    // something is null, set price to 0
                     $(element).find(".itemprice").val("0.00");
+                    // increment number invalid
+                    numinvalid++;
                 }
-            } else {
-                // not a valid record
-                $(element).removeClass("valid");
-                $(element).addClass("danger");
-                // something is null, set price to 0
-                $(element).find(".itemprice").val("0.00");
-                // increment number invalid
-                numinvalid++;
-            }
         });
         // show warning if items invalid
         if (numinvalid>0){
@@ -572,7 +740,7 @@ function WPOSSales() {
         if (getNumSalesItems() && curgrandtotal>0){
             // Show integrated eftpos button if enabled
             var inteftbtn = $("#eftpospaybtn");
-            if (WPOS.eftpos.isEnabledAndReady()){
+            if (WPOS.hasOwnProperty('eftpos') && WPOS.eftpos.isEnabledAndReady()){
                 inteftbtn.show();
                 inteftbtn.text(WPOS.util.capFirstLetter(WPOS.eftpos.getType())+' Eftpos');
             } else {
@@ -693,7 +861,7 @@ function WPOSSales() {
             '<option value="check" '+(method=='check'?'selected':'')+'>Cheque</option>' +
             '<option value="deposit" '+(method=='deposit'?'selected':'')+'>Deposit</option>' +
             exmethod+ '</select>' +
-            '<div class="cashvals" '+(method!='cash'?'style="display: none"':'')+'>' +
+            '<div class="cashvals" '+(method!='cash'?'style="display: none"':'width:150px;')+'>' +
             '<div style="width: 100px; display: inline-block;">Tendered:</div><input onChange="WPOS.sales.updatePaymentChange($(this).parent());" class="paytender numpad" style="width:50px;" type="text" value="'+(method!='cash'?0.00:(tender!=null?tender:value))+'" />' +
             '<div style="width: 100px; display: inline-block;">Change:</div><input class="paychange" style="width:50px;" type="text" value="'+(method!='cash'?0.00:(change!=null?change:0.00))+'" readonly />' +
             '</div></td>' +
@@ -715,6 +883,10 @@ function WPOSSales() {
         var salesobj = getSaleObject();
         if (curref!=null){
             salesobj.ref = curref;
+            var cursale = WPOS.trans.getTransactionRecord(curref);
+            if (cursale.hasOwnProperty('id')){
+                salesobj.id = cursale.id; // make sure we add the id
+            }
             removeSalesRecord(curref);
         }
         lasttransref = salesobj.ref;
@@ -722,11 +894,8 @@ function WPOSSales() {
         // add to offline table temporarily
         addOfflineSale(salesobj, "orders/set");
         if (WPOS.isOnline()) {
-            if (WPOS.sendJsonDataAsync("orders/set", JSON.stringify(salesobj), WPOS.sales.postSaleUpload, salesobj.ref)){ // if the ajax request is success
-                WPOS.setStatusBar(2, "Uploading Record...");
-            } else {
-                WPOS.sales.postSaleUpload(false, salesobj.ref);
-            }
+            WPOS.setStatusBar(2, "Uploading Record...");
+            WPOS.sendJsonDataAsync("orders/set", JSON.stringify(salesobj), function(data){ WPOS.sales.postSaleUpload(data, salesobj.ref); });
         } else {
             // update status
             WPOS.setStatusBar(3, "WPOS is offline ("+WPOS.sales.getOfflineSalesNum()+" offline records)");
@@ -734,7 +903,8 @@ function WPOSSales() {
         // close the payment dialog and clear form
         clearSalesForm();
         $("#paymentsdiv").dialog("close");
-
+        // process the orders
+        WPOS.orders.processOrder(salesobj, cursale);
     }
 
     this.loadOrder = function(ref){
@@ -746,7 +916,13 @@ function WPOSSales() {
         if (answer){
             WPOS.util.showLoader();
             if (WPOS.sendJsonData("orders/remove", JSON.stringify({ref: ref}))!==false){
+                var cursale = WPOS.trans.getTransactionRecord(ref);
                 removeSalesRecord(ref);
+                // if the order is loaded we need to clear the sales form
+                if (ref==curref)
+                    clearSalesForm();
+                // process the orders
+                WPOS.orders.processOrder(ref, cursale);
             } else {
                 alert("Could not delete the order!");
             }
@@ -760,19 +936,46 @@ function WPOSSales() {
         var salesobj = WPOS.trans.getTransactionRecord(ref);
         if (salesobj!=false){
             clearSalesForm();
+            $("#itemtable").html('');
+            // if order data exists,
+            for (var id in salesobj.orderdata){
+                var orderdata = salesobj.orderdata[id];
+                $('<tr id="order_row_'+id+'" class="order_row" data-data=\''+JSON.stringify(orderdata)+'\'><td style="background-color:#438EB9; color:#FFF;" colspan="7"><h4 style="text-align: center; margin: 0;">Order #'+orderdata.id+'</h4></td></tr>')
+                    .appendTo("#itemtable");
+            }
             // load items into the table
             var item;
             for (var i in salesobj.items){
                 item = salesobj.items[i];
-                WPOS.items.addItemRow(item.qty, item.name, item.desc, item.unit, item.taxid, item.sitemid);
+                var data = {
+                    desc:   item.desc,
+                    ref:    item.ref,
+                    orderid:item.orderid
+                };
+                if (item.hasOwnProperty('mod')) data.mod = item.mod;
+                WPOS.items.addItemRow(item.qty, item.name, item.unit, item.taxid, item.sitemid, data);
             }
+            // add a new order row
+            if (WPOS.isOrderTerminal())
+                $('<tr class="order_row"><td style="background-color:#438EB9; color:#FFF;" colspan="7"><h4 style="text-align: center; margin: 0;">New Order</h4></td></tr>').appendTo("#itemtable");
+            // load sale data
             $("#salediscount").val(salesobj.discount);
             $("#salenotes").val(salesobj.salenotes);
             $("#custemail").val(salesobj.custemail);
             $("#custid").val(salesobj.custid);
-            // TODO: Check for custdata property, indicating that the customer data requires an update, load the data
+            if (salesobj.hasOwnProperty("custdata") && typeof salesobj.custdata =="object"){
+                var custdata = salesobj.custdata;
+                $("#custname").val(custdata.name);
+                $("#custphone").val(custdata.phone);
+                $("#custmobile").val(custdata.mobile);
+                $("#custaddress").val(custdata.address);
+                $("#custsuburb").val(custdata.suburb);
+                $("#custpostcode").val(custdata.postcode);
+                $("#custcountry").val(custdata.country);
+                WPOS.sales.setUpdateCust();
+            }
             var payment;
-            for (var i in salesobj.payments){
+            for (i in salesobj.payments){
                 payment = salesobj.payments[i];
                 var tender, change;
                 if (payment.method == "cash"){
@@ -800,10 +1003,12 @@ function WPOSSales() {
         salebtn.prop("disabled", true);
         if (!isSaleBalanced()){
             alert("Please balance the sale before continuing");
+            salebtn.prop("disabled", false);
             return;
         }
         if (!validatePayments()){
             alert("Only cash-out payments may have a negative amount");
+            salebtn.prop("disabled", false);
             return;
         }
         ProcessSaleTransaction();
@@ -831,8 +1036,10 @@ function WPOSSales() {
     function ProcessSaleTransaction(){
         var salesobj = getSaleObject();
         // check for sale reference, indicating an exiting order and set it's reference onto the new data
+        var cursale = null;
         if (curref!==null){
             //alert("Processing using orders existing reference: "+curref);
+            cursale = WPOS.trans.getTransactionRecord(curref);
             salesobj.ref = curref;
             delete salesobj.isorder;
             removeSalesRecord(curref);
@@ -841,11 +1048,8 @@ function WPOSSales() {
         addOfflineSale(salesobj, "sales/add");
         lasttransref = salesobj.ref; // set for recall function use
         if (WPOS.isOnline()) {
-            if (WPOS.sendJsonDataAsync("sales/add", JSON.stringify(salesobj), WPOS.sales.postSaleUpload, salesobj.ref)){ // if the ajax request fails to execute (try/catch)
-                WPOS.setStatusBar(2, "Uploading Record...");
-            } else {
-                WPOS.sales.postSaleUpload(false, salesobj.ref);
-            }
+            WPOS.setStatusBar(2, "Uploading Record...");
+            WPOS.sendJsonDataAsync("sales/add", JSON.stringify(salesobj), function(data){ WPOS.sales.postSaleUpload(data, salesobj.ref); });
         } else {
             // update status
             WPOS.setStatusBar(3, "WPOS is offline ("+WPOS.sales.getOfflineSalesNum()+" offline records)");
@@ -854,7 +1058,6 @@ function WPOSSales() {
         // close the payment dialog and clear form (clears current ref aswell)
         clearSalesForm();
         $("#paymentsdiv").dialog("close");
-
         // open the draw if a cash payment
         for (var i in salesobj.payments){
             if (salesobj.payments[i].method == "cash"){
@@ -862,6 +1065,8 @@ function WPOSSales() {
                 break;
             }
         }
+        // process the orders
+        WPOS.orders.processOrder(salesobj, cursale);
         // print receipt or prompt
         if (WPOS.getLocalConfig().recask == "print"){
             WPOS.print.printReceipt(salesobj.ref);
@@ -886,7 +1091,8 @@ function WPOSSales() {
             removeOfflineSale(callbackref);
             // check if customer data available for processing
             if (jsonresponse.custdata != undefined){
-                WPOS.updateCustTable(jsonresponse.custid, jsonresponse.custdata);
+                jsonresponse.custdata.id = jsonresponse.custid;
+                WPOS.updateCustTable(jsonresponse.custdata);
             }
             // reset status Icon
             WPOS.setStatusBar(1, "WPOS is Online");
@@ -904,27 +1110,95 @@ function WPOSSales() {
 
     function getSaleObject(){
         // get sales items
+        var itemtable = $("#itemtable");
+        var date = new Date().getTime();
         var items = [];
         var taxtotals = {};
-        var temptax, temptaxid, tempqty, numitems = 0;
-
-        $("#itemtable").children(".valid").each(function (index, element) {
-            // add tax information into the tax totals array
-            temptax = parseFloat($(element).find(".itemtaxval").val());
-            temptaxid = $(element).find(".itemtax option:selected").attr("id").split("-")[1];
-            // add items tax to total if it is not "no tax"
-            if (temptaxid!=1){
-                if (!taxtotals.hasOwnProperty(temptaxid)){
-                    taxtotals[temptaxid] = parseFloat('0.00');
+        var taxdata, itemdata, taxruleid, tempqty, numitems = 0;
+        var orders = {};
+        var oldorders = {};
+        var neworderid = null;
+        // get orders & load their data
+        itemtable.children(".order_row").each(function (index, element) {
+            var curorder;
+            if ($(element).attr('data-data')) {
+                curorder = $(element).data('data');
+                oldorders[curorder.id] = $.extend({}, curorder); // save the current order to work out if it's been modified
+                curorder.items = {};
+            } else {
+                curorder = getNewOrderObject(date);
+                if (orders.hasOwnProperty(curorder.id)){
+                    curorder.id = WPOS.util.getSequencialOrderNumber(); // avoiding a duplicate order numbers in the same transaction
                 }
-                taxtotals[temptaxid]+=temptax;
+                neworderid = curorder.id;
             }
-            // add # items to total
-            tempqty = parseInt($(element).find(".itemqty").val());
-            numitems+=tempqty;
-            // add item to the array
-            items.push({"ref": index+1, "sitemid": $(element).find(".itemid").val(), "qty": tempqty, "name": $(element).find(".itemname").val(), "desc": $(element).find(".itemdesc").val(), "unit": parseFloat($(element).find(".itemunit").val()).toFixed(2), "taxid": temptaxid, "tax":temptax, "price": parseFloat($(element).find(".itemprice").val()).toFixed(2) });
+            orders[curorder.id] = curorder;
         });
+        itemtable.children(".item_row, .valid").each(function (index, element) {
+                // add tax information into the tax totals array
+                taxdata = $(element).find(".itemtaxval").data('taxdata');
+                taxruleid = $(element).find(".itemtax").val();
+                for (var i in taxdata.values) {
+                    if (!taxtotals.hasOwnProperty(i)) {
+                        taxtotals[i] = 0;
+                    }
+                    taxtotals[i] += taxdata.values[i];
+                }
+                // add # items to total
+                tempqty = parseInt($(element).find(".itemqty").val());
+                numitems += tempqty;
+                // add item to the array
+                var data = {
+                    "ref": WPOS.util.getRandomId(), // use index as reference for this sale item,
+                    "sitemid": $(element).find(".itemid").val(),
+                    "qty": tempqty,
+                    "name": $(element).find(".itemname").val(),
+                    "unit": parseFloat($(element).find(".itemunit").val()).toFixed(2),
+                    "taxid": taxruleid,
+                    "tax": taxdata,
+                    "price": parseFloat($(element).find(".itemprice").val()).toFixed(2)
+                };
+                itemdata = $(element).find(".itemid").data('options');
+                for (var x in itemdata) {
+                    data[x] = itemdata[x];
+                }
+                items.push(data);
+
+                if (WPOS.isOrderTerminal()){
+                    // if order id is undefined, add to the new order
+                    if (!data.hasOwnProperty('orderid')) {
+                        data.orderid = neworderid;
+                    }
+                    // add referece to current order item; store the index for quick access to it's data, the index may change but the id will remain the same.
+                    orders[data.orderid].items[data.ref] = index;
+                }
+        });
+
+        // cycle through orders & match the old order items to the new, if they don't match, update the moddt
+        if (WPOS.isOrderTerminal())
+            for (var o in orders){
+                // check number of items & remove if 0
+                if (Object.keys(orders[o].items).length==0) {
+                    delete orders[o];
+                } else {
+                    console.log(oldorders);
+                    // We can determine if the order has changed if the ids have changed, if so we set the order modified flag.
+                    if (oldorders.hasOwnProperty(o)) {
+                        if (Object.keys(orders[o].items).sort().join(',')!=Object.keys(oldorders[o].items).sort().join(',')){
+                            orders[o].moddt = date;
+                        } else {
+                            // otherwise we need to check against each value
+                            var olditems = WPOS.trans.getTransactionRecord(curref).items;
+                            for (var index in orders[o].items) {
+                                if (!WPOS.util.areObjectsEquivalent(items[orders[o].items[index]], olditems[orders[o].items[index]])) {
+                                    console.log("order not equivalent, updating moddt");
+                                    orders[o].moddt = date;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
         // gather payments
         var payments = [];
@@ -941,8 +1215,7 @@ function WPOSSales() {
         });
 
         // create object
-        var salesobj = { };
-        var date = new Date().getTime();
+        var salesobj = {};
         var config = WPOS.getConfigTable();
         salesobj.ref = date + "-" + config.deviceid + "-" + Math.floor((Math.random() * 10000) + 1);
         salesobj.userid = WPOS.getCurrentUserId();
@@ -960,7 +1233,7 @@ function WPOSSales() {
         salesobj.items = items;
         salesobj.payments = payments;
         // add tax information
-        salesobj.tax = curtax.toFixed(2);
+        salesobj.tax = curtaxtotal.toFixed(2);
         for (var i in taxtotals){
             taxtotals[i] = taxtotals[i].toFixed(2);
         }
@@ -977,7 +1250,21 @@ function WPOSSales() {
             salesobj.emailrec = true;
         }
 
+        // add order data to the record
+        if (WPOS.isOrderTerminal())
+            salesobj.orderdata = orders;
+
         return salesobj;
+    }
+
+    function getNewOrderObject(date){
+        return {
+            id:         WPOS.util.getSequencialOrderNumber(),
+            items:      {},
+            processdt:  date,
+            received:   false,
+            tablenum:   $("#tablenumber").val()
+        };
     }
 
     function getCustomerObject(){
@@ -1001,7 +1288,7 @@ function WPOSSales() {
         updatecust = true;
     };
     this.clearCustUpdate = function(){ // used when the customer email field is changed
-        updatecust = true;
+        updatecust = false;
     };
 
     this.openRefundDialog = function(ref){
@@ -1043,7 +1330,7 @@ function WPOSSales() {
             '</tr>');
         }
         var eftbtn = $("#eftposrefundbtn");
-        if (WPOS.eftpos.isEnabledAndReady()){
+        if (WPOS.hasOwnProperty('eftpos') && WPOS.eftpos.isEnabledAndReady()){
             eftbtn.show();
         } else {
             eftbtn.hide();
@@ -1162,11 +1449,8 @@ function WPOSSales() {
             refundobj =  getVoidObject(ref, isrefund);
         }
         if (WPOS.isOnline()){
-            if (WPOS.sendJsonDataAsync("sales/void", JSON.stringify(refundobj), WPOS.sales.postVoidUpload, refundobj)){ // if the ajax request fails to execute (try/catch)
-                WPOS.setStatusBar(2, "Uploading Record...");
-            } else {
-                WPOS.sales.postVoidUpload(false, refundobj);
-            }
+            WPOS.setStatusBar(2, "Uploading Record...");
+            WPOS.sendJsonDataAsync("sales/void", JSON.stringify(refundobj), function(data){ WPOS.sales.postVoidUpload(data); });
         } else {
             addUpdatedOfflineRecord(true, refundobj, "sales/void"); // update records
             // update status
@@ -1398,6 +1682,7 @@ function WPOSSales() {
                     addSalesRecord(jsonresponse);
                 } else {
                     // damn so close, go back into offline mode
+                    // TODO: check connectivity, skip this record & move on, there may be an error with this record: keep track of errornous sales count & display in status.
                     if (WPOS.switchToOffline()) {
                         // update status
                         WPOS.setStatusBar(3, "WPOS is offline ("+WPOS.sales.getOfflineSalesNum()+" offline records)");

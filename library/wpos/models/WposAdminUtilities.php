@@ -63,18 +63,31 @@ class WposAdminUtilities {
     }
 
     /**
+     * Sets the values used for currency formatting
+     * @param $format
+     */
+    public function setCurrencyFormat($format){
+        $this->currencyVals = explode('~', $format);
+    }
+
+    private $currencyVals = null;
+    /**
      * Formats currency for display, includes provided currency symbol or default
      * @param $value
-     * @param $currency
      * @return string
      */
-    public static function currencyFormat($currency, $value){
-        if ($currency==null){
+    public function currencyFormat($value){
+        if ($this->currencyVals==null){
             $confMdl = new ConfigModel();
             $conf = $confMdl->get('general');
-            $currency = $conf['curformat'];
+            $this->currencyVals = explode('~', $conf['currencyformat']);
         }
-        return $currency.number_format($value, 2, ".", ",");
+        $formatted = number_format($value, $this->currencyVals[1], $this->currencyVals[2], $this->currencyVals[3]);
+        if ($this->currencyVals[4]==0){
+            return $this->currencyVals[0].$formatted;
+        } else {
+            return $formatted.$this->currencyVals[0];
+        }
     }
 
     /**
@@ -95,6 +108,110 @@ class WposAdminUtilities {
             $rnd = $rnd & $filter; // discard irrelevant bits
         } while ($rnd >= $range);
         return $min + $rnd;
+    }
+
+    private static $taxTable = null;
+    /**
+     * Gets tax information as a static variable
+     * @return null
+     */
+    public static function getTaxTable(){
+        if (self::$taxTable==null){
+            self::$taxTable = WposPosData::getTaxes([])['data'];
+        }
+        return self::$taxTable;
+    }
+
+    /**
+     * Calculates tax using the given ruleid, locationid & item total
+     * This is used for test data generation only but reflects how tax is calculated in utilities.js
+     *
+     * @param $taxruleid
+     * @param $locationid
+     * @param $itemtotal
+     * @return stdClass
+     */
+    public static function calculateTax($taxruleid, $locationid, $itemtotal){
+        $tax = new stdClass();
+        $tax->total = 0;
+        $tax->values = new stdClass();
+        $tax->inclusive = true;
+        if (!array_key_exists($taxruleid, self::getTaxTable()['rules']))
+            return $tax;
+
+        // get the tax rule; taxable total is needed to calculate inclusive tax
+        $rule = self::getTaxTable()['rules'][$taxruleid];
+        $tax->inclusive = $rule->inclusive;
+        $taxitems = self::getTaxTable()['items'];
+        $taxablemulti = $rule->inclusive ? self::getTaxableTotal($rule, $locationid) : 0;
+        // check in locations, if location rule present get tax totals
+        if (isset($rule->locations->{$locationid})){
+            foreach ($rule->locations->{$locationid} as $itemkey){
+                if (array_key_exists($itemkey, $taxitems)){
+                    $tempitem = $taxitems[$itemkey];
+                    if (!isset($tax->values->{$tempitem['id']})) $tax->values->{$tempitem['id']} = 0;
+                    $tempval = $rule->inclusive ? self::getIncludedTax($tempitem['multiplier'], $taxablemulti, $itemtotal) : round($tempitem['multiplier']*$itemtotal, 2);
+                    $tax->values->{$tempitem['id']} += $tempval;
+                    $tax->total += $tempval;
+                    if ($rule->mode=="single")
+                        return $tax;
+                }
+            }
+        }
+        // get base tax totals
+        foreach ($rule->base as $itemkey){
+            if (array_key_exists($itemkey ,$taxitems)){
+                $tempitem = $taxitems[$itemkey];
+                if (!isset($tax->values->{$tempitem['id']})) $tax->values->{$tempitem['id']} = 0;
+                $tempval = $rule->inclusive ? self::getIncludedTax($tempitem['multiplier'], $taxablemulti, $itemtotal) : round($tempitem['multiplier']*$itemtotal, 2);
+                $tax->values->{$tempitem['id']} += $tempval;
+                $tax->total += $tempval;
+                if ($rule->mode=="single")
+                    return $tax;
+            }
+        }
+        return $tax;
+    }
+
+    /**
+     * Gets the total taxable percentage for an item using the given tax rule & location
+     * @param $rule
+     * @param $locationid
+     * @return float
+     */
+    private static function getTaxableTotal($rule, $locationid){
+        $taxitems = self::getTaxTable()['items'];
+        $taxable = 0;
+        if (isset($rule->locations->{$locationid})){
+            foreach ($rule->locations->{$locationid} as $itemkey){
+                if (array_key_exists($itemkey, $taxitems)) {
+                    $taxable += floatval($taxitems[$itemkey]['multiplier']);
+                    if ($rule->mode=="single")
+                        round($taxable, 2);
+                }
+            }
+        }
+        foreach ($rule->base as $itemkey){
+            if (array_key_exists($itemkey , $taxitems)) {
+                $taxable += floatval($taxitems[$itemkey]['multiplier']);
+                if ($rule->mode=="single")
+                    round($taxable, 2);
+            }
+        }
+        return round($taxable, 2);
+    }
+
+    /**
+     * gets the tax inclusive of the item total
+     * @param $multiplier
+     * @param $taxablemulti
+     * @param $value
+     * @return float
+     */
+    private static function getIncludedTax($multiplier, $taxablemulti, $value){
+        $value = floatval($value);
+        $taxable = $value-($value/($taxablemulti+1));
+        return round(($taxable/$taxablemulti)*$multiplier, 2);
     }
 
     /**

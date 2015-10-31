@@ -230,7 +230,6 @@ class WposPosData
      */
     public function searchSales($searchdata, $result)
     {
-        $searchdata = json_decode($searchdata);
         $salesMdl = new SalesModel();
         $dbSales  = $salesMdl->get(0, 0, $searchdata->ref, null, null, null, null, true);
         if (is_array($dbSales)) {
@@ -252,22 +251,41 @@ class WposPosData
      *
      * @return array Returns an array of tax objects
      */
-    public function getTaxes($result)
+    public static function getTaxes($result=[])
     {
         $taxItemsMdl = new TaxItemsModel();
-        $taxItems    = $taxItemsMdl->get();
-        if (is_array($taxItems)) {
-            $taxes = [];
-            foreach ($taxItems as $taxItem) {
-                $taxes[$taxItem['id']] = $taxItem;
+        $taxItemsArr    = $taxItemsMdl->get();
+
+        if (is_array($taxItemsArr)) {
+            $taxItems = [];
+            foreach ($taxItemsArr as $taxItem) {
+                $taxItems[$taxItem['id']] = $taxItem;
             }
-            $result['data'] = $taxes;
+            $result['data'] = [];
+            $result['data']['items'] = $taxItems;
+
+            $taxRulesMdl = new TaxRulesModel();
+            $taxRulesArr   = $taxRulesMdl->get();
+            if (is_array($taxRulesArr)) {
+                $taxRules = [];
+                foreach ($taxRulesArr as $taxRule) {
+                    $ruleData = json_decode($taxRule['data']);
+                    $ruleData->id = $taxRule['id'];
+                    $taxRules[$taxRule['id']] = $ruleData;
+                }
+
+                $result['data']['rules'] = $taxRules;
+            } else {
+                $result['error'] = "Tax data could not be retrieved: ".$taxRulesMdl->errorInfo;
+            }
         } else {
-            $result['error'] = $taxItemsMdl->errorInfo;
+            $result['error'] = "Tax data could not be retrieved: ".$taxItemsMdl->errorInfo;
         }
 
         return $result;
     }
+
+
 
     /**
      * @param $result

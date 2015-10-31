@@ -260,14 +260,14 @@ class XeroIntegration {
         $clineItems = $cnote->addChild("LineItems");
         foreach ($taxStats['data'] as $key=>$data){
             if ($key!=0){
-            $taxType = (isset($accnmap->{"tax-".$key})?$accnmap->{"tax-".$key}:'');
+                $taxType = (isset($accnmap->{"tax-".$key})?$accnmap->{"tax-".$key}:'');
                 // Add sales
                 $accountCode = (isset($accnmap->sales)?$accnmap->sales:'');
                 if ($data->saletotal>0){
                     $lineItem = $lineItems->addChild("LineItem");
                     $lineItem->addChild("Quantity", 1);
                     $lineItem->addChild("Description", $data->name." Sales");
-                    $lineItem->addChild("UnitAmount", str_replace(',', '', $data->saletotal));
+                    $lineItem->addChild("UnitAmount", str_replace(',', '', ($data->saletotal+$data->saletax)));
                     $lineItem->addChild("AccountCode", $accountCode);
                     $lineItem->addChild("TaxType", $taxType);
                 }
@@ -277,10 +277,20 @@ class XeroIntegration {
                     $clineItem = $clineItems->addChild("LineItem");
                     $clineItem->addChild("Quantity", 1);
                     $clineItem->addChild("Description", $data->name." Refunds");
-                    $clineItem->addChild("UnitAmount", str_replace(',', '', $data->refundtotal));
+                    $clineItem->addChild("UnitAmount", str_replace(',', '', $data->refundtotal+$data->refundtax));
                     $clineItem->addChild("AccountCode", $accountCode);
                     $clineItem->addChild("TaxType", $taxType);
                 }
+            } else if ($data->total!=0) {
+                // add cash rounding
+                $taxType = (isset($accnmap->{"tax-".$key})?$accnmap->{"tax-".$key}:'');
+                $accountCode = (isset($accnmap->sales)?$accnmap->sales:'');
+                $clineItem = $lineItems->addChild("LineItem");
+                $clineItem->addChild("Quantity", 1);
+                $clineItem->addChild("Description", "Cash Rounding");
+                $clineItem->addChild("UnitAmount", str_replace(',', '', $data->total));
+                $clineItem->addChild("AccountCode", $accountCode);
+                $clineItem->addChild("TaxType", $taxType);
             }
         }
         // Setup payments xml

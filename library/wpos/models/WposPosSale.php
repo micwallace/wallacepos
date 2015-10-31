@@ -207,7 +207,7 @@ class WposPosSale {
      * @return bool
      */
     private function updateOrderRecord(){
-        if ($this->salesMdl->edit(null, $this->ref, $this->sale)===false){
+        if ($this->salesMdl->edit(null, $this->ref, json_encode($this->jsonobj))===false){
             return false;
         }
         return true;
@@ -254,10 +254,10 @@ class WposPosSale {
             $this->dt = date("Y-m-d H:i:s");
             // insert items and payments. If these fail, try to reverse the transaction; incomplete transactions should not exist
             if (!$this->insertTransactionItems() || !$this->insertTransactionPayments()) {
-                if ($this->removeTransactionRecords()) {
-                    $result['error'] = "My SQL server error: the transactions did not complete successfully and has been rolled back.";
+                if ($this->removeTransactionRecords()) { // TODO: at the moment this deletes the transaction entry, which is bad for orders, we should keep a copy of the original json to restore from when it's an order.
+                    $result['error'] = "My SQL server error: the transactions did not complete successfully and has been rolled back: ".$this->itemErr.$this->paymentErr;
                 } else {
-                    $result['error'] = "My SQL server error: the transaction did not complete and the changes failed to roll back please contact support to remove invalid records.";
+                    $result['error'] = "My SQL server error: the transaction did not complete and the changes failed to roll back please contact support to remove invalid records: ".$this->itemErr.$this->paymentErr;
                 }
                 return $result;
             }
@@ -268,11 +268,11 @@ class WposPosSale {
             $this->jsonobj->status = 1;
 
             // Create transaction history record
-            WposTransactions::addTransactionHistory($this->id, $_SESSION['userId'], "Created", "Sale created");
+            WposTransactions::addTransactionHistory($this->id, $this->jsonobj->userid, "Created", "Sale created");
             // log data
             Logger::write("Sale Processed with ref: ".$this->ref, "SALE", json_encode($this->jsonobj));
         } else {
-            $this->removeTransactionRecords();
+            $this->removeTransactionRecords(); // TODO: at the moment this deletes the transaction entry...see above.
             $result['error'] = "My SQL server error: the transaction did not complete successfully and has been rolled back. ".$this->salesMdl->errorInfo;
             return $result;
         }
@@ -443,7 +443,7 @@ class WposPosSale {
                         $saleItemsMdl->incrementQtyRefunded($this->id, $item->ref, $item->numreturned);
                     }
                     // Create transaction history record
-                    WposTransactions::addTransactionHistory($this->id, $_SESSION['userId'], "Refunded", "Sale refunded");
+                    WposTransactions::addTransactionHistory($this->id, isset($_SESSION['userId'])?$_SESSION['userId']:0, "Refunded", "Sale refunded");
                     // log data
                     Logger::write("Refund processed with ref: ".$this->ref, "REFUND", json_encode($refund));
                 }
@@ -469,7 +469,7 @@ class WposPosSale {
                         }
                     }
                     // Create transaction history record
-                    WposTransactions::addTransactionHistory($this->id, $_SESSION['userId'], "Voided", "Sale voided");
+                    WposTransactions::addTransactionHistory($this->id, isset($_SESSION['userId'])?$_SESSION['userId']:0, "Voided", "Sale voided");
                     // log data
                     Logger::write("Sale voided with ref: ".$this->ref, "VOID", json_encode($this->voiddata));
                 }
@@ -478,6 +478,7 @@ class WposPosSale {
         return $result;
     }
 
+    private $itemErr = "";
     /**
      * Insert transaction item records
      * @return bool
@@ -489,6 +490,7 @@ class WposPosSale {
         $wposStock = new WposAdminStock();
         foreach ($this->jsonobj->items as $key=>$item) {
             if (!$res=$itemsMdl->create($this->id, $item->sitemid, $item->ref, $item->qty, $item->name, $item->desc, $item->taxid, $item->tax, $item->unit, $item->price)) {
+                $this->itemErr = $itemsMdl->errorInfo;
                 return false;
             }
             // decrement stock level
@@ -501,6 +503,7 @@ class WposPosSale {
         return true;
     }
 
+    private $paymentErr = "";
     /**
      * Insert transaction payment records
      * @return bool
@@ -510,6 +513,7 @@ class WposPosSale {
         $payMdl = new SalePaymentsModel();
         foreach ($this->jsonobj->payments as $key=>$payment) {
             if (!$id=$payMdl->create($this->id, $payment->method, $payment->amount, $this->jsonobj->processdt)) {
+                $this->paymentErr = $payMdl->errorInfo;
                 return false;
             }
             $this->jsonobj->payments[$key]->id = $id;
@@ -543,7 +547,6 @@ class WposPosSale {
      */
     private function processCustomer()
     {
-        $custMdl = new CustomerModel();
         // is updated data available
         if ($this->custdata != null) {
             // if customer record (id) exists
@@ -642,6 +645,8 @@ class WposPosSale {
         $config = new WposAdminSettings();
         $recval = $config->getSettingsObject("pos");
         $genval = $config->getSettingsObject("general");
+        $utils = new WposAdminUtilities();
+        $utils->setCurrencyFormat($genval->currencyformat);
         // create receipt
         $html = '<div style="padding: 10px; padding-left: 5px; padding-right: 5px; margin-top:5px; width:300px; margin: auto; background-color:#FFFFFF;"><img width="95%" src="http://'.$_SERVER['SERVER_ADDR'].$recval->recemaillogo.'"/><br/>';
         $html.= '<h3 style="text-align: center; margin: 5px;">'.$genval->bizname.'</h3>';
@@ -655,16 +660,22 @@ class WposPosSale {
         $html .= 'Sale Time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . WposAdminUtilities::getDateFromTimeStamp($this->jsonobj->processdt, $genval->dateformat) . '</p>';
         // items
         $html .= '<table style="width: 100%; margin-bottom: 4px; font-size: 13px;">';
-
         foreach ($this->jsonobj->items as $item){
-            $html.='<tr><td>'. $item->qty . "x " . $item->name . " (" . $genval->curformat . $item->unit . ")".'</td><td style="text-align: right;">'.$genval->curformat . $item->price.'</td></tr>';
+            // item mod details
+            $modStr = "";
+            if (isset($item->mod)){
+                foreach ($item->mod->items as $mod){
+                    $modStr.= '<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.(isset($mod->qty)?(($mod->qty>0?'+ ':'').$mod->qty.' '):'').$mod->name.(isset($mod->value)?': '.$mod->value:'').' ('.$utils->currencyFormat($mod->price).')';
+                }
+            }
+            $html.='<tr><td>'. $item->qty . "x " . $item->name . " (" . $utils->currencyFormat($item->unit) . ")". $modStr .'</td><td style="text-align: right;">'.$utils->currencyFormat($item->price).'</td></tr>';
         }
         $html.='<tr style="height: 5px;"><td></td><td></td></tr>';
         // totals
         // subtotal
         $taxcount = count(get_object_vars($this->jsonobj->taxdata));
         if ($taxcount>0 || $this->jsonobj->discount>0){ // only add if discount or taxes
-            $html.= '<tr><td><b>Subtotal: </b></td><td style="text-align: right;"><b style="text-decoration: overline;">'. $genval->curformat.$this->jsonobj->subtotal .'</b></td></tr>';
+            $html.= '<tr><td><b>Subtotal: </b></td><td style="text-align: right;"><b style="text-decoration: overline;">'. $utils->currencyFormat($this->jsonobj->subtotal) .'</b></td></tr>';
         }
         // taxes
         if ($taxcount){
@@ -676,20 +687,20 @@ class WposPosSale {
             foreach ($this->jsonobj->taxdata as $key => $tax){
                 $taxstr = $taxes[$key];
                 $taxstr = $taxstr['name'].' ('.$taxstr['value'].'%)';
-                $html.= '<tr><td>'.$taxstr.':</td><td style="text-align: right;">'. $genval->curformat . $tax.'</td></tr>';
+                $html.= '<tr><td>'.$taxstr.':</td><td style="text-align: right;">'. $utils->currencyFormat($tax).'</td></tr>';
             }
         }
         // discount
-        $html.= ($this->jsonobj->discount>0?'<tr><td>'.$this->jsonobj->discount.'% Discount</td><td style="text-align: right;">'. $genval->curformat . number_format(abs(floatval($this->jsonobj->total)-(floatval($this->jsonobj->subtotal) + floatval($this->jsonobj->tax))), 2) .'</td></tr>':'');
+        $html.= ($this->jsonobj->discount>0?'<tr><td>'.$this->jsonobj->discount.'% Discount</td><td style="text-align: right;">'. $utils->currencyFormat(abs(floatval($this->jsonobj->total)-(floatval($this->jsonobj->subtotal) + floatval($this->jsonobj->tax)))) .'</td></tr>':'');
         // grand total
-        $html.= '<tr><td><b>Total ('.$this->jsonobj->numitems.' items): </b></td><td style="text-align: right;"><b style="text-decoration: overline;">'. $genval->curformat . $this->jsonobj->total .'</b></td></tr>';
+        $html.= '<tr><td><b>Total ('.$this->jsonobj->numitems.' items): </b></td><td style="text-align: right;"><b style="text-decoration: overline;">'. $utils->currencyFormat($this->jsonobj->total) .'</b></td></tr>';
         $html.='<tr style="height: 2px;"><td></td><td></td></tr>';
         // payments
         foreach ($this->jsonobj->payments as $payment){
-            $html.='<tr><td><span style="font-size: 14px;">' . ucfirst($payment->method) . '</p></td><td style="text-align: right;"><p style="font-size: 14px;">'. $genval->curformat . $payment->amount.'</span></td></tr>';
+            $html.='<tr><td><span style="font-size: 14px;">' . ucfirst($payment->method) . '</p></td><td style="text-align: right;"><p style="font-size: 14px;">'. $utils->currencyFormat($payment->amount).'</span></td></tr>';
             if ($payment->method=='cash'){ // If cash print tender & change
-                $html.='<tr><td>Tendered:</td><td style="text-align: right;">'. $genval->curformat . $payment->tender.'</td></tr>';
-                $html.='<tr><td>Change:</td><td style="text-align: right;">'. $genval->curformat . $payment->change.'</td></tr>';
+                $html.='<tr><td>Tendered:</td><td style="text-align: right;">'. $utils->currencyFormat($payment->tender).'</td></tr>';
+                $html.='<tr><td>Change:</td><td style="text-align: right;">'. $utils->currencyFormat($payment->change).'</td></tr>';
             }
         }
         $html.='</table>';

@@ -681,7 +681,8 @@
                 <div class="space-4"></div>
                 <label class="fixedlabel">Tax: </label><select type="text" id="transitemtaxid" class="taxselect" onchange="WPOS.transactions.calculateItemTotals();"></select>
                 <div class="space-4"></div>
-                <label class="fixedlabel">Tax Value: </label><span id="transitemtax">0</span><br/>
+                <div id="transitemtax">
+                </div>
                 <label class="fixedlabel">Price: </label><span id="transitemprice">0</span><br/>
             </form>
         </div>
@@ -846,6 +847,7 @@
         <script src="../assets/js/wpos/utilities.js"></script>
 
         <script src="assets/js/jquery.dataTables.min.js"></script>
+        <script src="assets/js/datatableSorting.js"></script>
         <script src="assets/js/jquery.dataTables.bootstrap.js"></script>
 
         <script src="assets/js/date-time/bootstrap-datepicker.min.js"></script>

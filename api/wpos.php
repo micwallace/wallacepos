@@ -25,7 +25,7 @@
 $_SERVER['APP_ROOT'] = "/";
 
 require($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/config.php');
-
+// setup api error handling
 set_error_handler("errorHandler", E_ERROR | E_WARNING | E_PARSE);
 set_exception_handler("exceptionHandler");
 
@@ -88,7 +88,7 @@ if (!$auth->isLoggedIn()) {
     returnResult($result);
 }
 // Decode JSON data if provided
-if ($_REQUEST['data']!=""){
+if (isset($_REQUEST['data']) && $_REQUEST['data']!=""){
     if (($requests=json_decode($_REQUEST['data']))==false){
         $result['error'] = "Could not parse the provided json request";
         returnResult($result);
@@ -215,6 +215,7 @@ function routeApiCall($action, $data, $result) {
     if ($notinprev == false) { // an action has been executed: return the data
         return $result;
     }
+    $notinprev = false;
     // Check if user is allowed to use this API request
     if ($auth->isUserAllowed($action) === false) {
         $result['errorCode'] = "priv";
@@ -387,6 +388,32 @@ function routeApiCall($action, $data, $result) {
         case "locations/disable":
             $setup = new WposPosSetup($data);
             $result = $setup->setLocationDisabled($result);
+            break;
+
+        // tax
+        case "tax/rules/add":
+            $tax = new WposAdminItems($data);
+            $result = $tax->addTaxRule($result);
+            break;
+        case "tax/rules/edit":
+            $tax = new WposAdminItems($data);
+            $result = $tax->updateTaxRule($result);
+            break;
+        case "tax/rules/delete":
+            $tax = new WposAdminItems($data);
+            $result = $tax->deleteTaxRule($result);
+            break;
+        case "tax/items/add":
+            $tax = new WposAdminItems($data);
+            $result = $tax->addTaxItem($result);
+            break;
+        case "tax/items/edit":
+            $tax = new WposAdminItems($data);
+            $result = $tax->updateTaxItem($result);
+            break;
+        case "tax/items/delete":
+            $tax = new WposAdminItems($data);
+            $result = $tax->deleteTaxItem($result);
             break;
 
         // SALES (All transactions)
@@ -667,9 +694,35 @@ function routeApiCall($action, $data, $result) {
             break;
 
         default:
-            $result["error"] = "Action not defined: ".$action;
+            $notinprev = true;
             break;
     }
+    if ($notinprev == false) { // an action has been executed: return the data
+        return $result;
+    }
+
+    // Check if user is allowed admin only API calls
+    if (!$auth->isAdmin()) {
+        $result['errorCode'] = "priv";
+        $result['error'] = "You do not have permission to perform this action.";
+        return $result;
+    }
+    // Check in permission protected API calls
+    switch ($action) {
+        case "devices/registrations":
+            $setup = new WposPosSetup($data);
+            $result = $setup->getDeviceRegistrations($result);
+            break;
+        case "devices/registrations/delete":
+            $setup = new WposPosSetup($data);
+            $result = $setup->deleteDeviceRegistration($result);
+            break;
+
+        default:
+        $result["error"] = "Action not defined: ".$action;
+        break;
+    }
+
     return $result;
 }
 /**

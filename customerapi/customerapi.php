@@ -25,7 +25,7 @@
 $_SERVER['APP_ROOT'] = "/";
 
 require($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/config.php');
-
+// setup api error handling
 set_error_handler("errorHandler", E_ERROR | E_WARNING | E_PARSE);
 set_exception_handler("exceptionHandler");
 

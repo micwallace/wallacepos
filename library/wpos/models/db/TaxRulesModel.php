@@ -1,9 +1,9 @@
 <?php
 /**
- * TaxItemsModel is part of Wallace Point of Sale system (WPOS) API
+ * TaxRulesModel is part of Wallace Point of Sale system (WPOS) API
  *
  * TaxItemsModel extends the DbConfig PDO class to interact with the config DB table.
- * Tax_items are used in tax_rules, which in turn are applied to sale_items.
+ * Tax Rules consist of tax components, or "tax_items" which are applied to items.
  * This allows for applying multiple tax rates to an item & applying conditional taxes based on location
  *
  * WallacePOS is free software; you can redistribute it and/or
@@ -25,13 +25,13 @@
  * @since      File available since 11/23/13 10:36 PM
  */
 
-class TaxItemsModel extends DbConfig
+class TaxRulesModel extends DbConfig
 {
 
     /**
      * @var array
      */
-    protected $_columns = ['id', 'name', 'type', 'value', 'multiplier'];
+    protected $_columns = ['id', 'name', 'data'];
 
     /**
      * Init DB
@@ -42,16 +42,13 @@ class TaxItemsModel extends DbConfig
     }
 
     /**
-     * @param $name
-     * @param $type
-     * @param $value
-     * @param $multiplier
+     * @param $data
      * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
      */
-    public function create($name, $type, $value, $multiplier)
+    public function create($data)
     {
-        $sql          = "INSERT INTO tax_items (name, type, value, multiplier) VALUES (:name, :type, :value, :multiplier);";
-        $placeholders = [":name"=>$name, ":type"=>$type, ":value"=>$value, ":multiplier"=>$multiplier];
+        $sql          = "INSERT INTO tax_rules (data) VALUES (:data);";
+        $placeholders = [":data"=>json_encode($data)];
 
         return $this->insert($sql, $placeholders);
     }
@@ -63,7 +60,7 @@ class TaxItemsModel extends DbConfig
      */
     public function get($taxId = null, $name = null)
     {
-        $sql          = 'SELECT * FROM tax_items';
+        $sql          = 'SELECT * FROM tax_rules';
         $placeholders = [];
         if ($taxId !== null) {
             if (empty($placeholders)) {
@@ -85,17 +82,14 @@ class TaxItemsModel extends DbConfig
 
     /**
      * @param $id
-     * @param $name
-     * @param $type
-     * @param $value
-     * @param $multiplier
+     * @param $data
      * @return bool|int Returns false on an unexpected failure or the number of rows affected by the operation
      */
-    public function edit($id, $name, $type, $value, $multiplier)
+    public function edit($id, $data)
     {
 
-        $sql          = "UPDATE tax_items SET name= :name, type= :type, value= :value, multiplier= :multiplier WHERE id= :id;";
-        $placeholders = [":id"=>$id, ":name"=>$name, ":type"=>$type, ":value"=>$value, ":multiplier"=>$multiplier];
+        $sql          = "UPDATE tax_rules SET data= :data WHERE id= :id;";
+        $placeholders = [":id"=>$id, ":data"=>json_encode($data)];
 
         return $this->update($sql, $placeholders);
     }
@@ -109,7 +103,7 @@ class TaxItemsModel extends DbConfig
         if ($id === null) {
             return false;
         }
-        $sql          = "DELETE FROM tax_items WHERE id= :id;";
+        $sql          = "DELETE FROM tax_rules WHERE id= :id;";
         $placeholders = [":id"=>$id];
 
         return $this->delete($sql, $placeholders);

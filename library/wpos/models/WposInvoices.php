@@ -86,11 +86,11 @@ class WposInvoices {
         }
         if ($result!==false){
             if (isset($result[0]))
-            if (($this->invoice = json_decode($result[0]['data']))){
-                $this->id = $this->invoice->id;
-                $this->ref = $this->invoice->ref;
-                return true;
-            }
+                if (($this->invoice = json_decode($result[0]['data']))){
+                    $this->id = $this->invoice->id;
+                    $this->ref = $this->invoice->ref;
+                    return true;
+                }
             return false;
         }
         return false;
@@ -155,7 +155,7 @@ class WposInvoices {
                     $this->deleteInvoice();
                 }
                 // update json with id
-                $this->invoice->items->{$key}->id = $itemid;
+                $this->invoice->items[$key]->id = $itemid;
             }
         } else {
             $this->invoice->items = [];
@@ -170,7 +170,7 @@ class WposInvoices {
                     $this->deleteInvoice();
                 } else {
                     // update json with id
-                    $this->invoice->items->{$key}->id = $payid;
+                    $this->invoice->payments[$key]->id = $payid;
                 }
             }
         } else {
@@ -313,7 +313,7 @@ class WposInvoices {
 
     public function addItem($result){
         // validate json
-        $jsonval = new JsonValidate($this->data, '{"id":1, "sitemid":1, "qty":1, "name":"", "desc":"~", "taxid":1, "tax":1, "unit":1, "price":1}');
+        $jsonval = new JsonValidate($this->data, '{"id":1, "sitemid":1, "qty":1, "name":"", "desc":"~", "taxid":1, "tax":"{", "unit":1, "price":1}');
         if (($errors = $jsonval->validate())!==true){
             $result['error'] = $errors;
             return $result;
@@ -351,7 +351,7 @@ class WposInvoices {
 
     public function updateItem($result){
         // validate json
-        $jsonval = new JsonValidate($this->data, '{"id":1, "itemid":1, "sitemid":1, "qty":1, "name":"", "desc":"~", "taxid":1, "tax":1, "unit":1, "price":1}');
+        $jsonval = new JsonValidate($this->data, '{"id":1, "itemid":1, "sitemid":1, "qty":1, "name":"", "desc":"~", "taxid":1, "tax":"{", "unit":1, "price":1}');
         if (($errors = $jsonval->validate())!==true){
             $result['error'] = $errors;
             return $result;
@@ -564,18 +564,23 @@ class WposInvoices {
         if (isset($this->invoice->items)){
             foreach ($this->invoice->items as $key=>$item){
                 $item->price = round(floatval($item->qty)*floatval($item->unit), 2);
+                // add tax data to totals
+                foreach ($this->invoice->items[$key]->tax->values as $taxid=>$taxval){
+                    if (isset($this->invoice->taxdata[$taxid])){
+                        $this->invoice->taxdata[$taxid]+= $taxval;
+                    } else {
+                        $this->invoice->taxdata[$taxid] = $taxval;
+                    }
+                }
+                // Add to total sale tax
+                $this->invoice->tax+= $this->invoice->items[$key]->tax->total;
+                // if item tax exclusive, add to item total
+                if (!$this->invoice->items[$key]->tax->inclusive){
+                    $item->price+= $this->invoice->items[$key]->tax->total;
+                }
                 $total += $item->price;
                 $this->invoice->items[$key]->unit = number_format($item->unit, 2, ".", "");
                 $this->invoice->items[$key]->price = number_format($item->price, 2, ".", "");
-                // add tax data to totals
-                $taxid = $this->invoice->items[$key]->taxid;
-                if (isset($this->invoice->taxdata[$taxid])){
-                    $this->invoice->taxdata[$taxid]+= $this->invoice->items[$key]->tax;
-                } else {
-                    $this->invoice->taxdata[$taxid] = $this->invoice->items[$key]->tax;
-                }
-                // Add to total tax
-                $this->invoice->tax+= $this->invoice->items[$key]->tax;
             }
         }
         // add payments
@@ -604,7 +609,7 @@ class WposInvoices {
             // invoice closed
             $this->invoice->status = 1;
             if ($this->import == false)
-            $this->invoice->closedt = time()*1000;
+                $this->invoice->closedt = time()*1000;
         }
     }
 

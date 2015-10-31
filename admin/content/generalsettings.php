@@ -16,37 +16,115 @@
             </div>
             <div class="widget-body" style="padding-top: 10px;">
                 <form class="form-horizontal">
-                <div class="form-group">
-                    <div class="col-sm-5"><label>Date Format:</label></div>
-                    <div class="col-sm-5">
-                    <select id="dateformat">
-                        <option value="d/m/y">dd/mm/yy</option>
-                        <option value="m/d/y">mm/dd/yy</option>
-                        <option value="Y-m-d">yyyy-mm-dd</option>
-                    </select>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Timezone:</label></div>
+                        <div class="col-sm-5">
+                            <select id="timezone">
+                        <?php
+                            $timezones = DateTimeZone::listIdentifiers();
+                            foreach ($timezones as $timezone){
+                                echo('<option value="'.$timezone.'">'.$timezone.'</option>');
+                            }
+                        ?>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="space-4"></div>
-                <div class="form-group">
-                    <div class="col-sm-5"><label>Currency Symbol:</label></div>
-                    <div class="col-sm-5">
-                    <select id="curformat">
-                        <option value="$">$ Dollar</option>
-                        <option value="€">€ Euro</option>
-                        <option value="£">£ Pound</option>
-                    </select>
-                    </div>
-                </div>
-                <div class="space-4"></div>
-                <div class="form-group" style="display: none;">
-                    <div class="col-sm-5"><label>Accounting Type:</label></div>
-                    <div class="col-sm-5">
-                        <select id="accntype">
-                            <option value="cash">Cash</option>
-                            <option value="accrual">Accrual</option>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Date Format:</label></div>
+                        <div class="col-sm-5">
+                        <select id="dateformat">
+                            <option value="d/m/y">dd/mm/yy</option>
+                            <option value="m/d/y">mm/dd/yy</option>
+                            <option value="Y-m-d">yyyy-mm-dd</option>
                         </select>
+                        </div>
                     </div>
-                </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Currency Symbol:</label></div>
+                        <div class="col-sm-5">
+                        <select id="currency_symbol">
+                            <option value="$">$ Dollar</option>
+                            <option value="€">€ Euro</option>
+                            <option value="£">£ Pound</option>
+                            <option value="¥">¥ Yen/Yuan</option>
+                            <option value="₣">₣ Franc</option>
+                            <option value="₤">₤ Lira</option>
+                            <option value="﷼">﷼ Saudi Riyal</option>
+                            <!--<option value="₧">₧ Peseta</option> ! Encoding issues -->
+                            <!--<option value="₹">₹ Indian Rupee</option> ! Encoding issues -->
+                            <!--<option value="₨">₨ Rupee</option> ! Encoding issues -->
+                            <!--<option value="₩">₩ Won</option> ! Encoding issues -->
+                            <option value="₴">₴ Hryvnia</option>
+                            <option value="₯">₯ Drachma</option>
+                            <option value="₮">₮ Tugrik</option>
+                            <option value="₲">₲ Guarani</option>
+                            <option value="₱">₱ Peso</option>
+                            <option value="₳">₳ Austral</option>
+                            <option value="₵">₵ Cedi</option>
+                            <option value="₭">₭ Kip</option>
+                            <option value="₪">₪ New Sheqel</option>
+                            <option value="₫">₫ Dong</option>
+                            <!--<option value="៛">៛ Riel</option> ! Encoding issues -->
+                            <option value="Rp">Rp Rupiah</option>
+                            <option value="kr">kr Krone/Kroon/Krona</option>
+                            <option value="Kč">Kč Koruna</option>
+                        </select>
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Currency Decimals:</label></div>
+                        <div class="col-sm-5">
+                            <select id="currency_decimals">
+                                <option value="0">0</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Decimal Separator:</label></div>
+                        <div class="col-sm-5">
+                            <select id="currency_decimalsep">
+                                <option value=".">.</option>
+                                <option value=",">,</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Thousand Separator:</label></div>
+                        <div class="col-sm-5">
+                            <select id="currency_thousandsep">
+                                <option value=",">,</option>
+                                <option value=".">.</option>
+                                <option value=" "> </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Symbol Position:</label></div>
+                        <div class="col-sm-5">
+                            <select id="currency_symbolpos">
+                                <option value="0">Before Amount</option>
+                                <option value="1">After Amount</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group" style="display: none;">
+                        <div class="col-sm-5"><label>Accounting Type:</label></div>
+                        <div class="col-sm-5">
+                            <select id="accntype">
+                                <option value="cash">Cash</option>
+                                <option value="accrual">Accrual</option>
+                            </select>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -158,9 +236,30 @@
         // show loader
         WPOS.util.showLoader();
         var data = {};
+        var currencyformat = [];
         $("form :input").each(function(){
+            if ($(this).prop('id').indexOf("currency")!==-1){
+                switch ($(this).prop('id')){
+                    case "currency_symbol":
+                        currencyformat[0] = $(this).val();
+                        break;
+                    case "currency_decimals":
+                        currencyformat[1] = $(this).val();
+                        break;
+                    case "currency_decimalsep":
+                        currencyformat[2] = $(this).val();
+                        break;
+                    case "currency_thousandsep":
+                        currencyformat[3] = $(this).val();
+                        break;
+                    case "currency_symbolpos":
+                        currencyformat[4] = $(this).val();
+                        break;
+                }
+            }
             data[$(this).prop('id')] = $(this).val();
         });
+        data['currencyformat'] = currencyformat.join("~");
         data['gcontact'] = $("#gcontact").is(":checked")?1:0;
         WPOS.sendJsonData("settings/general/set", JSON.stringify(data));
         // hide loader
@@ -171,14 +270,23 @@
         options = WPOS.getJsonData("settings/general/get");
         // load option values into the form
         for (var i in options){
+            if (i == "currencyformat"){
+                var format = options[i].split("~");
+                $("#currency_symbol").val(format[0]);
+                $("#currency_decimals").val(format[1]);
+                $("#currency_decimalsep").val(format[2]);
+                $("#currency_thousandsep").val(format[3]);
+                $("#currency_symbolpos").val(format[4]);
+            }
             $("#"+i).val(options[i]);
         }
         setGoogleUI();
         $("#bizlogoprev").attr("src", options.bizlogo);
     }
     function setGoogleUI(){
-        $("#gcontact").prop("checked", options.gcontact==1);
-        $("#gcontact").prop("disabled", options.gcontactaval!=1);
+        var gcontact_enabled = $("#gcontact");
+        gcontact_enabled.prop("checked", options.gcontact==1);
+        gcontact_enabled.prop("disabled", options.gcontactaval!=1);
         if (options.gcontactaval==1){
             $(".congaccn").hide();
             $(".disgaccn").show();

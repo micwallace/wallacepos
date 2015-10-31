@@ -117,12 +117,12 @@
             var itemqty = 0;
             for (var i2 in sale.items){
                 itemqty += parseInt(sale.items[i2].qty);
-                itemstr += "("+sale.items[i2].qty+"x "+sale.items[i2].name+"-"+sale.items[i2].desc+" @ "+WPOS.currency()+sale.items[i2].unit+" = "+WPOS.currency()+sale.items[i2].price+") ";
+                itemstr += "("+sale.items[i2].qty+"x "+sale.items[i2].name+"-"+sale.items[i2].desc+" @ "+WPOS.util.currencyFormat(sale.items[i2].unit)+(sale.items[i2].tax.inclusive?" tax incl. ":" tax excl. ")+WPOS.util.currencyFormat(sale.items[i2].tax.total)+" = "+WPOS.util.currencyFormat(sale.items[i2].price)+") ";
             }
             // join payments
             var paystr = "";
             for (i2 in sale.payments){
-                paystr += "("+sale.payments[i2].method+"-"+WPOS.currency()+sale.payments[i2].amount+") ";
+                paystr += "("+sale.payments[i2].method+"-"+WPOS.util.currencyFormat(sale.payments[i2].amount)+") ";
             }
             var status = getTransactionStatus(sales[i]);
             var voidstr = "";
@@ -137,7 +137,7 @@
                     for (i2 in sale.refunddata){
                         var ritems = JSON.stringify(sale.refunddata[i2].items);
                         // TODO: get returned item string
-                        refstr += "(" + WPOS.util.getDateFromTimestamp(sale.refunddata[i2].processdt) + " - "+sale.refunddata[i2].reason+" - "+sale.refunddata[i2].method+" - "+WPOS.currency()+sale.refunddata[i2].amount+" - items: "+ritems+") ";
+                        refstr += "(" + WPOS.util.getDateFromTimestamp(sale.refunddata[i2].processdt) + " - "+sale.refunddata[i2].reason+" - "+sale.refunddata[i2].method+" - "+WPOS.util.currencyFormat(sale.refunddata[i2].amount)+" - items: "+ritems+") ";
                     }
                 }
             }
@@ -147,7 +147,7 @@
                 case 3: status = "Refunded"; break;
             }
             csv+=sale.id+","+sale.ref+","+WPOS.getConfigTable().users[sale.userid].username+","+WPOS.getConfigTable().devices[sale.devid].name+","+WPOS.getConfigTable().locations[sale.locid].name+","
-                +sale.custemail+","+itemstr+","+itemqty+","+paystr+","+WPOS.currency()+sale.subtotal+","+sale.discount+"%,"+WPOS.currency()+sale.total+","+WPOS.util.getDateFromTimestamp(sale.processdt)+","+sale.dt+","+status+","+voidstr+","+refstr+"\n";
+                +sale.custemail+","+itemstr+","+itemqty+","+paystr+","+WPOS.util.currencyFormat(sale.subtotal)+","+sale.discount+"%,"+WPOS.util.currencyFormat(sale.total)+","+WPOS.util.getDateFromTimestamp(sale.processdt)+","+sale.dt+","+status+","+voidstr+","+refstr+"\n";
         }
 
         WPOS.initSave("sales-"+WPOS.util.getDateFromTimestamp(stime)+"-"+WPOS.util.getDateFromTimestamp(etime), csv);
@@ -169,15 +169,15 @@
                 "aaData": itemarray,
                 "aaSorting": [[ 1, "desc" ]],
                 "aoColumns": [
-                    { "mData":"id" },
-                    { "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
-                    { "mData":function(data, type, val){ return WPOS.getConfigTable().users[data.userid].username;} },
-                    { "mData":"devlocname" },
-                    { "mData":"numitems" },
-                    { "mData":function(data, type, val){return WPOS.util.getDateFromTimestamp(data.processdt);} },
-                    { "mData":function(data,type,val){return WPOS.currency()+data["total"];} },
-                    { "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data));} },
-                    { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.transactions.openTransactionDialog($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'));"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.transactions.deleteTransaction($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'))"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
+                    { "sType": "numeric", "mData":"id" },
+                    { "sType": "numeric", "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
+                    { "sType": "string", "mData":function(data, type, val){ return WPOS.getConfigTable().users[data.userid].username;} },
+                    { "sType": "string", "mData":"devlocname" },
+                    { "sType": "numeric", "mData":"numitems" },
+                    { "sType": "timestamp", "mData":function(data, type, val){return WPOS.util.getDateFromTimestamp(data.processdt);} },
+                    { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["total"]);} },
+                    { "sType": "html", "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data));} },
+                    { "sType": "html", mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.transactions.openTransactionDialog($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'));"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.transactions.deleteTransaction($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'))"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
                 ] } );
         // insert table wrapper
         $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");

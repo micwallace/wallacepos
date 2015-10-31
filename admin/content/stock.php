@@ -128,9 +128,9 @@
             "aaSorting": [[ 2, "asc" ]],
             "aoColumns": [
                 { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false, sClass:"hidden-480 hidden-320 hidden-xs noexport" },
-                { mData:"name" },
+                { mData:function(data,type,val){return (data.name==null?"Unknown":data.name) } },
                 { mData:"supplier" },
-                { mData:function(data,type,val){return (data.locationid!='0'?WPOS.locations[data.locationid].name:'Warehouse');} },
+                { mData:function(data,type,val){return (data.locationid!=='0'?(WPOS.locations.hasOwnProperty(data.locationid)?WPOS.locations[data.locationid].name:'Unknown'):'Warehouse');} },
                 { mData:"stocklevel" },
                 { mData:function(data,type,val){return '<div class="action-buttons"><a class="green" onclick="openEditStockDialog('+data.id+');"><i class="icon-pencil bigger-130"></i></a><a class="blue" onclick="openTransferStockDialog('+data.id+')"><i class="icon-arrow-right bigger-130"></i></a><a class="red" onclick="getStockHistory('+data.storeditemid+', '+data.locationid+');"><i class="icon-time bigger-130"></i></a></div>'; }, "bSortable": false, sClass: "noexport" }
             ] } );
@@ -257,11 +257,13 @@
             }
         });
         // fill location selects
+        var locselect = $(".locselect");
+        locselect.html('');
         for (key in WPOS.locations){
             if (key == 0){
-                $(".locselect").append('<option class="locid-0" value="0">Warehouse</option>');
+                locselect.append('<option class="locid-0" value="0">Warehouse</option>');
             } else {
-                $(".locselect").append('<option class="locid-'+WPOS.locations[key].id+'" value="'+WPOS.locations[key].id+'">'+WPOS.locations[key].name+'</option>');
+                locselect.append('<option class="locid-'+WPOS.locations[key].id+'" value="'+WPOS.locations[key].id+'">'+WPOS.locations[key].name+'</option>');
             }
         }
 

@@ -81,10 +81,30 @@
 			<?php foreach ($invoice->items as $value) { ?>
 			<tr>
 					<td style="vertical-align: top;" align="center"><?php echo ($value->qty); ?></td>
-					<td style="vertical-align: top;"><?php echo ("<strong>".$value->name.":</strong><br>".nl2br($value->desc)); ?></td>
-					<td style="vertical-align: top;" align="right"><?php echo (WposAdminUtilities::currencyFormat($settings->curformat, $value->unit)); ?></td>
-					<td style="vertical-align: top;" align="right"><?php echo ($taxes[$value->taxid]->name." ".WposAdminUtilities::currencyFormat($settings->curformat, $value->tax)); ?></td>
-					<td style="vertical-align: top;" align="right"><?php echo (WposAdminUtilities::currencyFormat($settings->curformat, $value->price)); ?></td>
+					<td style="vertical-align: top;">
+                    <?php
+                        echo ("<strong>".$value->name.":</strong><br/>");
+                        // item mod details
+                        if (isset($value->mod)){
+                            foreach ($value->mod->items as $mod){
+                                echo((isset($mod->qty)?(($mod->qty>0?'+ ':'').$mod->qty.' '):'').$mod->name.(isset($mod->value)?': '.$mod->value:'').' ('.$utils->currencyFormat($mod->price).')<br/>');
+                            }
+                        }
+                        echo(nl2br($value->desc));
+                    ?>
+                    </td>
+					<td style="vertical-align: top;" align="right"><?php echo ($utils->currencyFormat($value->unit)); ?></td>
+					<td style="vertical-align: top;" align="right">
+                        <?php
+                        if (count((array) $value->tax->values)==0)
+                            echo($utils->currencyFormat(0));
+                        else
+                        foreach ($value->tax->values as $taxid=>$taxval){
+                            echo ("(".$taxes[$taxid]->name." ".$taxes[$taxid]->value."%) ".$utils->currencyFormat($taxval)."<br/>");
+                        }
+                        ?>
+                    </td>
+					<td style="vertical-align: top;" align="right"><?php echo ($utils->currencyFormat($value->price)); ?></td>
 			</tr>
 			<?php } ?>
 			<tr>
@@ -96,20 +116,19 @@
 					<?php echo ('Subtotal: '); ?>
 				</td>
 				<td align="right">
-					<?php echo (WposAdminUtilities::currencyFormat($settings->curformat, $invoice->subtotal)); ?>
+					<?php echo ($utils->currencyFormat($invoice->subtotal)); ?>
 				</td>
 			</tr>
-			<?php if (isset($invoice->taxdata)) foreach ($invoice->taxdata as $key=>$value) { ?>
-			<?php if ($value) { ?>
+			<?php if (isset($invoice->taxdata))
+                  foreach ($invoice->taxdata as $key=>$value) { ?>
 			<tr>
 				<td colspan="4" align="right">
 					<?php echo ($taxes[$key]->name." (".$taxes[$key]->value."%):"); ?>
 				</td>
 				<td align="right">
-					<?php echo (WposAdminUtilities::currencyFormat($settings->curformat, $value)); ?>
+					<?php echo ($utils->currencyFormat($value)); ?>
 				</td>
 			</tr>
-			<?php } ?>
 			<?php } ?>
             <?php if ($invoice->discount!=0){ ?>
             <tr>
@@ -117,7 +136,7 @@
 					<?php echo ("Discount (".$invoice->discount."%): "); ?>
 				</td>
 				<td align="right">
-					<?php echo ("-".WposAdminUtilities::currencyFormat($settings->curformat, $invoice->discountval)); ?>
+					<?php echo ("-".$utils->currencyFormat($invoice->discountval)); ?>
 				</td>
 			</tr>
             <?php } ?>
@@ -126,7 +145,7 @@
 					<?php echo ("Grand Total: "); ?>
 				</td>
 				<td align="right">
-					<?php echo (WposAdminUtilities::currencyFormat($settings->curformat, $invoice->total)); ?>
+					<?php echo ($utils->currencyFormat($invoice->total)); ?>
 				</td>
 			</tr>
 			<tr>
@@ -134,7 +153,7 @@
 					<?php echo ('Amount Paid: '); ?>
 				</td>
 				<td align="right">
-					<?php echo (WposAdminUtilities::currencyFormat($settings->curformat, ($invoice->total-$invoice->balance))); ?>
+					<?php echo ($utils->currencyFormat($invoice->total-$invoice->balance)); ?>
 				</td>
 			</tr>
 			<tr>
@@ -142,7 +161,7 @@
 					<?php echo ('Total Due: '); ?>
 				</td>
 				<td align="right">
-					<?php echo (WposAdminUtilities::currencyFormat($settings->curformat, $invoice->balance)); ?>
+					<?php echo ($utils->currencyFormat($invoice->balance)); ?>
 				</td>
 			</tr>
 		</table>

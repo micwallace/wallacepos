@@ -163,9 +163,11 @@ class WposSocketIO {
      * Broadcast a customer addition/update/delete to all connected devices.
      * @param $customer
      * @param int $senddev
+     * @return bool
      */
     public function sendCustomerUpdate($customer, $senddev = 0){
-        //TODO: Send customer details update
+
+        return $this->sendDataToDevices(['a' => 'customer', 'data' => $customer], null);
     }
 
     /**
@@ -177,25 +179,27 @@ class WposSocketIO {
     public function sendSaleUpdate($devices=null, $sale){ // device that the record was updated on
 
         return $this->sendDataToDevices(['a' => 'sale', 'data' => $sale], $devices);
-
     }
 
     /**
      * Broadcast a configuration update to all connected devices.
      * @param $newconfig
-     * @param $type
+     * @param $configset; the set name for the values
      * @return bool
      */
-    public function sendConfigUpdate($newconfig, $type){
-        switch($type){
-            case "general":
-                return $this->sendDataToDevices(['a' => 'config', 'type' => "general", 'data' => $newconfig], null);
-                break;
-            case "pos":
-                return $this->sendDataToDevices(['a' => 'config', 'type' => "pos", 'data' => $newconfig], null);
-                break;
-        }
-        return false;
+    public function sendConfigUpdate($newconfig, $configset){
+        return $this->sendDataToDevices(['a' => 'config', 'type' => $configset, 'data' => $newconfig], null);
     }
 
+    /**
+     * Send updated device specific config
+     * @param $newconfig
+     * @param $configset; the set name for the values
+     * @return bool
+     */
+    public function sendDeviceConfigUpdate($id, $newconfig){
+        $ids = new stdClass();
+        $ids->{$id} = $id;
+        return $this->sendDataToDevices(['a' => 'config', 'type' => 'deviceconfig', 'data' => $newconfig], $ids);
+    }
 }

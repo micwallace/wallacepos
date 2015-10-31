@@ -91,7 +91,7 @@ class JsonValidate {
      * @return bool|string Returns true if the value is valid or an error string on failure
      */
     private function validateValue($dataval, $schemaval){
-        if (strlen($schemaval)==1){
+        //if (strlen($schemaval)==1){
             // one character rules
             switch ($schemaval){
                 case "~": // can be any value
@@ -112,36 +112,43 @@ class JsonValidate {
                         return "must be an array with at least one value\n";
                     }
                     break;
-                default:
+                case "{": // must be an object
+                    if (!is_object($dataval)){
+                        return "must be a json object\n";
+                    }
                     break;
-            }
-        } else {
-            // multi character rules
-            $rule = substr($schemaval, 0, 2);
-            $val = substr($schemaval, 2, strlen($schemaval));
-            switch ($rule){
                 case -1: // must be numeric but can be null
                     if ($dataval!=="" && !is_numeric($dataval)){
                         return "must be numeric\n";
                     }
                     break;
-                case "!=": // must not equals
-                    if ($dataval == $val){
-                        return "must not equal ".$val."\n";
+                case true: // must be numeric but can be null
+                    if ($schemaval===true && !is_bool($dataval)){
+                        return "must be a boolean\n";
+                        break;
                     }
-                    break;
-                case "<=": // must be no larger than
-                    if ($dataval > $val){
-                        return "must be no larger than ".$val."\n";
-                    }
-                    break;
-                case ">=": // must be equal or larger than
-                    if ($dataval < $val){
-                        return "must be larger than ".$val."\n";
+                default:
+                    $rule = substr($schemaval, 0, 2);
+                    $val = substr($schemaval, 2, strlen($schemaval));
+                    switch ($rule){
+                        case "!=": // must not equals
+                            if ($dataval == $val){
+                                return "must not equal ".$val."\n";
+                            }
+                            break;
+                        case "<=": // must be no larger than
+                            if ($dataval > $val){
+                                return "must be no larger than ".$val."\n";
+                            }
+                            break;
+                        case ">=": // must be equal or larger than
+                            if ($dataval < $val){
+                                return "must be larger than ".$val."\n";
+                            }
+                            break;
                     }
                     break;
             }
-        }
         return true;
     }
 

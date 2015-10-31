@@ -49,7 +49,7 @@ class WposAdminItems {
     public function addStoredItem($result)
     {
         // validate input
-        $jsonval = new JsonValidate($this->data, '{"code":"", "qty":1, "name":"", "taxid":1, "price":-1}');
+        $jsonval = new JsonValidate($this->data, '{"code":"","qty":1, "name":"", "taxid":1, "price":-1,"type":""}');
         if (($errors = $jsonval->validate()) !== true) {
             $result['error'] = $errors;
             return $result;
@@ -62,7 +62,7 @@ class WposAdminItems {
             return $result;
         }
         // create the new item
-        $qresult = $itemMdl->create($this->data->supplierid, $this->data->code, $this->data->qty, $this->data->name, $this->data->description, $this->data->taxid, $this->data->price);
+        $qresult = $itemMdl->create($this->data);
         if ($qresult === false) {
             $result['error'] = "Could not add the item: " . $itemMdl->errorInfo;
         } else {
@@ -103,7 +103,7 @@ class WposAdminItems {
             }
         }
         // update the item
-        $qresult = $itemMdl->edit($this->data->id, $this->data->supplierid, $this->data->code, $this->data->qty, $this->data->name, $this->data->description, $this->data->taxid, $this->data->price);
+        $qresult = $itemMdl->edit($this->data->id, $this->data);
         if ($qresult === false) {
             $result['error'] = "Could not edit the item";
         } else {
@@ -455,5 +455,181 @@ class WposAdminItems {
 
         return $result;
     }
+    // Tax items
+    /**
+     * Add a new tax rule
+     * @param $result
+     * @return mixed
+     */
+    public function addTaxRule($result)
+    {
+        $jsonval = new JsonValidate($this->data, '{"name":"", "inclusive":true, "base":"", "locations":""}');
+        if (($errors = $jsonval->validate()) !== true) {
+            $result['error'] = $errors;
+            return $result;
+        }
+        $taxRuleMdl = new TaxRulesModel();
+        $qresult = $taxRuleMdl->create($this->data);
+        if ($qresult === false) {
+            $result['error'] = "Could not add the tax rule: ".$taxRuleMdl->errorInfo;
+        } else {
+            $this->data->id = $qresult;
+            $result['data'] = $this->data;
+            $this->broadcastTaxUpdate();
+            // log data
+            Logger::write("Tax rule added with id:" . $this->data->id, "TAX", json_encode($this->data));
+        }
+        return $result;
+    }
 
+    /**
+     * Update a tax rule
+     * @param $result
+     * @return mixed
+     */
+    public function updateTaxRule($result)
+    {
+        $jsonval = new JsonValidate($this->data, '{"id":1, "name":"", "inclusive":true, "base":"", "locations":""}');
+        if (($errors = $jsonval->validate()) !== true) {
+            $result['error'] = $errors;
+            return $result;
+        }
+        if ($this->data->id==1){
+            $result['error'] = "The No Tax rule cannot be edited";
+            return $result;
+        }
+        $taxRuleMdl = new TaxRulesModel();
+        $qresult = $taxRuleMdl->edit($this->data->id, $this->data);
+        if ($qresult === false) {
+            $result['error'] = "Could not edit the tax rule: ".$taxRuleMdl->errorInfo;
+        } else {
+            $result['data'] = $this->data;
+            $this->broadcastTaxUpdate();
+            // log data
+            Logger::write("Tax rule updated with id:" . $this->data->id, "TAX", json_encode($this->data));
+        }
+        return $result;
+    }
+
+    /**
+     * Delete a tax rule
+     * @param $result
+     * @return mixed
+     */
+    public function deleteTaxRule($result)
+    {
+        // validate input
+        if (!is_numeric($this->data->id)) {
+            $result['error'] = "A valid id must be supplied";
+            return $result;
+        }
+        if ($this->data->id==1){
+            $result['error'] = "The No Tax rule cannot be deleted";
+            return $result;
+        }
+        $taxRuleMdl = new TaxRulesModel();
+        $qresult = $taxRuleMdl->remove($this->data->id);
+        if ($qresult === false) {
+            $result['error'] = "Could not delete the tax rule: ".$taxRuleMdl->errorInfo;
+        } else {
+            $result['data'] = true;
+            $this->broadcastTaxUpdate();
+            // log data
+            Logger::write("Tax rule deleted with id:" . $this->data->id, "TAX");
+        }
+        return $result;
+    }
+
+    /**
+     * @param $value
+     * @return float
+     */
+    public static function calculateTaxMultiplier($value){
+        return ($value/100);
+    }
+    /**
+     * Add a new tax rule
+     * @param $result
+     * @return mixed
+     */
+    public function addTaxItem($result)
+    {
+        $jsonval = new JsonValidate($this->data, '{"name":"", "type":"", "value":1}');
+        if (($errors = $jsonval->validate()) !== true) {
+            $result['error'] = $errors;
+            return $result;
+        }
+        $this->data->multiplier = WposAdminItems::calculateTaxMultiplier($this->data->value);
+        $taxItemMdl = new TaxItemsModel();
+        $qresult = $taxItemMdl->create($this->data->name, $this->data->type, $this->data->value, $this->data->multiplier);
+        if ($qresult === false) {
+            $result['error'] = "Could not add the tax item: ".$taxItemMdl->errorInfo;
+        } else {
+            $this->data->id = $qresult;
+            $result['data'] = $this->data;
+            $this->broadcastTaxUpdate();
+            // log data
+            Logger::write("Tax item added with id:" . $this->data->id, "TAX", json_encode($this->data));
+        }
+        return $result;
+    }
+
+    /**
+     * Update a tax rule
+     * @param $result
+     * @return mixed
+     */
+    public function updateTaxItem($result)
+    {
+        $jsonval = new JsonValidate($this->data, '{"name":"", "type":"", "value":1}');
+        if (($errors = $jsonval->validate()) !== true) {
+            $result['error'] = $errors;
+            return $result;
+        }
+        $this->data->multiplier = WposAdminItems::calculateTaxMultiplier($this->data->value);
+        $taxItemMdl = new TaxItemsModel();
+        $qresult = $taxItemMdl->edit($this->data->id, $this->data->name, $this->data->type, $this->data->value, $this->data->multiplier);
+        if ($qresult === false) {
+            $result['error'] = "Could not edit the tax item: ".$taxItemMdl->errorInfo;
+        } else {
+            $result['data'] = $this->data;
+            $this->broadcastTaxUpdate();
+            // log data
+            Logger::write("Tax item updated with id:" . $this->data->id, "TAX", json_encode($this->data));
+        }
+        return $result;
+    }
+
+    /**
+     * Delete a tax rule
+     * @param $result
+     * @return mixed
+     */
+    public function deleteTaxItem($result)
+    {
+        // validate input
+        if (!is_numeric($this->data->id)) {
+            $result['error'] = "A valid id must be supplied";
+            return $result;
+        }
+        $taxItemMdl = new TaxItemsModel();
+        $qresult = $taxItemMdl->remove($this->data->id);
+        if ($qresult === false) {
+            $result['error'] = "Could not delete the tax item: ".$taxItemMdl->errorInfo;
+        } else {
+            $result['data'] = true;
+            $this->broadcastTaxUpdate();
+            // log data
+            Logger::write("Tax item deleted with id:" . $this->data->id, "TAX");
+        }
+        return $result;
+    }
+
+    private function broadcastTaxUpdate(){
+        $taxconfig = WposPosData::getTaxes();
+        if (!isset($taxconfig['error'])){
+            $socket = new WposSocketIO();
+            $socket->sendConfigUpdate($taxconfig['data'], "tax");
+        }
+    }
 }

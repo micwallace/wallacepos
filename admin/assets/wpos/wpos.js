@@ -43,6 +43,10 @@ $(function(){
     WPOS = new WPOSAdmin();
     // init
     WPOS.isLogged();
+    // dev/demo quick login
+    if (document.location.host=="alpha.wallacepos.com"){
+        $("#logindiv").append('<button class="btn btn-primary btn-sm" onclick="$(\'#loguser\').val(\'admin\');$(\'#logpass\').val(\'admin\'); WPOS.login();">Dev Login</button>');
+    }
 });
 function WPOSAdmin(){
     // AJAX PAGE LOADER FUNCTIONS
@@ -420,7 +424,7 @@ function WPOSAdmin(){
     var socketon = false;
     this.startSocket = function() {
         if (socket === null){
-            socket = io.connect('https://'+window.location.hostname+'/');
+            socket = io.connect(window.location.protocol+'//'+window.location.hostname+'/');
             socketon = true;
             socket.on('updates', function (data) {
                 switch (data.a) {
@@ -467,8 +471,21 @@ function WPOSAdmin(){
     // data & config
     var configtable;
 
-    this.currency = function(){
-        return configtable.general.curformat;
+    this.devices = null;
+    this.locations = null;
+    this.users = null;
+    function fetchConfigTable() {
+        configtable = getJsonData("adminconfig/get");
+        WPOS.devices = configtable.devices;
+        WPOS.locations = configtable.locations;
+        WPOS.users = configtable.users;
+    }
+
+    this.getConfigTable = function () {
+        if (configtable == null) {
+            return false;
+        }
+        return configtable;
     };
 
     this.getTaxTable = function () {
@@ -478,32 +495,10 @@ function WPOSAdmin(){
         return configtable.tax;
     };
 
-    this.getConfigTable = function () {
-        if (configtable == null) {
-            return false;
-        }
-        return configtable;
+    this.putTaxTable = function(taxtable){
+        configtable.tax = taxtable;
+        this.transactions.refreshTaxSelects();
     };
-
-    this.devices = null;
-    this.locations = null;
-    this.users = null;
-    function fetchConfigTable() {
-        configtable = getJsonData("adminconfig/get");
-        WPOS.devices = configtable.devices;
-        WPOS.locations = configtable.locations;
-        WPOS.users = configtable.users;
-        initTaxFunc();
-    }
-    function initTaxFunc(){
-        // evaluate function string into a function
-        var tempfunc;
-        for (var i in configtable.tax){
-            tempfunc = configtable.tax[i].calcfunc;
-            eval("tempfunc = "+tempfunc);
-            configtable.tax[i].calcfunc = tempfunc;
-        }
-    }
 
     // CSV export functions
     this.initSave = function(filename, data){

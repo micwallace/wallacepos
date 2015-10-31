@@ -153,12 +153,12 @@
             var itemqty = 0;
             for (var i2 in invoice.items){
                 itemqty += parseInt(invoice.items[i2].qty);
-                itemstr += "("+invoice.items[i2].qty+"x "+invoice.items[i2].name+"-"+invoice.items[i2].desc+" @ "+WPOS.currency()+invoice.items[i2].unit+" = "+WPOS.currency()+invoice.items[i2].price+") ";
+                itemstr += "("+invoice.items[i2].qty+"x "+invoice.items[i2].name+"-"+invoice.items[i2].desc+" @ "+WPOS.util.currencyFormat(invoice.items[i2].unit)+(invoice.items[i2].tax.inclusive?" tax incl. ":" tax excl. ")+WPOS.util.currencyFormat(invoice.items[i2].tax.total)+" = "+WPOS.util.currencyFormat(invoice.items[i2].price)+") \n";
             }
             // join payments
             var paystr = "";
             for (i2 in invoice.payments){
-                paystr += "("+invoice.payments[i2].method+"-"+WPOS.currency()+invoice.payments[i2].amount+") ";
+                paystr += "("+invoice.payments[i2].method+"-"+WPOS.util.currencyFormat(invoice.payments[i2].amount)+") ";
             }
             var status = getTransactionStatus(invoices[i]);
             var voidstr = "";
@@ -173,7 +173,7 @@
                     for (i2 in invoice.refunddata){
                         var ritems = JSON.stringify(invoice.refunddata[i2].items);
                         // TODO: get returned item string
-                        refstr += "(" + WPOS.util.getDateFromTimestamp(invoice.refunddata[i2].processdt) + " - "+invoice.refunddata[i2].reason+" - "+invoice.refunddata[i2].method+" - "+WPOS.currency()+invoice.refunddata[i2].amount+" - items: "+ritems+") ";
+                        refstr += "(" + WPOS.util.getDateFromTimestamp(invoice.refunddata[i2].processdt) + " - "+invoice.refunddata[i2].reason+" - "+invoice.refunddata[i2].method+" - "+WPOS.util.currencyFormat(invoice.refunddata[i2].amount)+" - items: "+ritems+") ";
                     }
                 }
             }
@@ -185,7 +185,7 @@
                 case 3: status = "Refunded"; break;
             }
             csv+=invoice.id+","+invoice.ref+","+WPOS.getConfigTable().users[invoice.userid].username+","+WPOS.getConfigTable().devices[invoice.devid].name+","+WPOS.getConfigTable().locations[invoice.locid].name+","
-                +invoice.custemail+","+itemstr+","+itemqty+","+paystr+","+WPOS.currency()+invoice.subtotal+","+invoice.discount+"%,"+WPOS.currency()+invoice.total+","+WPOS.util.getDateFromTimestamp(invoice.processdt)+","+invoice.dt+","+status+","+voidstr+","+refstr+"\n";
+                +invoice.custemail+","+itemstr+","+itemqty+","+paystr+","+WPOS.util.currencyFormat(invoice.subtotal)+","+invoice.discount+"%,"+WPOS.util.currencyFormat(invoice.total)+","+WPOS.util.getDateFromTimestamp(invoice.processdt)+","+invoice.dt+","+status+","+voidstr+","+refstr+"\n";
         }
 
         WPOS.initSave("invoices-"+WPOS.util.getDateFromTimestamp(stime)+"-"+WPOS.util.getDateFromTimestamp(etime), csv);
@@ -206,21 +206,22 @@
         for (var key in invoices){
             itemarray.push(invoices[key]);
         }
+        var timestamphtml = '<small class="hidden timestamp">';
         datatable = $('#invoicestable').dataTable(
             { "bProcessing": true,
                 "aaData": itemarray,
                 "aaSorting": [[8, "desc"],[ 0, "desc" ]],
                 "aoColumns": [
-                    { "mData":"id" },
-                    { "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
-                    { "mData":function(data, type, val){ return (customers.hasOwnProperty(data.custid)?customers[data.custid].name:"N/A");} },
-                    { "mData":function(data, type, val){ return WPOS.getConfigTable().users[data.userid].username;} },
-                    { "mData":function(data, type, val){return WPOS.util.getShortDate(data.processdt);} },
-                    { "mData":function(data, type, val){return WPOS.util.getShortDate(data.duedt);} },
-                    { "mData":function(data,type,val){return WPOS.currency()+data["total"];} },
-                    { "mData":function(data,type,val){return WPOS.currency()+data["balance"];} },
-                    { "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data));} },
-                    { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.transactions.openTransactionDialog($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'));"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.transactions.deleteTransaction($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'))"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
+                    { "sType": "numeric", "mData":"id" },
+                    { "sType": "string", "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
+                    { "sType": "string", "mData":function(data, type, val){ return (customers.hasOwnProperty(data.custid)?customers[data.custid].name:"N/A");} },
+                    { "sType": "string", "mData":function(data, type, val){ return WPOS.getConfigTable().users[data.userid].username;} },
+                    { "sType": "timestamp", "mData":function(data, type, val){return timestamphtml+data.processdt+'</small>'+WPOS.util.getShortDate(data.processdt);} },
+                    { "sType": "timestamp", "mData":function(data, type, val){return timestamphtml+data.duedt+'</small>'+WPOS.util.getShortDate(data.duedt);} },
+                    { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["total"]);} },
+                    { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["balance"]);} },
+                    { "sType": "html", "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data));} },
+                    { "sType": "html", mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.transactions.openTransactionDialog($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'));"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.transactions.deleteTransaction($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'))"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
                 ] } );
         // insert table wrapper
         $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");

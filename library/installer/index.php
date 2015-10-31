@@ -28,6 +28,10 @@ $_SERVER['APP_ROOT'] = "/";
 if (!isset($_SERVER['DOCUMENT_ROOT'])) {
     $_SERVER['DOCUMENT_ROOT'] = "/app"; // this is what dokku uses as docroot, we can catch it because it ain't defined (not using mod_php);
 }
+if (php_sapi_name() == "cli"){
+    $_SERVER['DOCUMENT_ROOT'] = "/app"; // explicitly define docroot
+    parse_str(implode('&', array_slice($argv, 1)), $_REQUEST);
+}
 require($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'library/wpos/AutoLoader.php'); //Autoload all the classes.
 $dbUpdater = new DbUpdater();
 // update

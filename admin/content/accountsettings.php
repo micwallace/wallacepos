@@ -4,11 +4,70 @@
         Accounting Setting
         <small>
             <i class="icon-double-angle-right"></i>
-            Manage accounting integration and preferences
+            Manage tax preferences & accounting integration
         </small>
     </h1>
 </div><!-- /.page-header -->
 <div class="row">
+    <div class="col-sm-6">
+        <div class="widget-box transparent">
+            <div class="widget-header widget-header-flat">
+                <h4 class="lighter">Tax Rules</h4>
+            </div>
+            <div style="padding-top: 10px;">
+                <div class="table-header">
+                    Tax rules are applied to sale items
+                </div>
+                <div class="table-responsive">
+                    <table id="tax-rule-table" class="table table-striped table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Price Inclusive</th>
+                            <th>Mode</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                    <br/><button id="addtaxrulebtn" class="btn btn-primary btn-sm pull-right" onclick="openTaxRuleDialog(0)"><i class="icon-pencil align-top bigger-125"></i>Add</button>
+                </div>
+            </div>
+        </div>
+        <div class="space-26"></div>
+        <div class="widget-box transparent">
+            <div class="widget-header widget-header-flat">
+                <h4 class="lighter">Tax Items</h4>
+            </div>
+            <div style="padding-top: 10px;">
+                <div class="table-responsive">
+                    <div class="table-header">
+                        Tax items/components are included in tax rules
+                    </div>
+                    <table id="tax-item-table" class="table table-striped table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th class="hidden-480">Value</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+
+
+                        </tbody>
+                    </table>
+                    <br/><button id="addtaxitembtn" class="btn btn-primary btn-sm pull-right" onclick="openTaxItemDialog(0)"><i class="icon-pencil align-top bigger-125"></i>Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="col-sm-6">
         <div class="widget-box transparent">
             <div class="widget-header widget-header-flat">
@@ -61,6 +120,7 @@
                             </table>
                         </div>
                     </div>
+                    <i>Xero export does not support multi mode tax rules at this time.</i>
                     <div class="space-4"></div>
                     <div class="form-group">
                         <div class="col-sm-5"></div>
@@ -71,9 +131,64 @@
                 </form>
             </div>
         </div>
+        <div class="col-sm-12 align-center form-actions">
+            <button class="btn btn-success" type="button" onclick="saveSettings();"><i class="icon-save align-top bigger-125"></i>Save</button>
+        </div>
     </div>
-    <div class="col-sm-12 align-center form-actions">
-        <button class="btn btn-success" type="button" onclick="saveSettings();"><i class="icon-save align-top bigger-125"></i>Save</button>
+</div>
+<div id="edittaxitemdialog" class="hide">
+    <table>
+        <tr>
+            <td style="text-align: right;"><label>Name:&nbsp;</label></td>
+            <td><input id="taxitemname" type="text"/>
+                <input id="taxitemid" type="hidden"/></td>
+        </tr>
+        <tr>
+            <td style="text-align: right;"><label>Type:&nbsp;</label></td>
+            <td><select style="width: 180px;" id="taxitemtype"><option value="standard">Standard</option></select></td>
+        </tr>
+        <tr>
+            <td style="text-align: right;"><label>Value:&nbsp;</label></td>
+            <td><input style="width: 165px;" id="taxitemvalue" type="text"/>%</td>
+        </tr>
+    </table>
+</div>
+<div id="edittaxruledialog" class="hide" style="min-width: 375px;">
+    <table>
+        <tr>
+            <td style="text-align: right;"><label>Name:&nbsp;</label></td>
+            <td><input id="taxrulename" type="text"/>
+                <input id="taxruleid" type="hidden"/></td>
+        </tr>
+        <tr>
+            <td style="text-align: right; vertical-align: top;"><label>Inclusive:&nbsp;</label></td>
+            <td><input id="taxruleinc" type="checkbox"/><br/><small>Tax is included in item unit price</small></td>
+        </tr>
+        <tr>
+            <td style="text-align: right; vertical-align: top;"><label>Multi-Mode:&nbsp;</label></td>
+            <td>
+                <select id="taxrulemode">
+                    <option value="single">Single</option>
+                    <option value="multi">Multiple</option>
+                </select>
+                <br/><small>Single: Applies first matched location tax, or base tax if there is no match<br/>
+                Multiple: Allows multiple taxes to be applied to an item</small>
+            </td>
+        </tr>
+    </table>
+    <div style="margin-bottom: 25px;">
+        <h4 class="header blue lighter smaller no-margin-bottom">Base Taxes:</h4>
+        <table id="taxrulebasetable" class="table" style="margin-bottom: 5px;">
+
+        </table>
+        <button onclick="insertTaxBaseRule(null);" class="btn btn-primary btn-xs pull-right">Add Base Tax</button>
+    </div>
+    <div>
+        <h4 class="header blue lighter smaller no-margin-bottom">Apply at location:</h4>
+        <table id="taxrulelocalstable" class="table no-margin-bottom" style="margin-bottom: 5px;">
+
+        </table>
+        <button onclick="insertTaxLocationRule(null, null);" class="btn btn-primary btn-xs pull-right">Add Rule</button>
     </div>
 </div>
 <div id="salesexportdialog" class="hide">
@@ -140,10 +255,13 @@
         if (options.xeroaval==1){
             $(".conxaccn").hide();
             $(".disxaccn").show();
-            var tax = WPOS.getTaxTable();
+            var tax = WPOS.getTaxTable().items;
+            var taxtable = $("#taxmaptable");
             for (var i in tax){
-                $("#taxmaptable").append('<tr><td>'+tax[i].name+'</td><td><select id="xeromap-tax-'+tax[i].id+'" class="width-100 xerotaxselect"></select></td></tr>');
+                taxtable.append('<tr><td>'+tax[i].name+'</td><td><select id="xeromap-tax-'+tax[i].id+'" class="width-100 xerotaxselect"></select></td></tr>');
             }
+            // add cash rounding account
+            taxtable.append('<tr><td>Cash Rounding</td><td><select id="xeromap-tax-0" class="width-100 xerotaxselect"></select></td></tr>');
             // populate xero accounts
             getXeroAccountSelects();
         } else {
@@ -216,6 +334,19 @@
         $("#exportprogress").hide();
         $("#exprogtext").show();
         $("#exprogresult").hide();
+        var exstime = $("#exportsdate");
+        var exetime = $("#exportedate");
+        var date = new Date();
+        date.setDate(date.getDate()-1);
+        date.setHours(0); date.setMinutes(0); date.setSeconds(0);
+        var stime = date.getTime();
+        date.setHours(23); date.setMinutes(59); date.setSeconds(59);
+        var etime = date.getTime();
+        exstime.datepicker({dateFormat:"dd/mm/yy", maxDate: new Date(stime)});
+        exetime.datepicker({dateFormat:"dd/mm/yy", maxDate: new Date(etime)});
+        // set to the last day
+        exstime.datepicker('setDate', new Date(stime));
+        exetime.datepicker('setDate', new Date(etime));
         var expdialog = $( "#salesexportdialog");
         expdialog.removeClass('hide').dialog({
             resizable: false,
@@ -246,19 +377,6 @@
                 $(this).css("maxWidth", "400px");
             }
         });
-        var exstime = $("#exportsdate");
-        var exetime = $("#exportedate");
-        var date = new Date();
-        date.setDate(date.getDate()-1);
-        date.setHours(0); date.setMinutes(0); date.setSeconds(0);
-        var stime = date.getTime();
-        date.setHours(23); date.setMinutes(59); date.setSeconds(59);
-        var etime = date.getTime();
-        exstime.datepicker({dateFormat:"dd/mm/yy", maxDate: new Date(stime)});
-        exetime.datepicker({dateFormat:"dd/mm/yy", maxDate: new Date(etime)});
-        // set to the last day
-        exstime.datepicker('setDate', new Date(stime));
-        exetime.datepicker('setDate', new Date(etime));
 
         expdialog.dialog('open');
     }
@@ -312,8 +430,282 @@
             restext.removeClass("green");
         }
     }
+    // tax stuff
+    var taxitemtable, taxruletable, rulearray, itemarray;
+    var taxtable = WPOS.getTaxTable();
+    function initTaxTables(){
+        loadTaxRuleData();
+        taxruletable = $('#tax-rule-table').dataTable(
+            { "bProcessing": false,
+                "sDom": '<"top">t<"clear">',
+                "aaData": rulearray,
+                "aoColumns": [
+                    { "mData":"id" }, { "mData":"name" },
+                    { "mData":function(data, type, val){ return data.inclusive?'<i class="icon-cogs green"></i>&nbsp;Inclusive':'<i class="icon-cogs red"></i>&nbsp;Exclusive' } },
+                    { "mData":function(data, type, val){ return data.hasOwnProperty('mode')?WPOS.util.capFirstLetter(data.mode):''; } },
+                    { "mData":function(data, type, val){ if (data.id==1) return ""; else return '<div class="action-buttons" style="width: 40px;"><a class="green" onclick="openTaxRuleDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
+                        '<a class="red" onclick="deleteTaxRule($(this).closest(\'tr\').find(\'td\').eq(0).text())"><i class="icon-trash bigger-130"></i></a></div>'; }, "bSortable": false }
+                ] } );
+        loadTaxItemData();
+        taxitemtable = $('#tax-item-table').dataTable(
+            { "bProcessing": false,
+                "sDom": '<"top">t<"clear">',
+                "aaData": itemarray,
+                "aoColumns": [
+                    { "mData":"id" }, { "mData":"name" }, { "mData":"type" }, { "mData":function(data, type, val){return data.value+"%";} },
+                    { "mdata":null, "sDefaultContent":'<div class="action-buttons" style="width: 40px;"><a class="green" onclick="openTaxItemDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
+                        '<a class="red" onclick="deleteTaxItem($(this).closest(\'tr\').find(\'td\').eq(0).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
+                ] } );
+        // insert table wrapper
+        $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
+        // init dialogs
+        $( "#edittaxitemdialog" ).removeClass('hide').dialog({
+            resizable: false,
+            width: 'auto',
+            modal: true,
+            autoOpen: false,
+            title: "Edit Tax Item",
+            title_html: true,
+            buttons: [
+                {
+                    html: "<i class='icon-trash bigger-110'></i>&nbsp; Update",
+                    "class" : "btn btn-success btn-xs",
+                    click: function() {
+                        saveTaxItem();
+                    }
+                }
+                ,
+                {
+                    html: "<i class='icon-remove bigger-110'></i>&nbsp; Cancel",
+                    "class" : "btn btn-xs",
+                    click: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            ]
+        });
+        $( "#edittaxruledialog" ).removeClass('hide').dialog({
+            resizable: false,
+            width: 'auto',
+            modal: true,
+            autoOpen: false,
+            title: "Edit Tax Rule",
+            title_html: true,
+            buttons: [
+                {
+                    html: "<i class='icon-trash bigger-110'></i>&nbsp; Update",
+                    "class" : "btn btn-success btn-xs",
+                    click: function() {
+                        saveTaxRule();
+                    }
+                }
+                ,
+                {
+                    html: "<i class='icon-remove bigger-110'></i>&nbsp; Cancel",
+                    "class" : "btn btn-xs",
+                    click: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            ]
+        });
+    }
+    function insertTaxBaseRule(id){
+        $("#taxrulebasetable").append("<tr><td><select class='taxbase-id'>"+getTaxSelectOptions(id)+'</option></td><td><div class="action-buttons text-right"><a class="red" onclick="$(this).closest(\'tr\').remove();"><i class="icon-trash bigger-130"></i></a></div></td></tr>');
+    }
+    function insertTaxLocationRule(locid, taxid){
+        var lochtml="";
+        for (var key in WPOS.locations){
+            lochtml+='<option value="'+WPOS.locations[key].id+'" '+(locid==WPOS.locations[key].id?'selected=selected':'')+'>'+WPOS.locations[key].name+'</option>';
+        }
+        $("#taxrulelocalstable").append("<tr><td><select class='taxlocals-locid'>"+lochtml+"</option></td>" +
+                "<td><select class='taxlocals-taxid'>"+getTaxSelectOptions(taxid)+'</option></td><td><div class="action-buttons text-right"><a class="red" onclick="$(this).closest(\'tr\').remove();"><i class="icon-trash bigger-130"></i></a></div></td></tr>');
+    }
+    function getTaxSelectOptions(id){
+        var html="";
+        for (var key in taxtable.items){
+            html+='<option class="taxid-'+taxtable.items[key].id+'" value="'+taxtable.items[key].id+'" '+(id==taxtable.items[key].id?'selected=selected':'')+'>'+taxtable.items[key].name+' ('+taxtable.items[key].value+'%)</option>';
+        }
+        return html;
+    }
+    function loadTaxRuleData(){
+        var tempitem;
+        rulearray = [];
+        for (var key in taxtable.rules){
+            tempitem = taxtable.rules[key];
+            rulearray.push(tempitem);
+        }
+    }
+    function loadTaxItemData(){
+        var tempitem;
+        itemarray = [];
+        for (var key in taxtable.items){
+            tempitem = taxtable.items[key];
+            itemarray.push(tempitem);
+        }
+    }
+    function reloadTaxRuleTable(){
+        loadTaxRuleData();
+        taxruletable.fnClearTable();
+        taxruletable.fnAddData(rulearray);
+    }
+    function reloadTaxItemTable(){
+        loadTaxItemData();
+        taxitemtable.fnClearTable();
+        taxitemtable.fnAddData(itemarray);
+    }
+    function openTaxItemDialog(id){
+        $("#taxitemid").val(id);
+        if (id==0){
+            $("#taxitemname").val("");
+            $("#taxitemvalue").val("");
+            $("#edittaxitemdialog").dialog("open");
+            return;
+        }
+        var item = taxtable.items[id];
+        $("#taxitemname").val(item.name);
+        $("#taxitemtype").val(item.type);
+        $("#taxitemvalue").val(item.value);
+        $("#edittaxitemdialog").dialog("open");
+    }
+    function saveTaxItem(){
+        WPOS.util.showLoader();
+        var item = {};
+        item.name = $("#taxitemname").val();
+        item.type = $("#taxitemtype").val();
+        item.value = $("#taxitemvalue").val();
+        var id = $("#taxitemid").val();
+        var result;
+        if (id==0){
+            // adding a new item
+            result = WPOS.sendJsonData("tax/items/add", JSON.stringify(item));
+            if (result){
+                taxtable.items[result.id] = result;
+                WPOS.putTaxTable(taxtable);
+                reloadTaxItemTable();
+                $("#edittaxitemdialog").dialog("close");
+            }
+        } else {
+            // updating an item
+            item.id = id;
+            result = WPOS.sendJsonData("tax/items/edit", JSON.stringify(item));
+            if (result){
+                taxtable.items[result.id] = result;
+                WPOS.putTaxTable(taxtable);
+                reloadTaxItemTable();
+                $("#edittaxitemdialog").dialog("close");
+            }
+        }
+        WPOS.util.hideLoader();
+    }
+    function deleteTaxItem(id){
+        // check if it's being used in a rule
+        id = parseInt(id);
+        for (var i in taxtable.rules){
+            if (taxtable.rules[i].base.indexOf(id)!==-1){
+                alert("This tax item is being used in a rule, remove it from the rule first");
+                return;
+            }
+            for (var x in taxtable.rules[i].locations){
+                if (taxtable.rules[i].locations[x].indexOf(id)!==-1){
+                    console.log(taxtable.rules[i].locations[x].indexOf(id));
+                    alert("This tax item is being used in a rule, remove it from the rule first");
+                    return;
+                }
+            }
+        }
+        var answer = confirm("Are you sure you want to delete this tax item?");
+        if (answer){
+            WPOS.util.showLoader();
+            if (WPOS.sendJsonData("tax/items/delete", '{"id":'+id+'}')){
+                delete taxtable.items[id];
+                WPOS.putTaxTable(taxtable);
+                reloadTaxItemTable();
+            }
+            WPOS.util.hideLoader();
+        }
+    }
+    function openTaxRuleDialog(id){
+        $("#taxruleid").val(id);
+        $("#taxrulebasetable").html('');
+        $("#taxrulelocalstable").html('');
+        if (id==0){
+            $("#taxrulename").val('');
+            $("#taxruleinc").prop("checked", true);
+            $("#edittaxruledialog").dialog("open");
+            return;
+        }
+        var rule = taxtable.rules[id];
+        $("#taxrulename").val(rule.name);
+        $("#taxruleinc").prop("checked", rule.inclusive);
+        $("#taxrulemode").val(rule.mode);
+        for (var i = 0; i<rule.base.length; i++){
+            insertTaxBaseRule(rule.base[i]);
+        }
+        var x;
+        for (i in rule.locations){
+            for (x = 0; x<rule.locations[i].length; x++){
+                insertTaxLocationRule(i, rule.locations[i][x]);
+            }
+        }
+        $("#edittaxruledialog").dialog("open");
+    }
+    function saveTaxRule(){
+        WPOS.util.showLoader();
+        var rule = {};
+        rule.name = $("#taxrulename").val();
+        rule.inclusive = $("#taxruleinc").is(":checked");
+        rule.mode = $("#taxrulemode").val();
+        rule.base = [];
+        rule.locations = {};
+        $("#taxrulebasetable tr").each(function(){
+           rule.base.push(parseInt($(this).find(".taxbase-id").val()));
+        });
+        $("#taxrulelocalstable tr").each(function(){
+            var id = $(this).find(".taxlocals-locid").val();
+            if (!rule.locations.hasOwnProperty(id))
+                rule.locations[id] = [];
+            rule.locations[id].push(parseInt($(this).find(".taxlocals-taxid").val()));
 
+        });
+        var id = $("#taxruleid").val();
+        var result;
+        if (id==0){
+            // adding a new item
+            result = WPOS.sendJsonData("tax/rules/add", JSON.stringify(rule));
+            if (result){
+                taxtable.rules[result.id] = result;
+                WPOS.putTaxTable(taxtable);
+                reloadTaxRuleTable();
+                $("#edittaxruledialog").dialog("close");
+            }
+        } else {
+            // updating an item
+            rule.id = id;
+            result = WPOS.sendJsonData("tax/rules/edit", JSON.stringify(rule));
+            if (result){
+                taxtable.rules[result.id] = result;
+                WPOS.putTaxTable(taxtable);
+                reloadTaxRuleTable();
+                $("#edittaxruledialog").dialog("close");
+            }
+        }
+        WPOS.util.hideLoader();
+    }
+    function deleteTaxRule(id){
+        var answer = confirm("Are you sure you want to delete this tax rule?\nIf the rule is applied to stored items, this tax will no longer apply.");
+        if (answer){
+            WPOS.util.showLoader();
+            if (WPOS.sendJsonData("tax/rules/delete", '{"id":'+id+'}')){
+                delete taxtable.rules[id];
+                WPOS.putTaxTable(taxtable);
+                reloadTaxRuleTable();
+            }
+            WPOS.util.hideLoader();
+        }
+    }
     $(function(){
+        initTaxTables();
         loadSettings();
         // hide loader
         WPOS.util.hideLoader();

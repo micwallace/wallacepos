@@ -77,7 +77,7 @@ class DbConfig
 
         try {
             if (!$this->_db = new \PDO($dsn, self::$_username, self::$_password)){
-                throw new PDOException('Failed to connect to database.', 0, 0);
+                throw new PDOException('Failed to connect to database, php PDO extension may not be installed', 0, 0);
             }
 
             $this->_db->query("SET time_zone = '+00:00'"); //Set timezone to GMT, previous statement didnt work (Australia/Sydney), and GMT preserved daylight savings.
@@ -86,7 +86,7 @@ class DbConfig
             $this->_db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
 
         } catch (PDOException $e) {
-            throw new PDOException('Failed to connect to database.', 0, $e);
+            throw new PDOException('Failed to connect to database: '.$e->getMessage(), 0, $e);
         }
 
     }

@@ -244,7 +244,7 @@
                 <a href="#faq-2-1" data-parent="#faq-list-2" data-toggle="collapse" class="accordion-toggle collapsed">
                     <i class="icon-chevron-right smaller-80" data-icon-hide="icon-chevron-down align-top" data-icon-show="icon-chevron-right"></i>
                     &nbsp;
-                    Tyro Eftpos Setup (Hosted versions only)
+                    Tyro Eftpos Setup
                 </a>
             </div>
 

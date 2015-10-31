@@ -25,42 +25,19 @@
 class WposPosSetup
 {
     /**
-     * @var string
-     */
-    private $deviceId;
-    /**
-     * @var string
-     */
-    private $deviceName;
-    /**
-     * @var string
-     */
-    private $locationId;
-    /**
-     * @var string
-     */
-    private $locationName;
-    /**
-     * @var
-     */
-    private $uuid;
-
-    /**
      * @var mixed
      */
     private $data;
+
+    private $devMdl;
 
     /**
      * Decode provided JSON and extract commonly used variables
      * @param $data
      */
     public function WposPosSetup($data = null){
+        $this->devMdl = new DevicesModel();
         $this->data = $data;
-        $this->uuid         = (isset($this->data->uuid) ? $this->data->uuid : "");
-        $this->deviceId     = (isset($this->data->devid) ? $this->data->devid : "");
-        $this->deviceName   = (isset($this->data->devname) ? $this->data->devname : "");
-        $this->locationId   = (isset($this->data->locid) ? $this->data->locid : "");
-        $this->locationName = (isset($this->data->locname) ? $this->data->locname : "");
     }
 
     /**
@@ -71,28 +48,29 @@ class WposPosSetup
     public function getDeviceRecord($result){
         // Get device info using the uuid
         $devMdl     = new DevicesModel();
-        $deviceInfo = $devMdl->getUuidInfo($this->uuid);
+        $deviceInfo = $devMdl->getUuidInfo($this->data->uuid);
         if ($deviceInfo === false) {
             $result['error'] = "DB Error fetching your device settings";
             return $result;
-        } else if (sizeof($deviceInfo) < 1) {
+        } else if ($deviceInfo === null) {
             // device removed or not found
-            $result['data'] = ["remdev"=>true];
+            $result['data'] = "removed";
             $result['warning'] = "This device has been removed from the system, please contact your Administrator";
             return $result;
         }
-        if ($deviceInfo[0]['disabled'] == 1){ // check if device is disabled
-            $result['data'] = ["remdev"=>true];
+        if ($deviceInfo['disabled'] == 1){ // check if device is disabled
+            $result['data'] = "disabled";
             $result['warning'] = "This device has been disabled, please contact your Administrator";
             return $result;
         }
 
         // add device specific info
         $result['data']               = new stdClass();
-        $result['data']->deviceid     = $deviceInfo[0]["deviceid"];
-        $result['data']->devicename   = $deviceInfo[0]["devicename"];
-        $result['data']->locationid   = $deviceInfo[0]["locationid"];
-        $result['data']->locationname = $deviceInfo[0]["locationname"];
+        $result['data']->deviceid     = $deviceInfo["deviceid"];
+        $result['data']->devicename   = $deviceInfo["devicename"];
+        $result['data']->locationid   = $deviceInfo["locationid"];
+        $result['data']->locationname = $deviceInfo["locationname"];
+        $result['data']->deviceconfig = $deviceInfo["deviceconfig"];
 
         // Get general & global pos configuration
         $WposConfig = new WposAdminSettings();
@@ -114,8 +92,11 @@ class WposPosSetup
         }
 
         // get tax
-        if (($result['data']->tax=$this->getTaxRecords())===false){
-            $result['error'] = "Tax config could not be retrieved!";
+        $tax = WposPosData::getTaxes();
+        if (is_null($tax['error'])){
+            $result['data']->tax = $tax['data'];
+        } else {
+            $result['error'] = $tax['error'];
         }
 
         return $result;
@@ -149,26 +130,13 @@ class WposPosSetup
         }
 
         // get tax
-        if (($result['data']->tax=$this->getTaxRecords())===false){
-            $result['error'] = "Tax config could not be retrieved!";
+        $tax = WposPosData::getTaxes();
+        if (!isset($tax['error'])){
+            $result['data']->tax = $tax['data'];
+        } else {
+            $result['error'] = $tax['error'];
         }
 
-        return $result;
-    }
-
-    /**
-     * Retrieve tax record
-     * @return array|bool
-     */
-    private function getTaxRecords(){
-        $taxMdl = new TaxItemsModel();
-        if (($taxes = $taxMdl->get())===false){
-            return false;
-        }
-        $result = [];
-        foreach($taxes as $tax){
-            $result[$tax['id']] = $tax;
-        }
         return $result;
     }
 
@@ -238,17 +206,17 @@ class WposPosSetup
     public function setupDevice($result)
     {
         // create new location record
-        if ($this->locationId == null) {
+        if ($this->data->locationid == null) {
             // check if a name has been provided
-            if ($this->locationName == null) {
-                if ($this->deviceId == null){ // if we are adding a new device, location id or name must be provided.
+            if ($this->data->locationname == null) {
+                if ($this->data->deviceid == null){ // if we are adding a new device, location id or name must be provided.
                     $result['error'] = "No location id or name was provided";
                     return $result;
                 }
             } else {
                 // create a new location using the provided name
-                if (($newid = $this->addNewLocation($this->locationName))!==false) {
-                    $this->locationId = $newid;
+                if (($newid = $this->addNewLocation($this->data->locationname))!==false) {
+                    $this->data->locationid = $newid;
                 } else {
                     $result['error'] = "Insertion of new location record failed";
 
@@ -257,15 +225,23 @@ class WposPosSetup
             }
         }
         // insert new device
-        if ($this->deviceId == null) {
-            if ($this->deviceName == null) {
+        if ($this->data->deviceid == null) {
+            if ($this->data->devicename == null) {
                 $result['error'] = "The no device id or name was provided";
 
                 return $result;
             } else {
                 // create a new location using the provided name
-                if (($newid = $this->addNewDevice($this->deviceName, $this->locationId))!==false) {
-                    $this->deviceId = $newid;
+                $deviceData = new stdClass();
+                $deviceData->name = $this->data->devicename;
+                $deviceData->locationid = $this->data->locationid;
+                $deviceData->type = $this->data->deviceType;
+                $deviceData->ordertype = $this->data->deviceOrderType;
+                $deviceData->orderdisplay = $this->data->deviceOrderDisplay;
+                $deviceData->kitchenid = $this->data->kitchenId;
+                $deviceData->barid = $this->data->barId;
+                if (($newid = $this->addNewDevice($deviceData))!==false) {
+                    $this->data->deviceid = $newid;
                 } else {
                     $result['error'] = "Insertion of new device record failed";
                     return $result;
@@ -274,7 +250,7 @@ class WposPosSetup
         } else {
             // check if device exists and is enabled
             $devMdl = new DevicesModel();
-            $dev = $devMdl->get($this->deviceId);
+            $dev = $devMdl->get($this->data->deviceid, null, null, false);
             if ($dev===false || sizeof($dev)==0){
                 $result['error'] = "The deviceid specified does not exist";
                 return $result;
@@ -284,30 +260,32 @@ class WposPosSetup
                 $result['error'] = "The deviceid specified is disabled";
                 return $result;
             }
-            if ($this->locationId != null){ // if location id is left out, we can leave device at it's current location
+            if ($this->data->locationid != null){ // if location id is left out, we can leave device at it's current location
                 // check if location exists (and enabled) before updating device location
-                if (!$this->doesLocationExist($this->locationId)){
+                if (!$this->doesLocationExist($this->data->locationid)){
                     $result['error'] = "The locationid specified does not exist or is disabled";
                     return $result;
                 }
                 // update location
-                if ($devMdl->updateLocation($this->deviceId, $this->locationId)===false){
+                $deviceData = json_decode($dev['data']);
+                $deviceData->locationid = $this->data->locationid;
+                if ($devMdl->edit($this->data->deviceid, $deviceData)===false){
                     $result['error'] = "Failed to update the devices location";
                     return $result;
                 }
             }
         }
         // insert the md5 signature in the device_map table
-        if ($this->addNewUuid($this->uuid, $this->deviceId)) {
+        if ($this->addNewUuid($this->data->uuid, $this->data->deviceid)) {
             // create json record to return to the client
             $result['data']               = new stdClass();
-            $result['data']->deviceid     = $this->deviceId;
-            $result['data']->devicename   = $this->deviceName;
-            $result['data']->locationid   = $this->locationId;
-            $result['data']->locationname = $this->locationName;
+            $result['data']->deviceid     = $this->data->deviceid;
+            $result['data']->devicename   = $this->data->devicename;
+            $result['data']->locationid   = $this->data->locationid;
+            $result['data']->locationname = $this->data->locationname;
 
             // log data
-            Logger::write("New device registered with uuid:".$this->uuid, "CONFIG", json_encode($this->data));
+            Logger::write("New device registered with uuid: ".$this->data->uuid, "CONFIG", json_encode($this->data));
 
             return $result;
         } else {
@@ -319,14 +297,15 @@ class WposPosSetup
 
     /**
      * Add a new device record into the system
+     * @param $data
      * @return bool|string
      */
-    private function addNewDevice()
+    private function addNewDevice($data)
     {
-        $devMdl = new DevicesModel();
-        $newid  = $devMdl->create($this->deviceName, $this->locationId);
+        $newid  = $this->devMdl->create($data);
         if ($newid !== false) {
-            return $newid;
+            $this->data->id = $newid;
+            return true;
         } else {
             return false;
         }
@@ -339,22 +318,21 @@ class WposPosSetup
      */
     public function addDevice($result){
          // validate input
-         $jsonval = new JsonValidate($this->data, '{"devname":"", "locid":1}');
+         $jsonval = new JsonValidate($this->data, '{"name":"", "locationid":1, "type":"", "ordertype":"", "orderdisplay":""}');
          if (($errors = $jsonval->validate())!==true){
             $result['error'] = $errors;
             return $result;
          }
-         if (!$this->doesLocationExist($this->locationId)){
+         if (!$this->doesLocationExist($this->data->locationid)){
             $result['error'] = "The location id specified does not exist";
             return $result;
          }
-         if (!$this->addNewDevice()){
-            $result['error'] = "Could not add the device";
+         if (!$this->addNewDevice($this->data)){
+            $result['error'] = "Could not add the device: ".$this->devMdl->errorInfo;
          } else {
             // log data
             Logger::write("New device added", "CONFIG", json_encode($this->data));
-
-            $result['data'] = true;
+            $result['data'] = $this->data;
          }
         return $result;
     }
@@ -366,19 +344,20 @@ class WposPosSetup
      */
     public function updateDevice($result){
         // validate input
-        $jsonval = new JsonValidate($this->data, '{"devid":1, "devname":"", "locid":1}');
+        $jsonval = new JsonValidate($this->data, '{"id":1, "name":"", "locationid":1, "type":"", "ordertype":"", "orderdisplay":""}');
         if (($errors = $jsonval->validate())!==true){
             $result['error'] = $errors;
             return $result;
         }
-        if (!$this->doesLocationExist($this->locationId)){
+        if (!$this->doesLocationExist($this->data->locationid)){
             $result['error'] = "The location id specified does not exist";
             return $result;
         }
         $devMdl = new DevicesModel();
-        if ($devMdl->edit($this->deviceId, $this->deviceName, $this->locationId)!==false) {
-            $result['data'] = true;
-
+        if ($devMdl->edit($this->data->id, $this->data)!==false) {
+            $result['data'] = $this->data;
+            $socketIO = new WposSocketIO();
+            $socketIO->sendDeviceConfigUpdate($this->data->id, $this->data);
             // log data
             Logger::write("Device updated", "CONFIG", json_encode($this->data));
         } else {
@@ -394,16 +373,17 @@ class WposPosSetup
      */
     public function deleteDevice($result){
         // validation
-        if (!is_numeric($this->deviceId)){
+        if (!is_numeric($this->data->id)){
             $result['error'] = "A valid id must be supplied";
             return $result;
         }
         $devMdl = new DevicesModel();
-        if ($devMdl->remove($this->deviceId)!==false) {
+        if ($devMdl->remove($this->data->id)!==false) {
             $result['data'] = true;
-
+            $socketIO = new WposSocketIO();
+            $socketIO->sendDeviceConfigUpdate($this->data->id, "removed");
             // log data
-            Logger::write("Device deleted with id:".$this->deviceId, "CONFIG");
+            Logger::write("Device deleted with id:".$this->data->id, "CONFIG");
         } else {
             $result['error'] = "Could not remove the device";
         }
@@ -433,7 +413,10 @@ class WposPosSetup
         if ($devMdl->setDisabled($this->data->id, boolval($this->data->disable))===false) {
             $result['error'] = "Could not enable/disable the device";
         }
-
+        if ($this->data->disable){
+            $socketIO = new WposSocketIO();
+            $socketIO->sendDeviceConfigUpdate($this->data->id, "disabled");
+        }
         // log data
         Logger::write("Device ".($this->data->disable==true?"disabled":"enabled")." with id:".$this->data->id, "CONFIG");
 
@@ -441,13 +424,58 @@ class WposPosSetup
     }
 
     /**
+     * Set a device disabled
+     * @param $result
+     * @return mixed
+     */
+    public function getDeviceRegistrations($result){
+        // validate input
+        if (!is_numeric($this->data->id)){
+            $result['error'] = "A valid id must be supplied";
+            return $result;
+        }
+        // get location id
+        $devMdl = new DevicesModel();
+        if (($result['data']=$devMdl->getUuids($this->data->id))===false){
+            $result['error'] = "Could not retrieve device registrations";
+        }
+
+        return $result;
+    }
+
+    /**
+     * Set a device disabled
+     * @param $result
+     * @return mixed
+     */
+    public function deleteDeviceRegistration($result){
+        // validate input
+        if (!is_numeric($this->data->id)){
+            $result['error'] = "A valid id must be supplied";
+            return $result;
+        }
+        // get location id
+        $devMdl = new DevicesModel();
+        if ($devMdl->removeUuid($this->data->id)!==false) {
+            $result['data'] = true;
+            // log data
+            Logger::write("Device registration deleted with id:".$this->data->id, "CONFIG");
+        } else {
+            $result['error'] = "Could not remove the device registration";
+        }
+
+        return $result;
+    }
+
+    /**
      * Add a new location record
+     * @param $name
      * @return bool|string
      */
-    public function addNewLocation()
+    public function addNewLocation($name)
     {
         $locMdl = new LocationsModel();
-        if (($newid = $locMdl->create($this->locationName))!==false) {
+        if (($newid = $locMdl->create($name))!==false) {
             return $newid;
         } else {
             return false;
@@ -461,15 +489,15 @@ class WposPosSetup
      */
     public function addLocation($result){
         // validate input
-        $jsonval = new JsonValidate($this->data, '{"locname":""}');
+        $jsonval = new JsonValidate($this->data, '{"name":""}');
         if (($errors = $jsonval->validate())!==true){
             $result['error'] = $errors;
             return $result;
         }
-        if (!$this->addNewLocation()){
+        if (!$this->data->id = $this->addNewLocation($this->data->name)){
             $result['error'] = "Could not add the location";
         } else {
-            $result['data'] = true;
+            $result['data'] = $this->data;
         }
         return $result;
     }
@@ -481,15 +509,14 @@ class WposPosSetup
      */
     public function updateLocationName($result){
         // validate input
-        $jsonval = new JsonValidate($this->data, '{"locid":1, "locname":""}');
+        $jsonval = new JsonValidate($this->data, '{"id":1, "name":""}');
         if (($errors = $jsonval->validate())!==true){
             $result['error'] = $errors;
             return $result;
         }
         $locMdl = new LocationsModel();
-        if ($locMdl->edit($this->locationId, $this->locationName)!==false) {
-            $result['data'] = true;
-
+        if ($locMdl->edit($this->data->id, $this->data->name)!==false) {
+            $result['data'] = $this->data;
             // log data
             Logger::write("Location updated", "CONFIG", json_encode($this->data));
         } else {
@@ -505,21 +532,20 @@ class WposPosSetup
      */
     public function deleteLocation($result){
         // validation
-        if (!is_numeric($this->locationId)){
+        if (!is_numeric($this->data->id)){
             $result['error'] = "A valid id must be supplied";
             return $result;
         }
         // Check if the location is in use
-        if ($this->isLocationUsed($this->locationId)){
+        if ($this->isLocationUsed($this->data->id)){
             $result['error'] = "The location is currently active, disable locations devices or update to a new location before deleting.";
             return $result;
         }
         $locMdl = new LocationsModel();
-        if ($locMdl->remove($this->locationId)!==false) {
+        if ($locMdl->remove($this->data->id)!==false) {
             $result['data'] = true;
-
             // log data
-            Logger::write("Location deleted with id:".$this->locationId, "CONFIG");
+            Logger::write("Location deleted with id:".$this->data->id, "CONFIG");
         } else {
             $result['error'] = "Could not delete the location";
         }

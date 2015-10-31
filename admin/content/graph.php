@@ -254,7 +254,7 @@
             if (item) {
                 if (previousPoint != item.seriesIndex) {
                     previousPoint = item.seriesIndex;
-                    var tip = item.series['label'] + " : " + WPOS.currency() + item.datapoint[1];
+                    var tip = item.series['label'] + " : " + WPOS.util.currencyFormat(item.datapoint[1]);
                     $tooltip.show().children(0).text(tip);
                 }
                 var left, right;

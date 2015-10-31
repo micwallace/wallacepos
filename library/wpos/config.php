@@ -9,9 +9,17 @@ $_SERVER['APP_ROOT'] = "/";
 if (!isset($_SERVER['DOCUMENT_ROOT'])) {
     $_SERVER['DOCUMENT_ROOT'] = "/app"; // this is what dokku uses as docroot, for some reason it's not set
 }
-
+// load timezone config if available
+// TODO: cache this somehow
+$timezone = "Australia/Sydney";
+if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/config.json")){
+    $config = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/config.json"));
+    if (isset($config->timezone))
+        $timezone = $config->timezone;
+}
 // Date & Time
-ini_set('date.timezone', 'Australia/Sydney');
+putenv("WPOS_TIMEZONE=".$timezone);
+ini_set('date.timezone', $timezone);
 
 // Error handling
 ini_set('display_errors', 'On');

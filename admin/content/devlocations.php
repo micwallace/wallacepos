@@ -3,7 +3,7 @@
     <h1 class="inline">
         Devices
     </h1>
-    <button onclick="$('#adddevdialog').dialog('open');" id="addbtn" class="btn btn-primary btn-sm pull-right"><i class="icon-pencil align-top bigger-125"></i>Add</button>
+    <button onclick="openDevDialog(0);" id="addbtn" class="btn btn-primary btn-sm pull-right"><i class="icon-pencil align-top bigger-125"></i>Add</button>
 </div><!-- /.page-header -->
 <div class="row">
     <div class="col-xs-12">
@@ -22,6 +22,7 @@
                             <th>ID</th>
                             <th>Name</th>
                             <th>Location</th>
+                            <th>Type</th>
                             <th>Status</th>
                             <th></th>
                         </tr>
@@ -38,7 +39,7 @@
             <h1 class="inline">
                 Locations
             </h1>
-            <button onclick="$('#addlocdialog').dialog('open');" id="addbtn" class="btn btn-primary btn-sm pull-right"><i class="icon-pencil align-top bigger-125"></i>Add</button>
+            <button onclick="openLocDialog(0);" id="addbtn" class="btn btn-primary btn-sm pull-right"><i class="icon-pencil align-top bigger-125"></i>Add</button>
         </div><!-- /.page-header -->
         <div class="row" style="margin-top: 10px;">
             <div class="col-xs-12">
@@ -74,46 +75,95 @@
         </tr>
     </table>
 </div>
-<div id="addlocdialog" class="hide">
-    <table>
-        <tr>
-            <td style="text-align: right;"><label>Name:&nbsp;</label></td>
-            <td><input id="newlocname" type="text"/><br/></td>
-        </tr>
-    </table>
-</div>
 <div id="editdevdialog" class="hide">
-    <table>
-        <tr>
-            <td style="text-align: right;"><label>Name:&nbsp;</label></td>
-            <td><input id="devname" type="text"/>
-                <input id="devid" type="hidden"/></td>
-        </tr>
-        <tr>
-            <td style="text-align: right;"><label>Location:&nbsp;</label></td>
-            <td><select id="devlocid" class="locselect">
-                </select></td>
-        </tr>
-    </table>
-</div>
-<div id="adddevdialog" class="hide">
-    <table>
-        <tr>
-            <td style="text-align: right;"><label>Name:&nbsp;</label></td>
-            <td><input id="newdevname" type="text"/><br/></td>
-        </tr>
-        <tr>
-            <td style="text-align: right;"><label>Location:&nbsp;</label></td>
-            <td><select id="newdevlocid" class="locselect">
-                </select></td>
-        </tr>
-    </table>
+    <div class="tabbable" style="min-width: 360px; min-height: 310px;">
+    <ul class="nav nav-tabs">
+        <li class="active">
+            <a href="#devicedetails" data-toggle="tab">
+                Details
+            </a>
+        </li>
+        <li id="devregtab" class="" onclick="loadDeviceRegistrations();">
+            <a href="#devicereg" data-toggle="tab">
+                Registrations
+            </a>
+        </li>
+    </ul>
+    <div class="tab-content" style="min-height: 320px;">
+        <div class="tab-pane active in" id="devicedetails">
+            <table>
+                <tr>
+                    <td style="text-align: right;"><label>Name:&nbsp;</label></td>
+                    <td><input id="devname" type="text"/>
+                        <input id="devid" type="hidden"/></td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>Location:&nbsp;</label></td>
+                    <td><select id="devlocid" class="locselect">
+                        </select></td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;"><label>Device Type:&nbsp;</label></td>
+                    <td><select id="devtype" onchange="showDeviceOptions($(this).val());">
+                            <option class="reg_device" value="general_register">General Cash Register</option>
+                            <option class="reg_device" value="order_register">Order Register (alpha version)</option>
+                            <option class="kitchen_device" value="kitchen_terminal">Kitchen/Bar Terminal (alpha version)</option>
+                        </select></td>
+                </tr>
+                <tr class="order_options">
+                    <td style="text-align: right;"><label>Kitchen Delivery:&nbsp;</label></td>
+                    <td><select id="devordertype" onchange="showKitchenOptions($(this).val());">
+                            <option value="terminal">Kitchen/Bar Terminal</option>
+                            <option value="printer">Kitchen/Bar Printer</option>
+                        </select></td>
+                </tr>
+                <tr class="order_options">
+                    <td style="text-align: right;"><label>Display Orders:&nbsp;</label></td>
+                    <td><input id="devorderdisplay" type="checkbox" /></td>
+                </tr>
+                <tr class="order_term_options">
+                    <td style="text-align: right;"><label>Kitchen Terminal:&nbsp;</label></td>
+                    <td><select id="devkitchenid" class="kitchenselect">
+                        </select></td>
+                </tr>
+            </table>
+        </div>
+        <div class="tab-pane" id="devicereg" style="min-height: 280px;">
+            <div style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-responsive">
+                    <tbody id="devreglist">
+                        <tr>
+                            <td colspan="2" style="text-align: center;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- page specific plugin scripts; migrated to index.php due to heavy use -->
 
 <!-- inline scripts related to this page -->
 <script type="text/javascript">
+
+    function showDeviceOptions(devicetype){
+        if (devicetype=='order_register'){
+            $('.order_options').show();
+            showKitchenOptions($('#devordertype').val());
+        } else {
+            $('.order_options').hide();
+            $('.order_term_options').hide();
+        }
+    }
+
+    function showKitchenOptions(deliverytype){
+        if (deliverytype=='terminal'){
+            $('.order_term_options').show();
+        } else {
+            $('.order_term_options').hide();
+        }
+    }
 
     var devtable, loctable, devices, locations;
 
@@ -123,7 +173,7 @@
         locations = data['locations/get'];
 
         var devarray = [];
-        var tempitem = {};
+        var tempitem;
         for (var key in devices){
             tempitem = devices[key];
             if (tempitem['locationid']!=undefined){
@@ -137,9 +187,9 @@
             { "bProcessing": true,
                 "aaData": devarray,
                 "aoColumns": [
-                    { "mData":"id" }, { "mData":"name" }, { "mData":"locationname" },
+                    { "mData":"id" }, { "mData":"name" }, { "mData":"locationname" }, { "mData":function(data, type, val){ switch(data.type){case 'kitchen_terminal': return 'Kitchen/Bar Terminal'; case 'general_register': return 'General Register'; case 'order_register': return 'Order Register';} return ''; } },
                     { "mData":function(data, type, val){ return '<i class="'+(data.disabled==1?'red icon-arrow-down':'green icon-arrow-up')+'"></i>'; } },
-                    { "mData":function(data, type, val){ return data.id==0?'':'<div class="action-buttons"><a class="green" onclick="openEditDevDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
+                    { "mData":function(data, type, val){ return data.id==0?'':'<div class="action-buttons"><a class="green" onclick="openDevDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
                         (data.disabled==1?'<a class="green" onclick="setItemDisabled(0, $(this).closest(\'tr\').find(\'td\').eq(0).text(), false)"><i class="icon-arrow-up bigger-130"></i></a><a class="red" onclick="removeDevItem($(this).closest(\'tr\').find(\'td\').eq(0).text())"><i class="icon-trash bigger-130"></i></a>':'<a class="red" onclick="setItemDisabled(0, $(this).closest(\'tr\').find(\'td\').eq(0).text(), true)"><i class="icon-arrow-down bigger-130"></i></a>')+'</div>'; }, "bSortable": false }
                 ] } );
         // insert table wrapper
@@ -155,7 +205,7 @@
                 "aoColumns": [
                     { "mData":"id" }, { "mData":"name" },
                     { "mData":function(data, type, val){ return '<i class="'+(data.disabled==1?'red icon-arrow-down':'green icon-arrow-up')+'"></i>'; } },
-                    { "mData":function(data, type, val){ return data.id==0?'':'<div class="action-buttons"><a class="green" onclick="openEditLocDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
+                    { "mData":function(data, type, val){ return data.id==0?'':'<div class="action-buttons"><a class="green" onclick="openLocDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
                         (data.disabled==1?'<a class="green" onclick="setItemDisabled(1, $(this).closest(\'tr\').find(\'td\').eq(0).text(), false)"><i class="icon-arrow-up bigger-130"></i></a><a class="red" onclick="removeLocItem($(this).closest(\'tr\').find(\'td\').eq(0).text())"><i class="icon-trash bigger-130"></i></a>':'<a class="red" onclick="setItemDisabled(1, $(this).closest(\'tr\').find(\'td\').eq(0).text(), true)"><i class="icon-arrow-down bigger-130"></i></a>')+'</div>'; }, "bSortable": false }
                 ] } );
 
@@ -184,35 +234,6 @@
             return 'left';
         }
         // dialogs
-        $( "#adddevdialog" ).removeClass('hide').dialog({
-            resizable: false,
-            width: 'auto',
-            modal: true,
-            autoOpen: false,
-            title: "Add Device",
-            title_html: true,
-            buttons: [
-                {
-                    html: "<i class='icon-save bigger-110'></i>&nbsp; Save",
-                    "class" : "btn btn-success btn-xs",
-                    click: function() {
-                        saveDevItem(true);
-                    }
-                }
-                ,
-                {
-                    html: "<i class='icon-remove bigger-110'></i>&nbsp; Cancel",
-                    "class" : "btn btn-xs",
-                    click: function() {
-                        $( this ).dialog( "close" );
-                    }
-                }
-            ],
-            create: function( event, ui ) {
-                // Set maxWidth
-                $(this).css("maxWidth", "375px");
-            }
-        });
         $( "#editdevdialog" ).removeClass('hide').dialog({
             resizable: false,
             width: 'auto',
@@ -225,36 +246,7 @@
                     html: "<i class='icon-save bigger-110'></i>&nbsp; Update",
                     "class" : "btn btn-success btn-xs",
                     click: function() {
-                        saveDevItem(false);
-                    }
-                }
-                ,
-                {
-                    html: "<i class='icon-remove bigger-110'></i>&nbsp; Cancel",
-                    "class" : "btn btn-xs",
-                    click: function() {
-                        $( this ).dialog( "close" );
-                    }
-                }
-            ],
-            create: function( event, ui ) {
-                // Set maxWidth
-                $(this).css("maxWidth", "375px");
-            }
-        });
-        $( "#addlocdialog" ).removeClass('hide').dialog({
-            resizable: false,
-            width: 'auto',
-            modal: true,
-            autoOpen: false,
-            title: "Add Location",
-            title_html: true,
-            buttons: [
-                {
-                    html: "<i class='icon-trash bigger-110'></i>&nbsp; Save",
-                    "class" : "btn btn-success btn-xs",
-                    click: function() {
-                        saveLocItem(true);
+                        saveDevItem();
                     }
                 }
                 ,
@@ -283,7 +275,7 @@
                     html: "<i class='icon-trash bigger-110'></i>&nbsp; Update",
                     "class" : "btn btn-success btn-xs",
                     click: function() {
-                        saveLocItem(false);
+                        saveLocItem();
                     }
                 }
                 ,
@@ -302,38 +294,43 @@
         });
         // populate select box records
         populateLocationSelect();
+        populateKitchenTerminalSelect();
 
         // hide loader
         WPOS.util.hideLoader();
     });
     // updating records
-    function openEditLocDialog(id){
-        var loc = locations[id];
-        $("#locid").val(loc.id);
-        $("#locname").val(loc.name);
+    function openLocDialog(id){
+        var idfield = $("#locid");
+        var namefield = $("#locname");
+        if (id && id>0){
+            var loc = locations[id];
+            idfield.val(loc.id);
+            namefield.val(loc.name);
+        } else {
+            idfield.val(0);
+            namefield.val('');
+        }
         $("#editlocdialog").dialog("open");
     }
-    function saveLocItem(isnewitem){
-        // show loader
+    function saveLocItem(){
         WPOS.util.showLoader();
+        var result;
         var location = {};
-        if (isnewitem){
-            // adding a new item
-            location.locname = $("#newlocname").val();
-            if (WPOS.sendJsonData("locations/add", JSON.stringify(location))){
-                reloadLocTable();
-                $("#addlocdialog").dialog("close");
-            }
+        location.name = $("#locname").val();
+        var id = $("#locid").val();
+        if (id==0){
+            result = WPOS.sendJsonData("locations/add", JSON.stringify(location));
         } else {
             // updating an item
-            location.locid = $("#locid").val();
-            location.locname = $("#locname").val();
-            if (WPOS.sendJsonData("locations/edit", JSON.stringify(location))){
-                reloadLocTable();
-                $("#editlocdialog").dialog("close");
-            }
+            location.id = id;
+            result = WPOS.sendJsonData("locations/edit", JSON.stringify(location));
         }
-        // hide loader
+        if (result){
+            locations[result.id] = result;
+            refreshLocTable();
+            $("#editlocdialog").dialog("close");
+        }
         WPOS.util.hideLoader();
     }
     function removeLocItem(id){
@@ -341,43 +338,106 @@
         if (answer){
             // show loader
             WPOS.util.showLoader();
-            if (WPOS.sendJsonData("locations/delete", '{"locid":'+id+'}')){
-                reloadLocTable();
+            if (WPOS.sendJsonData("locations/delete", '{"id":'+id+'}')){
+                delete locations[id];
+                refreshLocTable();
             }
             // hide loader
             WPOS.util.hideLoader();
         }
     }
-    function openEditDevDialog(id){
+    function loadDeviceRegistrations(){
+        var id = $('#devid').val();
+        var regtable = $("#devreglist");
+        if (id==0){
+            regtable.html('');
+            return;
+        }
+        regtable.html('<tr><td colspan="2" style="text-align: center;">Loading...</td></tr>');
+        WPOS.sendJsonDataAsync('devices/registrations', '{"id":'+id+'}', function(data){
+            if (data.length<1){
+                regtable.html('<tr><td colspan="2" style="text-align: center;">No Device registrations</td></tr>');
+                return;
+            }
+            // populate registrations
+            regtable.html('');
+            for (var i in data){
+                regtable.append('<tr id="devreg-'+data[i].id+'"><td>UUID: '+data[i].uuid+'<br/>IP Address: '+data[i].ip+'<br/>User-Agent: '+data[i].useragent+'<br/>Date Added: '+data[i].dt+'</td><td><a class="red" onclick="deleteDeviceRegistration('+data[i].id+');"><i class="icon-trash bigger-130"></i></a></td></tr>');
+            }
+        }, null);
+    }
+    function deleteDeviceRegistration(id){
+        var answer = confirm("Are you sure you want to delete this registration?\nThe device affected will need to use the terminal.");
+        if (answer){
+            // show loader
+            WPOS.util.showLoader();
+            if (WPOS.sendJsonData("devices/registrations/delete", '{"id":'+id+'}')){
+                $('#devreg-'+id).remove();
+            }
+            // hide loader
+            WPOS.util.hideLoader();
+        }
+    }
+    function openDevDialog(id){
+        var idfield = $("#devid");
+        var namefield = $("#devname");
+        var locidfield = $("#devlocid");
+        var typefield = $("#devtype");
+        var otypefield = $("#devordertype");
+        var odisplyfield = $("#devorderdisplay");
+        var kitchenidfield = $("#devkitchenid");
+        if (id && id>0){
         var dev = devices[id];
-        $("#devid").val(dev.id);
-        $("#devname").val(dev.name);
-        $("#devlocid").val(dev.locationid);
+            idfield.val(dev.id);
+            namefield.val(dev.name);
+            locidfield.val(dev.locationid);
+            typefield.val(dev.type);
+            otypefield.val(dev.ordertype);
+            odisplyfield.prop('checked', (dev.orderdisplay)?true:false);
+            kitchenidfield.val(dev.kitchenid);
+            var iskitchen = dev.type=="kitchen_terminal";
+            $(".reg_device").prop('disabled', iskitchen);
+            $(".kitchen_device").prop('disabled', !iskitchen);
+        } else {
+            idfield.val(0);
+            namefield.val('');
+            locidfield.val('');
+            typefield.val('general_register');
+            otypefield.val('terminal');
+            odisplyfield.prop('checked', true);
+            kitchenidfield.val(0);
+        }
+        showDeviceOptions(typefield.val());
+        if ($("#devregtab").hasClass('active')){
+            loadDeviceRegistrations();
+        }
         $("#editdevdialog").dialog("open");
     }
-    function saveDevItem(isnewitem){
-        // show loader
+    function saveDevItem(){
         WPOS.util.showLoader();
+        var result;
         var device = {};
-        if (isnewitem){
+        device.name = $("#devname").val();
+        device.locationid = $("#devlocid").val();
+        device.type = $("#devtype").val();
+        device.ordertype = $("#devordertype").val();
+        device.orderdisplay = $("#devorderdisplay").prop('checked')==true?1:0;
+        device.kitchenid = $("#devkitchenid").val();
+        var id = $("#devid").val();
+        if (id==0){
             // adding a new item
-            device.devname = $("#newdevname").val();
-            device.locid = $("#newdevlocid").val();
-            if (WPOS.sendJsonData("devices/add", JSON.stringify(device))){
-                reloadDevTable();
-                $("#adddevdialog").dialog("close");
-            }
+            result = WPOS.sendJsonData("devices/add", JSON.stringify(device));
         } else {
             // updating an item
-            device.devid = $("#devid").val();
-            device.devname = $("#devname").val();
-            device.locid = $("#devlocid").val();
-            if (WPOS.sendJsonData("devices/edit", JSON.stringify(device))){
-                reloadDevTable();
-                $("#editdevdialog").dialog("close");
-            }
+            device.id = id;
+            result = WPOS.sendJsonData("devices/edit", JSON.stringify(device));
         }
-        // hide loader
+        if (result){
+            devices[result.id] = result;
+            refreshDevTable();
+            populateKitchenTerminalSelect();
+            $("#editdevdialog").dialog("close");
+        }
         WPOS.util.hideLoader();
     }
     function removeDevItem(id){
@@ -385,8 +445,10 @@
         if (answer){
             // show loader
             WPOS.util.showLoader();
-            if (WPOS.sendJsonData("devices/delete", '{"devid":'+id+'}')){
-                reloadDevTable();
+            if (WPOS.sendJsonData("devices/delete", '{"id":'+id+'}')){
+                delete devices[id];
+                refreshDevTable();
+                populateKitchenTerminalSelect();
             }
             // hide loader
             WPOS.util.hideLoader();
@@ -401,13 +463,16 @@
             var result;
             if (type===0){ // device
                 result = WPOS.sendJsonData("devices/disable", JSON.stringify({id: id, disable: disable}));
-                if (result!==false){
-                    reloadDevTable();
-                }
             } else { // location
                 result = WPOS.sendJsonData("locations/disable", JSON.stringify({id: id, disable: disable}));
-                if (result!==false){
-                    reloadLocTable();
+            }
+            if (result!==false){
+                if (type==0){
+                    devices[id].disabled = disable;
+                    refreshDevTable();
+                } else {
+                    locations[id].disabled = disable;
+                    refreshLocTable();
                 }
             }
             // hide loader
@@ -415,12 +480,7 @@
         }
     }
 
-    function reloadDevTable(){
-        devices = WPOS.getJsonData("devices/get");
-        reDrawDevTable();
-    }
-
-    function reDrawDevTable (){
+    function refreshDevTable(){
         var itemarray = [];
         var tempitem;
         for (var key in devices){
@@ -436,8 +496,7 @@
         devtable.fnAddData(itemarray);
     }
 
-    function reloadLocTable(){
-        locations = WPOS.getJsonData("locations/get");
+    function refreshLocTable(){
         var itemarray = [];
         for (var key in locations){
             itemarray.push(locations[key]);
@@ -445,7 +504,7 @@
         loctable.fnClearTable();
         loctable.fnAddData(itemarray);
         // redraw the dev table, location names have changed
-        reDrawDevTable();
+        refreshDevTable();
         // repopulate the select boxes
         populateLocationSelect();
     }
@@ -456,6 +515,16 @@
         // populate tax records
         for (var key in locations){
             $(locselect).append('<option class="locid-'+locations[key].id+'" value="'+locations[key].id+'">'+locations[key].name+'</option>');
+        }
+    }
+
+    function populateKitchenTerminalSelect(){
+        var kselect = $(".kitchenselect");
+        $(kselect).html('');
+        // populate tax records
+        for (var i in devices){
+            if (devices[i].type=='kitchen_terminal')
+                $(kselect).append('<option class="devid-'+devices[i].id+'" value="'+devices[i].id+'">'+devices[i].name+'</option>');
         }
     }
 </script>

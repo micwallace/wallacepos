@@ -56,8 +56,8 @@ class WposAdminCustomers {
             return $result;
         }
         $res = $this->addCustomerData($this->data);
-        if (is_numeric($res)){
-            $result['data'] = $this->getCustomerData($res);
+        if (is_array($res)){
+            $result['data'] = $res;
         } else {
             $result['error'] = $res;
         }
@@ -74,7 +74,7 @@ class WposAdminCustomers {
         $gid = '';
         if ($settings->gcontact==1){
             // add google
-            $gres = GoogleIntergration::setGoogleContact($settings, $data);
+            $gres = GoogleIntegration::setGoogleContact($settings, $data);
             $gid = ($gres[0]!==false?$gres[1]:'');
         }
         $custMdl = new CustomerModel();
@@ -82,10 +82,15 @@ class WposAdminCustomers {
         if ($qresult === false) {
             return $custMdl->errorInfo;
         } else {
+            // get full customer record
+            $data = self::getCustomerData($qresult);
+            // broadcast to devices
+            $WposSocketIO = new WposSocketIO();
+            $WposSocketIO->sendCustomerUpdate($data);
             // log data
             Logger::write("Customer added with id:" . $qresult, "CUSTOMER", json_encode($data));
 
-            return $qresult;
+            return $data;
         }
     }
 
@@ -102,8 +107,8 @@ class WposAdminCustomers {
             return $result;
         }
         $res = $this->updateCustomerData($this->data);
-        if ($res===true){
-            $result['data'] = $this->getCustomerData($this->data->id);
+        if (is_array($res)){
+            $result['data'] = $res;
         } else {
             $result['error'] = $res;
         }
@@ -124,10 +129,10 @@ class WposAdminCustomers {
             $gid = $custMdl->get($data->id)[0]['googleid'];
             if ($gid){
                 // edit google
-                $gres = GoogleIntergration::setGoogleContact($settings, $data, $gid);
+                $gres = GoogleIntegration::setGoogleContact($settings, $data, $gid);
             } else {
                 // add google
-                $gres = GoogleIntergration::setGoogleContact($settings, $data);
+                $gres = GoogleIntegration::setGoogleContact($settings, $data);
             }
             if ($gres[0]==true){
                 $gid = $gres[1];
@@ -137,9 +142,15 @@ class WposAdminCustomers {
         if ($qresult === false) {
             return "Could not edit the customer: ".$custMdl->errorInfo;
         } else {
+            // get full customer record
+            $data = self::getCustomerData($qresult);
+            // broadcast to devices
+            $WposSocketIO = new WposSocketIO();
+            $WposSocketIO->sendCustomerUpdate($data);
             // log data
             Logger::write("Customer updated with id:" . $data->id, "CUSTOMER", json_encode($data));
-            return true;
+
+            return $data;
         }
     }
 
@@ -202,6 +213,9 @@ class WposAdminCustomers {
             $result['error'] = "Could not add the contact: ".$custMdl->errorInfo;
         } else {
             $result['data'] = $this->getCustomerData($this->data->customerid);
+            // broadcast to devices
+            $WposSocketIO = new WposSocketIO();
+            $WposSocketIO->sendCustomerUpdate($result['data']);
             // log data
             Logger::write("Contact added with id:" . $this->data->id . " to customer id: ".$this->data->customerid, "CUSTOMER", json_encode($this->data));
         }
@@ -226,7 +240,9 @@ class WposAdminCustomers {
             $result['error'] = "Could not edit the contact: ".$custMdl->errorInfo;
         } else {
             $result['data'] = $this->getCustomerData($this->data->customerid);;
-
+            // broadcast to devices
+            $WposSocketIO = new WposSocketIO();
+            $WposSocketIO->sendCustomerUpdate($result['data']);
             // log data
             Logger::write("Contact updated with id:" . $this->data->id, "CUSTOMER", json_encode($this->data));
         }

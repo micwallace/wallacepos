@@ -29,7 +29,7 @@ class StoredItemsModel extends DbConfig
     /**
      * @var array available columns
      */
-    protected $_columns = ['supplierid', 'code', 'qty', 'name', 'description', 'taxid', 'price'];
+    protected $_columns = ['id' ,'data', 'supplierid', 'code', 'name', 'price'];
 
     /**
      * Init DB
@@ -40,19 +40,13 @@ class StoredItemsModel extends DbConfig
     }
 
     /**
-     * @param $supplierid
-     * @param $code
-     * @param $qty
-     * @param $name
-     * @param $desc
-     * @param $taxid
-     * @param $price
+     * @param $data
      * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
      */
-    public function create($supplierid, $code, $qty, $name, $desc, $taxid, $price)
+    public function create($data)
     {
-        $sql          = "INSERT INTO stored_items (`supplierid`, `code`, `qty`, `name`, `description`, `taxid`, `price`) VALUES (:supplierid, :code, :qty, :name, :desc, :taxid, :price);";
-        $placeholders = [":supplierid"=>$supplierid, ":code"=>$code, ":qty"=>$qty, ":name"=>$name, ":desc"=>$desc, ":taxid"=>$taxid, ":price"=>$price];
+        $sql          = "INSERT INTO stored_items (`data`, `supplierid`, `code`, `name`, `price`) VALUES (:data, :supplierid, :code, :name, :price);";
+        $placeholders = [":data"=>json_encode($data),":supplierid"=>$data->supplierid, ":code"=>$data->code, ":name"=>$data->name, ":price"=>$data->price];
 
         return $this->insert($sql, $placeholders);
     }
@@ -80,25 +74,29 @@ class StoredItemsModel extends DbConfig
             $placeholders[':code'] = $code;
         }
 
-        return $this->select($sql, $placeholders);
+        $items = $this->select($sql, $placeholders);
+        if ($items===false)
+            return false;
+
+        foreach($items as $key=>$item){
+            $data = json_decode($item['data'], true);
+            $data['id'] = $item['id'];
+            $items[$key] = $data;
+        }
+
+        return $items;
     }
 
     /**
      * @param $id
-     * @param $supplierid
-     * @param $code
-     * @param $qty
-     * @param $name
-     * @param $desc
-     * @param $taxid
-     * @param $price
+     * @param $data
      * @return bool|int Returns false on an unexpected failure or the number of rows affected by the update operation
      */
-    public function edit($id, $supplierid, $code, $qty, $name, $desc, $taxid, $price)
+    public function edit($id, $data)
     {
 
-        $sql = "UPDATE stored_items SET supplierid= :supplierid, code= :code, qty= :qty, name= :name, description= :desc, taxid= :taxid, price= :price WHERE id= :id;";
-        $placeholders = [":id"=>$id, ":supplierid"=>$supplierid, ":code"=>$code, ":qty"=>$qty, ":name"=>$name, ":desc"=>$desc, ":taxid"=>$taxid, ":price"=>$price];
+        $sql = "UPDATE stored_items SET data= :data, supplierid= :supplierid, code= :code, name= :name, price= :price WHERE id= :id;";
+        $placeholders = [":id"=>$id, ":data"=>json_encode($data), ":supplierid"=>$data->supplierid, ":code"=>$data->code, ":name"=>$data->name, ":price"=>$data->price];
 
         return $this->update($sql, $placeholders);
     }

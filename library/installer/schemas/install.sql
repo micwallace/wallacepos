@@ -9,7 +9,7 @@
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
-
+ALTER DATABASE CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `auth` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `uuid` (`uuid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=5 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 --
 -- Table structure for table `auth`
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `config` (
   `name` varchar(66) NOT NULL,
   `data` varchar(2048) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=4 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 
 --
@@ -67,8 +67,8 @@ CREATE TABLE IF NOT EXISTS `config` (
 --
 
 INSERT INTO `config` (`id`, `name`, `data`) VALUES
-(1, 'general', '{"dateformat":"d\\/m\\/y","curformat":"$","accntype":"cash","bizname":"Wallace IT","biznumber":"9999 999 999","bizemail":"admin@wallacepos.com","bizaddress":"1 Some St","bizsuburb":"Someville","bizstate":"NSW","bizpostcode":"2000","bizcountry":"Australia","bizlogo":"\\/assets\\/images\\/receipt-logo.png","bizicon":"\\/icon.ico","gcontact":0,"gcontacttoken":""}'),
-(2, 'pos', '{"recline2":"Your business in the cloud","recline3":"an application by WallaceIT","reclogo":"\\/assets\\/images\\/receipt-logo-mono.png","recprintlogo":true,"recemaillogo":"\\/assets\\/images\\/receipt-logo.png","recfooter":"Thanks for shopping with us!","recqrcode":"https:\\/\\/wallaceit.com.au","salerange":"week","saledevice":"location","priceedit":"blank"}'),
+(1, 'general', '{"version":"1.2","dateformat":"d\\/m\\/y","currencyformat":"$~2~.~,~0","accntype":"cash","bizname":"Wallace IT","biznumber":"9999 999 999","bizemail":"admin@wallacepos.com","bizaddress":"1 Some St","bizsuburb":"Someville","bizstate":"NSW","bizpostcode":"2000","bizcountry":"Australia","bizlogo":"\\/assets\\/images\\/receipt-logo.png","bizicon":"\\/icon.ico","gcontact":0,"gcontacttoken":""}'),
+(2, 'pos', '{"recline2":"Your business in the cloud","recline3":"an application by WallaceIT","reclogo":"\\/assets\\/images\\/receipt-logo-mono.png","recprintlogo":true,"recemaillogo":"\\/assets\\/images\\/receipt-logo.png","recfooter":"Thanks for shopping with us!","recqrcode":"https:\\/\\/wallaceit.com.au","salerange":"week","saledevice":"location","priceedit":"blank","cashrounding":"5"}'),
 (3, 'invoice', '{"defaultduedt":"+2 weeks","payinst":"Please contact us for payment instructions","emailmsg":"<div align=\\"left\\">Dear %name%,<br><\\/div><br>Please find the attached invoice.<br><br>Kind regards,<br>Administration"}'),
 (4, 'accounting', '{"xeroenabled":0,"xerotoken":"","xeroaccnmap":""}');
 -- --------------------------------------------------------
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS `customers` (
   `lastlogin` datetime NOT NULL,
   `dt` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=127 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS `customer_contacts` (
   `email` varchar(128) NOT NULL,
   `receivesinv` int(1) NOT NULL,
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=16 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -127,10 +127,11 @@ CREATE TABLE IF NOT EXISTS `devices` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(66) NOT NULL,
   `locationid` int(11) NOT NULL,
+  `data` varchar(2048) NOT NULL,
   `dt` datetime NOT NULL,
   `disabled` int(1) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=10 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -142,9 +143,12 @@ CREATE TABLE IF NOT EXISTS `device_map` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `deviceid` int(11) NOT NULL,
   `uuid` char(32) NOT NULL,
+  `ip` varchar(66) NOT NULL,
+  `useragent` varchar(256) NOT NULL,
+  `dt` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=37 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -158,7 +162,7 @@ CREATE TABLE IF NOT EXISTS `locations` (
   `dt` datetime NOT NULL,
   `disabled` int(1) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=10 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -185,7 +189,7 @@ CREATE TABLE IF NOT EXISTS `sales` (
   `duedt` bigint(20) NOT NULL,
   `dt` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=210 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -200,7 +204,7 @@ CREATE TABLE IF NOT EXISTS `sale_history` (
   `type` varchar(66) NOT NULL,
   `description` varchar(256) NOT NULL,
   `dt` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -222,7 +226,7 @@ CREATE TABLE IF NOT EXISTS `sale_items` (
   `price` decimal(12,2) NOT NULL,
   `refundqty` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=494 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -237,7 +241,7 @@ CREATE TABLE IF NOT EXISTS `sale_payments` (
   `amount` decimal(12,2) NOT NULL,
   `processdt` bigint(20) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=195 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -259,7 +263,7 @@ CREATE TABLE IF NOT EXISTS `sale_voids` (
   `processdt` bigint(128) NOT NULL,
   `dt` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=15 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -279,7 +283,7 @@ CREATE TABLE IF NOT EXISTS `stock_history` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_2` (`id`),
   KEY `id` (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=4 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -294,7 +298,7 @@ CREATE TABLE IF NOT EXISTS `stock_levels` (
   `stocklevel` int(11) NOT NULL,
   `dt` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -304,16 +308,14 @@ CREATE TABLE IF NOT EXISTS `stock_levels` (
 
 CREATE TABLE IF NOT EXISTS `stored_items` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `data` varchar(2048) NOT NULL,
   `supplierid` int(11) NOT NULL,
   `code` varchar(256) NOT NULL,
-  `qty` int(11) NOT NULL,
   `name` varchar(66) NOT NULL,
-  `description` varchar(128) NOT NULL,
-  `taxid` varchar(11) NOT NULL,
   `price` varchar(66) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `supplierid` (`supplierid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=10 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -326,31 +328,42 @@ CREATE TABLE IF NOT EXISTS `stored_suppliers` (
   `name` varchar(66) NOT NULL,
   `dt` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=9 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `tax_items`
 --
-
 CREATE TABLE IF NOT EXISTS `tax_items` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(66) NOT NULL,
-  `value` decimal(8,0) NOT NULL,
-  `calcfunc` varchar(66) NOT NULL,
-  `divisor` decimal(10,0) NOT NULL,
+  `type` varchar(12) NOT NULL,
+  `value` varchar(8) NOT NULL,
+  `multiplier` varchar(8) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
-
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 --
 -- Dumping data for table `tax_items`
 --
+INSERT INTO `tax_items` (`id`, `name`, `type`, `value`, `multiplier`) VALUES
+(1, 'GST', 'standard', '10', '0.10');
+-- --------------------------------------------------------
 
-INSERT INTO `tax_items` (`id`, `name`, `value`, `calcfunc`, `divisor`) VALUES
-(1, 'No Tax', 0, 'function(total){ return 0; }', 0),
-(2, 'GST', 10, 'function(total){ return (total/11); }', 11);
-
+--
+-- Table structure for table `tax_rules`
+--
+CREATE TABLE IF NOT EXISTS `tax_rules` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `data` varchar(2048) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
+--
+-- Dumping data for table `tax_rules`
+--
+INSERT INTO `tax_rules` (`id`, `data`) VALUES
+(1, '{"name":"No Tax", "inclusive":true, "mode":"single", "base":[], "locations":{}, "id":"1"}'),
+(2, '{"name":"GST", "inclusive":true, "mode":"single", "base":[1], "locations":{}, "id":"1"}');
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

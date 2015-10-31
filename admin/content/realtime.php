@@ -425,7 +425,7 @@ function updateSalesTable(saleobj) {
 }
 
 function insertIntoSaleTable(saleobj) {
-    $("#recentsalestable").append('<tr><td>' + WPOS.util.getDateFromTimestamp(saleobj.processdt) + '</td><td>' + getStatusLabel(getSaleStatus(saleobj)) + '</td><td>' + WPOS.devices[saleobj.devid].name + ' / ' + WPOS.locations[saleobj.locid].name + '</td><td class="hidden-480 hidden-320">' + getTotalItems(saleobj) + '</td><td class="hidden-320">' + WPOS.currency() + saleobj.total + '</td></tr>');
+    $("#recentsalestable").append('<tr><td>' + WPOS.util.getDateFromTimestamp(saleobj.processdt) + '</td><td>' + getStatusLabel(getSaleStatus(saleobj)) + '</td><td>' + WPOS.devices[saleobj.devid].name + ' / ' + WPOS.locations[saleobj.locid].name + '</td><td class="hidden-480 hidden-320">' + getTotalItems(saleobj) + '</td><td class="hidden-320">' + WPOS.util.currencyFormat(saleobj.total) + '</td></tr>');
 }
 
 var stime;
@@ -460,12 +460,12 @@ function loadTodaysSales() {
 function populateTodayStats() {
     // populate the fields
     $("#rtsalenum").text(totals.salenum);
-    $("#rtsaletotal").text(WPOS.currency() + totals.saletotal);
+    $("#rtsaletotal").text(WPOS.util.currencyFormat(totals.saletotal));
     $("#rtrefundnum").text(totals.refundnum);
-    $("#rtrefundtotal").text(WPOS.currency() + totals.refundtotal);
+    $("#rtrefundtotal").text(WPOS.util.currencyFormat(totals.refundtotal));
     $("#rtvoidnum").text(totals.voidnum);
-    $("#rtvoidtotal").text(WPOS.currency()+totals.voidtotal);
-    $("#rttakings").text(totals.totaltakings);
+    $("#rtvoidtotal").text(WPOS.util.currencyFormat(totals.voidtotal));
+    $("#rttakings").text(WPOS.util.currencyFormat(totals.totaltakings, true));
     // Set onclicks
     $(".infobox-sales").on('click', function(){ WPOS.transactions.openTransactionList(totals.salerefs); });
     $(".infobox-refunds").on('click', function(){ WPOS.transactions.openTransactionList(totals.refundrefs); });
@@ -554,7 +554,7 @@ $(function () {
                 if (item.series['percent'] != null) {
                     var tip = item.series['label'] + " : " + item.series['percent'].toFixed(2) + '% ($' + item.series['data'][0][1] + ')';
                 } else {
-                    var tip = item.series['label'] + " : "+ WPOS.currency() + item.datapoint[1];
+                    var tip = item.series['label'] + " : "+ WPOS.util.currencyFormat(item.datapoint[1]);
                 }
                 $tooltip.show().children(0).text(tip);
             }

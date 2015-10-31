@@ -205,7 +205,7 @@ class Auth{
             return true;
         } else{
             // log data
-            Logger::write("Authentication failed for user:".$username." with hash:".$password, "AUTH");
+            Logger::write("Authentication failed for user:".$username." from IP address: ".$_SERVER['REMOTE_ADDR'], "AUTH");
 
             return false;
         }

@@ -177,7 +177,7 @@ class WposAdminStats {
             $stats[$key]->balance = round($stats[$key]->saletotal-$stats[$key]->refundtotal, 2);
         }
         // include totals if requested
-        if ($this->data->totals == true){
+        if (isset($this->data->totals) &&  $this->data->totals == true){
             $stats["Totals"] = $this->getOverviewStats($result)['data'];
         }
 
@@ -236,32 +236,65 @@ class WposAdminStats {
         $stime = isset($this->data->stime)?$this->data->stime:(strtotime('-1 week')*1000);
         $etime = isset($this->data->etime)?$this->data->etime:(time()*1000);
 
-        if (is_array($taxtotals = $itemsMdl->getTaxTotals($stime, $etime, true, $this->data->type))){
-            foreach ($taxtotals as $tax){
-                $stats[$tax['taxid']] = new stdClass();
-                $stats[$tax['taxid']]->refs = $tax['refs'];
-                $stats[$tax['taxid']]->name = $tax['taxname'];
-                $stats[$tax['taxid']]->qtyitems = $tax['qtyitems'];
-                //$stats[$tax['taxid']]->salebalance = number_format($tax['saletotal']-$tax['refundtotal'], 2);
-                $stats[$tax['taxid']]->saletotal = number_format($tax['saletotal'], 2);
-                $stats[$tax['taxid']]->refundtotal = number_format($tax['refundtotal'], 2);
-                if ($tax['taxid']==1){
-                    $stats[$tax['taxid']]->saletax = number_format(0.00, 2);
-                    $stats[$tax['taxid']]->refundtax = number_format(0.00, 2);
-                } else {
-                    $taxMdl = new TaxItemsModel();
-                    $taxdata = $taxMdl->get($tax['taxid']);
-                    if ($taxdata===false){
-                        $result['error'] = "Could not calculate tax";
-                        return $result;
+        if (is_array($saleitems = $itemsMdl->getTotalsRange($stime, $etime, true, $this->data->type))){
+            $taxMdl = new TaxItemsModel();
+            $taxdata = $taxMdl->get();
+            $taxes = [];
+            foreach ($taxdata as $value){
+                $taxes[$value['id']] = (object) $value;
+            }
+
+            foreach ($saleitems as $saleitem){
+                $itemtax = json_decode($saleitem['tax']);
+
+                if ($itemtax->total==0){
+                    if (!array_key_exists("Untaxed", $stats)){
+                        $stats[-1] = new stdClass();
+                        $stats[-1]->refs = [];
+                        $stats[-1]->name = "Untaxed";
+                        $stats[-1]->qtyitems = 0;
+                        $stats[-1]->saletotal = 0;
+                        $stats[-1]->refundtotal = 0;
+                        $stats[-1]->saletax = 0;
+                        $stats[-1]->refundtax = 0;
                     }
-                    $taxdiv = $taxdata[0]['divisor'];
-                    $stats[$tax['taxid']]->saletax = round($tax['saletotal']/$taxdiv, 2);
-                    $stats[$tax['taxid']]->refundtax = round($tax['refundtotal']/$taxdiv, 2);
+                    if (!in_array($saleitem['ref'], $stats[-1]->refs))
+                        $stats[-1]->refs[] = $saleitem['ref'];
+                    $stats[-1]->qtyitems += $saleitem['qty'];
+                    $stats[-1]->saletotal += $saleitem['itemtotal'];
+                    $stats[-1]->refundtotal += $saleitem['refundtotal'];
+                } else {
+                    // subtotal excludes tax, factors in discount
+                    $discountedtax = $saleitem['discount']>0 ?  round($itemtax->total - ($itemtax->total*($saleitem['discount']/100)), 2) : $itemtax->total;
+                    //echo($discountedtax);
+                    $itemsubtotal = $saleitem['itemtotal'] - $discountedtax;
+                    $refundsubtotal = $saleitem['refundtotal'] - round(($discountedtax/$saleitem['qty']) * $saleitem['refundqty'], 2);
+                    foreach ($itemtax->values as $key=>$value){
+                        if (!array_key_exists($key, $stats)){
+                            $stats[$key] = new stdClass();
+                            $stats[$key]->refs = [];
+                            $stats[$key]->name = isset($taxes[$key])?$taxes[$key]->name:"Unknown";
+                            $stats[$key]->qtyitems = 0;
+                            $stats[$key]->saletotal = 0;
+                            $stats[$key]->refundtotal = 0;
+                            //$stats[$key]->saletax = 0;
+                            //$stats[$key]->refundtax = 0;
+                        }
+                        if (!in_array($saleitem['ref'], $stats[$key]->refs))
+                            $stats[$key]->refs[] = $saleitem['ref'];
+                        $stats[$key]->qtyitems += $saleitem['qty'];
+                        $stats[$key]->saletotal += $itemsubtotal; // subtotal excludes tax, factors in discount
+                        $stats[$key]->refundtotal += $refundsubtotal;
+                        //$stats[$key]->saletax += $saleitem['discount']>0 ? round($value - ($value*($saleitem['discount']/100)), 2) : $value;
+                        // $stats[$key]->refundtax += $saleitem['discount']>0 ? (round($value/($saleitem['discount']/100), 2)/$saleitem['qty'])*$saleitem['refundqty']: ($value/$saleitem['qty'])*$saleitem['refundqty'];
+                    }
                 }
-                $stats[$tax['taxid']]->balance = number_format($stats[$tax['taxid']]->saletax-$stats[$tax['taxid']]->refundtax, 2);
-                $stats[$tax['taxid']]->saletax = number_format($stats[$tax['taxid']]->saletax, 2);
-                $stats[$tax['taxid']]->refundtax = number_format($stats[$tax['taxid']]->refundtax, 2);
+            }
+            foreach ($stats as $key=>$value){
+                $taxitems = WposAdminUtilities::getTaxTable()['items'];
+                $stats[$key]->saletax = round($taxitems[$key]['multiplier']*$stats[$key]->saletotal, 2);
+                $stats[$key]->refundtax = round($taxitems[$key]['multiplier']*$stats[$key]->refundtotal, 2);
+                $stats[$key]->balance = number_format($stats[$key]->saletax-$stats[$key]->refundtax, 2);
             }
             // Get cash rounding total
             $roundtotals = $itemsMdl->getRoundingTotal($stime, $etime);
@@ -274,7 +307,7 @@ class WposAdminStats {
             } else {
                 $result['error'] = $itemsMdl->errorInfo;
             }
-        }else {
+        } else {
             $result['error'] = $itemsMdl->errorInfo;
         }
 

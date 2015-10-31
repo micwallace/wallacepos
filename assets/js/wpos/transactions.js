@@ -29,16 +29,17 @@ function WPOSTransactions() {
         $("#transactiondiv").dialog('open');
     };
 
-    //
     this.showTransactionTable = function(){
         clearTransTable();
         loadLocalTransactions();
         showTransactionView(1);
+        $("#transactiondiv").dialog('open');
     };
 
     this.showTransactionInfo = function(ref){
         populateTransactionInfo(ref);
         showTransactionView(2);
+        $("#transactiondiv").dialog('open');
     };
 
     this.recallLastTransaction = function(){
@@ -67,7 +68,7 @@ function WPOSTransactions() {
                 break;
         }
         // put into array if cache is true
-        rowhtml = "<tr><td>" + gid + "<br/>" + ostathtml +"</td><td><a href='#' title='" + ref + "'>"+ ref.split('-')[2]+"</a></td><td>" + devloc + "</td><td>" + numitems + "</td><td>" + WPOS.currency() + total + "</td><td>" + sdt + "</td><td>" + getStatusHtml(status) + "</td><td><button class='btn btn-sm btn-primary' onclick='WPOS.trans.showTransactionInfo("+'"'+ref+'"'+")'>View</button></td></tr>";
+        rowhtml = "<tr><td>" + gid + "<br/>" + ostathtml +"</td><td><a href='#' title='" + ref + "'>"+ ref.split('-')[2]+"</a></td><td>" + devloc + "</td><td>" + numitems + "</td><td>" + WPOS.util.currencyFormat(total) + "</td><td>" + sdt + "</td><td>" + getStatusHtml(status) + "</td><td><button class='btn btn-sm btn-primary' onclick='WPOS.trans.showTransactionInfo("+'"'+ref+'"'+")'>View</button></td></tr>";
         if (cacherow) rows[ref] = rowhtml;
         // add to table
         $("#transtable").prepend(rowhtml);
@@ -127,7 +128,7 @@ function WPOSTransactions() {
     function getTransactionRecord(ref){
         if (WPOS.getSalesTable().hasOwnProperty(ref)){
             return WPOS.getSalesTable()[ref];
-        } else if (WPOS.sales.getOfflineSales().hasOwnProperty(ref)){ // check offline sales
+        } else if (WPOS.hasOwnProperty('sales') && WPOS.sales.getOfflineSales().hasOwnProperty(ref)){ // check offline sales
             return WPOS.sales.getOfflineSales()[ref];
         } else if (remtrans.hasOwnProperty(ref)) { // check in remote transaction table
             return remtrans[ref];
@@ -157,15 +158,15 @@ function WPOSTransactions() {
         $("#transloc").text(WPOS.getConfigTable().locations[record.locid].name);
         $("#transnotes").val(record.salenotes);
 
-        $("#transsubtotal").text(WPOS.currency()+record.subtotal);
+        $("#transsubtotal").text(WPOS.util.currencyFormat(record.subtotal));
         populateTaxinfo(record);
         if (record.discount>0){
-            $("#transdiscount").text(record.discount+"% ("+WPOS.currency()+(parseFloat(record.total)-Math.abs(parseFloat(record.subtotal)+parseFloat(record.tax))).toFixed(2)+')');
+            $("#transdiscount").text(record.discount+"% ("+WPOS.util.currencyFormat((parseFloat(record.total)-Math.abs(parseFloat(record.subtotal)+parseFloat(record.tax))).toFixed(2))+')');
             $("#transdisdiv").show();
         } else {
             $("#transdisdiv").hide();
         }
-        $("#transtotal").text(WPOS.currency()+record.total);
+        $("#transtotal").text(WPOS.util.currencyFormat(record.total));
 
         populateItemsTable(record.items);
         populatePaymentsTable(record.payments);
@@ -195,9 +196,10 @@ function WPOSTransactions() {
     function populateTaxinfo(record){
         var transtax = $('#transtax');
         transtax.html('');
+        var taxitems = WPOS.getTaxTable().items;
         if (record.hasOwnProperty('taxdata')){
             for (var i in record.taxdata){
-                transtax.append('<label class="fixedlabel">'+WPOS.getConfigTable().tax[i].name+' ('+WPOS.getConfigTable().tax[i].value+'%):</label><span>'+WPOS.currency()+record.taxdata[i]+'</span><br/>');
+                transtax.append('<label class="fixedlabel">'+taxitems[i].name+' ('+taxitems[i].value+'%):</label><span>'+WPOS.util.currencyFormat(record.taxdata[i])+'</span><br/>');
             }
         }
     }
@@ -205,15 +207,24 @@ function WPOSTransactions() {
     function populateItemsTable(items){
         var itemtable = $("#transitemtable");
         $(itemtable).html('');
-        var taxtable = WPOS.getTaxTable();
-        var taxval;
+        var taxitems = WPOS.getTaxTable().items;
         for (var i = 0; i<items.length; i++){
-            if (taxtable.hasOwnProperty(items[i].taxid)){
-                taxval = taxtable[items[i].taxid].name;
-            } else {
-                taxval = "";
+            // tax details
+            var taxStr = "";
+            for (var x in items[i].tax.values){
+                taxStr += WPOS.util.currencyFormat(items[i].tax.values[x]) + " (" + taxitems[x].name + " " + taxitems[x].value + "%) <br/>";
             }
-            $(itemtable).append('<tr><td>'+items[i].qty+'</td><td>'+items[i].name+'</td><td>'+WPOS.currency()+items[i].unit+'</td><td>'+(taxval!=null?taxval:"")+'</td><td>'+WPOS.currency()+items[i].price+'</td></tr>');
+            if (taxStr == "")
+                taxStr = WPOS.util.currencyFormat(0.00);
+            // item mod details
+            var modStr = "";
+            if (items[i].hasOwnProperty('mod')){
+                for (x=0; x<items[i].mod.items.length; x++){
+                    var mod = items[i].mod.items[x];
+                    modStr+= '<br/>'+(mod.hasOwnProperty('qty')?(mod.qty>0?'+ ':'')+mod.qty:'')+' '+mod.name+(mod.hasOwnProperty('value')?': '+mod.value:'')+' ('+WPOS.util.currencyFormat(mod.price)+')';
+                }
+            }
+            $(itemtable).append('<tr><td>'+items[i].qty+'</td><td>'+items[i].name+modStr+'</td><td>'+WPOS.util.currencyFormat(items[i].unit)+'</td><td>'+taxStr+'</td><td>'+WPOS.util.currencyFormat(items[i].price)+'</td></tr>');
         }
     }
 
@@ -234,10 +245,10 @@ function WPOSTransactions() {
                 }
                 // catch cash-outs
                 if (payments[i].paydata.hasOwnProperty('cashOut')){
-                    method = "cashout ("+WPOS.currency()+(-amount).toFixed(2)+")";
+                    method = "cashout ("+WPOS.util.currencyFormat((-amount).toFixed(2))+")";
                 }
             }
-            $(paytable).append('<tr><td>'+WPOS.util.capFirstLetter(method)+'</td><td>'+WPOS.currency()+amount+'</td><td style="text-align: right;">'+paydetailsbtn+'</td></tr>');
+            $(paytable).append('<tr><td>'+WPOS.util.capFirstLetter(method)+'</td><td>'+WPOS.util.currencyFormat(amount)+'</td><td style="text-align: right;">'+paydetailsbtn+'</td></tr>');
         }
     }
 
@@ -255,7 +266,7 @@ function WPOSTransactions() {
             }
         }
         if (record.voiddata !== undefined && record.voiddata !== null){
-            $(refundtable).append('<tr>><td><span class="label label-danger arrowed">Void</span></td><td>'+WPOS.util.getDateFromTimestamp(record.voiddata.processdt)+'</td><td><button class="btn btn-sm btn-primary" onclick="WPOS.trans.showVoidDialog();">View</button></td></tr>');
+            $(refundtable).append('<tr><td><span class="label label-danger arrowed">Void</span></td><td>'+WPOS.util.getDateFromTimestamp(record.voiddata.processdt)+'</td><td><button class="btn btn-sm btn-primary" onclick="WPOS.trans.showVoidDialog();">View</button></td></tr>');
         }
     }
 
@@ -305,7 +316,7 @@ function WPOSTransactions() {
         record = record[refundindex]; // get the right refund record from the array
         populateSharedVoidData(record);
         $("#transrefmethod").text(record.method);
-        $("#transrefamount").text(WPOS.currency()+record.amount);
+        $("#transrefamount").text(WPOS.util.currencyFormat(record.amount));
         // show payment details button if available
         var dtlbtn = $("#refpaydtlbtn");
         if (record.hasOwnProperty('paydata')){
@@ -388,7 +399,7 @@ function WPOSTransactions() {
                 insertIntoTransTable(salestable[ref].id, 3, ref, devloc, salestable[ref].numitems, salestable[ref].total, WPOS.util.getDateFromTimestamp(salestable[ref].processdt), getTransactionStatus(ref), true);
         }
         // Populate offline records
-        if (WPOS.sales.getOfflineSalesNum() > 0) {
+        if (WPOS.hasOwnProperty('sales') && WPOS.sales.getOfflineSalesNum() > 0) {
             var olsales = WPOS.sales.getOfflineSales();
             var syncstat, gid;
             for (ref in olsales) {

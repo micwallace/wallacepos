@@ -66,7 +66,7 @@ class SaleItemsModel extends DbConfig
             ':name'     => $name,
             ':description'   => $desc,
             ':taxid' => $taxid,
-            ':tax' => $tax,
+            ':tax' => json_encode($tax),
             ':unit'     => $unit,
             ':price'   => $price
         ];
@@ -167,7 +167,7 @@ class SaleItemsModel extends DbConfig
      */
     public function edit($itemid, $sitemid, $saleitemid=0, $qty, $name, $desc, $taxid, $tax, $unit, $price){
         $sql = 'UPDATE sale_items SET storeditemid=:sitemid, saleitemid=:saleitemid, qty=:qty, name=:name, description=:desc, taxid=:taxid, tax=:tax, unit=:unit, price=:price WHERE id= :id';
-        $placeholders = [":id"=>$itemid, ":sitemid"=>$sitemid, ":saleitemid"=>$saleitemid, ":qty"=>$qty, ":name"=>$name, ":desc"=>$desc, ":taxid"=>$taxid, ":tax"=>$tax, ":unit"=>$unit, ":price"=>$price];
+        $placeholders = [":id"=>$itemid, ":sitemid"=>$sitemid, ":saleitemid"=>$saleitemid, ":qty"=>$qty, ":name"=>$name, ":desc"=>$desc, ":taxid"=>$taxid, ":tax"=>json_encode($tax), ":unit"=>$unit, ":price"=>$price];
 
         return $this->update($sql, $placeholders);
     }
@@ -200,19 +200,17 @@ class SaleItemsModel extends DbConfig
      * @param $etime
      * @param bool $novoids
      * @param null $ttype
-     * @return array|bool Returns an array of taxes and their totaled values for a period. returns false on failure
+     * @return array|bool Returns a range of sale items with their totals. returns false on failure
      */
-    public function getTaxTotals($stime, $etime, $novoids = true, $ttype=null){
+    public function getTotalsRange($stime, $etime, $novoids = true, $ttype=null){
 
-        $sql = "SELECT i.taxid AS taxid, t.name AS taxname, t.value AS taxval, COALESCE(SUM(i.qty), 0) AS qtyitems, COALESCE(SUM(i.price-(i.price*(s.discount/100))), 0) AS saletotal, COALESCE(SUM(i.unit*i.refundqty), 0) AS refundtotal, COALESCE(GROUP_CONCAT(s.ref SEPARATOR ','),'') as refs FROM sale_items AS i LEFT JOIN sales AS s ON i.saleid=s.id LEFT JOIN tax_items t ON i.taxid=t.id WHERE (s.processdt>= :stime AND s.processdt<= :etime) ".($novoids?'AND s.status!=3':'');
+        $sql = "SELECT i.*, COALESCE(i.price-(i.price*(s.discount/100)), 0) AS itemtotal, COALESCE((i.price*(s.discount/100)/i.qty)*i.refundqty, 0) AS refundtotal, s.ref as ref, s.discount as discount FROM sale_items AS i LEFT JOIN sales AS s ON i.saleid=s.id WHERE (s.processdt>= :stime AND s.processdt<= :etime) ".($novoids?'AND s.status!=3':'');
         $placeholders = [":stime"=>$stime, ":etime"=>$etime];
 
         if ($ttype!=null){
             $sql .= ' AND s.type=:type';
             $placeholders[':type'] = $ttype;
         }
-
-        $sql.= " GROUP BY i.taxid";
 
         return $this->select($sql, $placeholders);
     }

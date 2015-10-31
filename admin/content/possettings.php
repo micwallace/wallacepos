@@ -45,6 +45,14 @@
                     </div>
                     <div class="space-4"></div>
                     <div class="form-group">
+                        <label class="col-sm-5">Receipt Currency Character:</label>
+                        <div class="col-sm-5">
+                            <input type="text" id="reccurrency" /><br/>
+                            <small>Supply an alternate decimal charcode or leave blank to disable</small>
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
                         <label class="col-sm-5">Browser/Email Logo:</label>
                         <div class="col-sm-5">
                             <input type="text" id="recemaillogo" /><br/>
@@ -115,6 +123,17 @@
                                 <select id="priceedit">
                                     <option value="blank">When Price is Blank</option>
                                     <option value="always">Always</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="space-4"></div>
+                        <div class="form-group">
+                            <div class="col-sm-5"><label>Cash rounding:</label></div>
+                            <div class="col-sm-5">
+                                <select id="cashrounding">
+                                    <option value="0">None</option>
+                                    <option value="5">5¢</option>
+                                    <option value="10">10¢</option>
                                 </select>
                             </div>
                         </div>

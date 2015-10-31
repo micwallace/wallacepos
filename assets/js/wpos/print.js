@@ -21,69 +21,113 @@
  * @since      Class created 15/1/13 12:01 PM
  */
 
-function WPOSPrint() {
-    var qzdeployed = false;
+function WPOSPrint(kitchenMode) {
     var wpdeployed = false;
     var webprint;
     var curset;
-    var printmethod;
-    var docmethod;
     var curprinter = null;
 
     this.loadPrintSettings = function () {
-        loadPrintSettings();
+        loadPrintSettings(true);
     };
 
-    function loadPrintSettings() {
-        // load variables from local config
-        curset = WPOS.getLocalConfig();
-        printmethod = curset.printmethod;
-        docmethod = curset.docmethod;
+    var defaultsettings = {
+        printer: {
+            printer:"",
+            port:"",
+            method: "br",
+            type: "raw",
+            baud: "9600",
+            databits: "8",
+            stopbits: "1",
+            parity: "even",
+            flow: "none",
+            printip: "",
+            printport: "",
+            cutter:true
+        },
+        global: {
+            recask:"print",
+            cashdraw: false,
+            serviceip: "127.0.0.1",
+            serviceport: 8080,
+            usekitchen: false,
+            usebar: false,
+            printers: {}
+        }
+    };
+
+    function getPrintSetting(printer, setting){
+        if (curset.printers[printer].hasOwnProperty(setting))
+            return curset.printers[printer][setting];
+        return defaultsettings.printer[setting];
+    }
+
+    function doesAnyPrinterHave(setting, value){
+        for (var i in curset.printers){
+            if (curset.printers[i][setting]==value)
+                return true;
+        }
+        return false;
+    }
+
+    function loadDefaultSettings(){
+        // load variables from local config; a
+        curset = WPOS.getLocalConfig().printing;
+        if (!curset){
+            curset = defaultsettings.global;
+        }
+        if (kitchenMode){
+            if (!curset.printers.hasOwnProperty('orders'))
+                curset.printers['orders'] = defaultsettings.printer;
+        } else {
+            if (!curset.printers.hasOwnProperty('receipts'))
+                curset.printers['receipts'] = defaultsettings.printer;
+
+            if (!curset.printers.hasOwnProperty('reports'))
+                curset.printers['reports'] = defaultsettings.printer;
+
+            if (!curset.printers.hasOwnProperty('kitchen'))
+                curset.printers['kitchen'] = defaultsettings.printer;
+
+            if (!curset.printers.hasOwnProperty('bar'))
+                curset.printers['bar'] = defaultsettings.printer;
+        }
+    }
+
+    function loadPrintSettings(loaddefaults) {
+        if (loaddefaults)
+            loadDefaultSettings();
         //deploy qz if not deployed and print method is qz.
-        if (printmethod == "qz" || docmethod == "qz") {
-            if (!qzdeployed) {
-                qzdeployed = true;
-                deployQZ();
-                alert("QZ-Print plugin has been depreciated, it's recommended that you switch to the new Web Print method.");
-            }
-            if (qzready == true) {
-                WPOS.print.qzReady(); // setup WPOS connections
-            }
-            $("#printstat").show();
-        } else if (printmethod == "ht" || printmethod == "wp" || docmethod == "wp") {
+        if (doesAnyPrinterHave('method', 'qz')) {
+            alert("QZ-Print integration is no longer available, switch to the new webprint applet");
+        } else if (doesAnyPrinterHave('method', 'wp') || doesAnyPrinterHave('method', 'ht')) {
             if (!wpdeployed)
                 deployRelayApps();
             $("#printstat").show();
         } else {
-            // disable qz status
+            // disable print status
             $("#printstat").hide();
         }
         // set html option form values? This is only needed for the first load, further interaction handled by inline JS.
         setHtmlValues();
     }
 
-    var qzready = false;
-    this.qzReady = function () {
-        this.printAppletReady();
-        qzready = true;
-    };
-
     this.printAppletReady = function(){
         $("#printstattxt").text("Print-App Connected");
-        if (curset.printmethod=="wp"){
+        if (doesAnyPrinterHave('method', 'wp')){
             webprint.requestPorts();
             webprint.requestPrinters();
         }
         // connect printer/s specified in config
-        if ((curset.printmethod=="wp" || curset.printmethod=="qz") && curset.rectype == "serial" && curset.recport != "") {
-            openSerialPorts();
+        if (doesAnyPrinterHave('method', 'wp') && doesAnyPrinterHave('type', 'serial')) {
+            setTimeout(function(){ openSerialPorts(); },1000);
         }
         console.log("Print Applet ready");
     };
 
     function disableUnsupportedMethods() {
         if (WPOS.util.mobile) {
-            $(".qz-option").prop("disabled", true);
             $(".wp-option").prop("disabled", true);
         }
         // disable http printing if not android
@@ -103,125 +147,138 @@ function WPOSPrint() {
 
     function setHtmlValues() {
         disableUnsupportedMethods();
-        if (printmethod == "qz" || printmethod == "wp" || printmethod == "ht") {
-            $(".printoptions").show();
-            // show advanced printer selection options if needed
-            if (printmethod == "qz" || printmethod == "wp") {
-                $(".advprintoptions").show();
-                if (curset.rectype == "serial") {
-                    $("#serialoptions").show();
-                    $("#rawoptions").hide();
-                    // set serial settings
-                    $("#recport option[value='" + curset.recport + "']").prop("selected", true);
-                    $("#recbaud option[value='" + curset.recbaud + "']").prop("selected", true);
-                    $("#recdatabits option[value='" + curset.recdatabits + "']").prop("selected", true);
-                    $("#recstopbits option[value='" + curset.recstopbits + "']").prop("selected", true);
-                    $("#recparity option[value='" + curset.recparity + "']").prop("selected", true);
+        for (var i in curset.printers){
+            var printer = curset.printers[i];
+            var id = "#printsettings_"+i;
+            if (printer.method == "wp" || printer.method == "ht") {
+                $(id+" .printoptions").show();
+                // show advanced printer selection options if needed
+                if (printer.method == "wp") {
+                    $(id+" .advprintoptions").show();
+                    if (printer.type == "serial") {
+                        $(id+" .serialoptions").show();
+                        $(id+" .rawoptions").hide();
+                        $(id+" .tcpoptions").hide();
+                        // set serial settings
+                        $(id+" .psetting_port").val(printer.port);
+                        $(id+" .psetting_baud").val(printer.baud);
+                        $(id+" .psetting_databits").val(printer.databits);
+                        $(id+" .psetting_stopbits").val(printer.stopbits);
+                        $(id+" .psetting_parity").val(printer.parity);
+                    } else if (printer.type=="raw") {
+                        $(id+" .rawoptions").show();
+                        $(id+" .serialoptions").hide();
+                        $(id+" .tcpoptions").hide();
+                        // set raw settings
+                        $(id+" .psetting_printer").val(printer.printer);
+                    } else if (printer.type=="tcp") {
+                        $(id+" .tcpoptions").show();
+                        $(id+" .rawoptions").hide();
+                        $(id+" .serialoptions").hide();
+                        // set tcp settings
+                        $(id+" .psetting_printerip").val(printer.printerip);
+                        $(id+" .psetting_printerport").val(printer.printerport);
+                    }
+                    $(id+" .psetting_type").val(printer.type);
                 } else {
-                    $("#serialoptions").hide();
-                    $("#rawoptions").show();
-                    // set raw values
-                    $("#recprinter option[value='" + curset.recprinter + "']").prop("selected", true);
+                    $(id+" .advprintoptions").hide();
                 }
-                $("#rectype option[value='" + curset.rectype + "']").prop("selected", true);
+                // set cash draw
+                $(id+" .cashdrawoptions").show();
             } else {
-                $(".advprintoptions").hide();
+                // browser printing, hide all options
+                $(id+" .advprintoptions").hide();
+                $(id+" .printoptions").hide();
+                $(id+" .printserviceoptions").hide();
+                $(id+" .cashdrawoptions").hide();
             }
-            // set cash draw
-            $(".cashdrawoptions").show();
-            curset.cashdraw ? $("#cashdraw").prop("checked", true) : $("#cashdraw").prop("checked", false);
-        } else {
-            // browser printing, hide all options
-            $(".advprintoptions").hide();
-            $(".printoptions").hide();
-            $(".printserviceoptions").hide();
-            $(".cashdrawoptions").hide();
+            $(id+" .psetting_method").val(printer.method);
         }
-        $("#printmethod option[value='" + curset.printmethod + "']").prop("selected", true);
-
-        if (docmethod == "qz" || docmethod == "wp") {
-            $("#docprinter").val(curset.docprinter);
-            $("#docprint-options").show();
-        } else {
-            $("#docprint-options").hide();
-        }
-        $("#docmethod option[value='" + curset.docmethod + "']").prop("selected", true);
-
+        $("#cashdraw").prop("checked", curset.cashdraw);
+        $("#recask").val(curset.recask);
         // show service options if needed
-        if (printmethod == "wp" || printmethod == "ht" || docmethod == "wp") {
+        if (doesAnyPrinterHave('method', 'wp') || doesAnyPrinterHave('method', 'ht')) {
             $(".printserviceoptions").show();
-            $("#recip").val(curset.recip);
-            $("#rectcpport").val(curset.rectcpport);
+            $(".serviceip").val(curset.serviceip);
+            $(".serviceport").val(curset.serviceport);
         } else {
             $(".printserviceoptions").hide();
         }
+        // hide kitchen / bar settings
     }
 
     this.populatePortsList = function (ports) {
-        var reclist = $('#recport');
+        var reclist = $('.psetting_port');
         reclist.html('');
-        if (!WPOS.getLocalConfig().hasOwnProperty('recport')){
-            reclist.append('<option value="" selected></option>');
-        }
         for (var p in ports) {
-            reclist.append('<option ' + (WPOS.getLocalConfig().recport == ports[p] ? 'selected=selected' : '') + ' value="' + ports[p] + '">' + ports[p] + '</option>');
+            reclist.append('<option value="' + ports[p] + '">' + ports[p] + '</option>');
+        }
+        for (var i in curset.printers){
+            var printer = curset.printers[i];
+            if (printer.type=='serial'){
+                var id = "#printsettings_"+i;
+                var elem = $("#printsettings_"+i+" .psetting_port");
+                if ($(id+" .psetting_port option[value='"+printer.port+"']").length == 0){
+                    elem.append('<option value="'+printer.port+'">'+printer.port+'</option>');
+                }
+                elem.val(printer.port);
+            }
         }
     };
 
     this.populatePrintersList = function (printers) {
-        var reclist = $('#recprinter');
-        var doclist = $('#docprinter');
+        var reclist = $('.psetting_printer');
         reclist.html('');
-        doclist.html('');
-        if (!WPOS.getLocalConfig().hasOwnProperty('recprinter')){
-            reclist.append('<option value="" selected></option>');
-        }
-        if (!WPOS.getLocalConfig().hasOwnProperty('docprinter')){
-            doclist.append('<option value="" selected></option>');
-        }
         for (var p in printers) {
-            reclist.append('<option ' + (WPOS.getLocalConfig().recprinter == printers[p] ? 'selected=selected' : '') + ' value="' + printers[p] + '">' + printers[p] + '</option>');
-            doclist.append('<option ' + (WPOS.getLocalConfig().docprinter == printers[p] ? 'selected=selected' : '') + ' value="' + printers[p] + '">' + printers[p] + '</option>');
+            reclist.append('<option value="' + printers[p] + '">' + printers[p] + '</option>');
+        }
+        for (var i in curset.printers){
+            var printer = curset.printers[i];
+            if (printer.type=='raw'){
+                var id = "#printsettings_"+i;
+                var elem = $("#printsettings_"+i+" .psetting_printer");
+                if ($(id+" .psetting_printer option[value='"+printer.printer+"']").length == 0){
+                    elem.append('<option value="'+printer.printer+'">'+printer.printer+'</option>');
+                }
+                elem.val(printer.printer);
+            }
         }
     };
 
     this.populatePrinters = function () {
-        if (curset.printmethod == "wp") {
+        if (doesAnyPrinterHave('method', 'wp')) {
             webprint.requestPrinters();
-        } else {
-            populatePrinters();
         }
     };
 
     this.populatePorts = function () {
-        if (curset.printmethod == "wp") {
+        if (doesAnyPrinterHave('method', 'wp')) {
             webprint.requestPorts();
-        } else {
-            populateSerialPorts();
         }
     };
 
-    this.setPrintSetting = function (key, value) {
-        setPrintSetting(key, value);
-    };
-
-    function setPrintSetting(key, value) {
-        if (value=="")
-            return;
-        WPOS.setLocalConfigValue(key, value);
-        loadPrintSettings(); // reload print settings, form is already updated no need to set
-        if (key == "recport" || key == "recbaud" || key == "recdatabits" || key == "recstopbits" || key == "recparity" || key == "recflow" || (key == "rectype" && value == "serial")) {
+    this.setPrintSetting= function(printer, key, value) {
+        curset.printers[printer][key] = value;
+        WPOS.setLocalConfigValue('printing', curset);
+        loadPrintSettings(false); // reload print settings, default are already loaded
+        if (key == "port" || key == "baud" || key == "databits" || key == "stopbits" || key == "parity" || key == "flow" || (key == "type" && value == "serial")) {
             openSerialPorts();
         }
-    }
+    };
+
+    this.setGlobalPrintSetting = function(key, value){
+        curset[key] = value;
+        WPOS.setLocalConfigValue('printing', curset);
+    };
 
     function openSerialPorts(){
-        if (curset.printmethod == "wp"){
-            if (curset.hasOwnProperty('recport'))
-                webprint.openPort(curset.recport);
-        } else {
-            openSerialPort();
+        for (var i in curset.printers){
+            if (getPrintSetting(i, 'method') == "wp"){
+                if (getPrintSetting(i, 'type')=="serial" && getPrintSetting(i, 'port')!="")
+                    webprint.openPort(curset.printers[i].port, curset.printers[i]);
+            }
         }
+        console.log("Setting up serial connections");
     }
 
     // REPORT PRINTING
@@ -231,20 +288,17 @@ function WPOSPrint() {
 
     function printCurrentReport() {
         var html;
-        switch (docmethod) {
+        var printer = getPrintSetting('reports', 'printer');
+        switch (getPrintSetting('reports', 'method')) {
             case "br":
                 browserPrintHtml($("#reportcontain").html(), true);
                 break;
             case "qz":
-                if (curprinter != curset.docprinter) {
-                    findPrinter(curset.docprinter);
-                }
-                html = '<html><head><title>Wpos Report</title><link media="all" href="admin/assets/css/bootstrap.min.css" rel="stylesheet"/><link media="all" rel="stylesheet" href="admin/assets/css/font-awesome.min.css"/><link media="all" rel="stylesheet" href="admin/assets/css/ace-fonts.css"/><link media="all" rel="stylesheet" href="admin/assets/css/ace.min.css"/></head><body style="background-color: #FFFFFF;">' + $("#reportcontain").html() + '</body></html>';
-                printHTML(html);
+                alert("QZ-Print integration is no longer available, switch to the new webprint applet");
                 break;
             case "wp":
-                html = '<html><head><title>Wpos Report</title><link media="all" href="admin/assets/css/bootstrap.min.css" rel="stylesheet"/><link media="all" rel="stylesheet" href="admin/assets/css/font-awesome.min.css"/><link media="all" rel="stylesheet" href="admin/assets/css/ace-fonts.css"/><link media="all" rel="stylesheet" href="admin/assets/css/ace.min.css"/></head><body style="background-color: #FFFFFF;">' + $("#reportcontain").html() + '</body></html>';
-                webprint.printHtml(html);
+                html = '<html><head><title>Wpos Report</title><link media="all" href="/admin/assets/css/bootstrap.min.css" rel="stylesheet"/><link media="all" rel="stylesheet" href="/admin/assets/css/font-awesome.min.css"/><link media="all" rel="stylesheet" href="/admin/assets/css/ace-fonts.css"/><link media="all" rel="stylesheet" href="admin/assets/css/ace.min.css"/></head><body style="background-color: #FFFFFF;">' + $("#reportcontain").html() + '</body></html>';
+                webprint.printHtml(html, printer);
         }
     }
 
@@ -258,26 +312,46 @@ function WPOSPrint() {
     };
 
     function openCashDraw() {
-        if (curset.cashdraw && (printmethod == "qz" || printmethod == "ht" || printmethod == "wp")) {
-            if ((printmethod == "qz" || printmethod == "wp") && (curset.recprinter == null && curset.recport == null)) {
+        var method = getPrintSetting('receipts', 'method');
+        if (curset.cashdraw && (method == "ht" || method == "wp")) {
+            if (method == "qz"){
+                alert("QZ-Print integration is no longer available, switch to the new webprint applet");
                 return false;
             }
-            return sendESCPPrintData(esc_init + esc_p + "\x32" + "\x32");
+            if (method == "wp") {
+                switch(getPrintSetting('receipts', 'type')){
+                    case "raw":
+                        if (getPrintSetting('receipts', 'printer')=="")
+                            return false;
+                        break;
+                    case "serial":
+                        if (getPrintSetting('receipts', 'port')=="")
+                            return false;
+                        break;
+                    case "tcp":
+                        if (getPrintSetting('receipts', 'printerip')=="" || getPrintSetting('receipts', 'printerport')=="")
+                            return false;
+                }
+            }
+            return sendESCPPrintData('receipts', esc_init + esc_p + "\x32" + "\x32");
         } else {
             return false;
         }
     }
 
     // RECEIPT PRINTING
-    this.printArbReceipt = function (text) {
-        switch (printmethod) {
+    this.printArbReceipt = function (printer, text) {
+        var method = getPrintSetting(printer, 'method');
+        switch (method) {
             case "br":
                 browserPrintHtml("<pre style='text-align: center; background-color: white;'>" + text + "</pre>", false);
                 return true;
             case "qz":
+                alert("QZ-Print integration is no longer available, switch to the new webprint applet");
+                return false;
             case "ht":
             case "wp":
-                sendESCPPrintData(esc_a_c + text + "\n\n\n\n" + gs_cut + "\r");
+                sendESCPPrintData(printer, esc_a_c + text + "\n\n\n\n" + gs_cut + "\r");
                 return true;
             default :
                 return false;
@@ -290,21 +364,23 @@ function WPOSPrint() {
 
     function printReceipt(ref) {
         var record = WPOS.trans.getTransactionRecord(ref);
-
-        switch (printmethod) {
+        var method = getPrintSetting('receipts', 'method');
+        switch (method) {
             case "br":
                 browserPrintHtml(getHtmlReceipt(record), false);
                 return true;
             case "qz":
+                alert("QZ-Print integration is no longer available, switch to the new webprint applet");
+                return false;
             case "ht":
             case "wp":
                 var data = getEscReceipt(record);
                 if (WPOS.getConfigTable().pos.recprintlogo == true) {
                     getESCPImageString("https://" + document.location.hostname + WPOS.getConfigTable().pos.reclogo, function (imgdata) {
-                        appendQrcode(imgdata + data);
+                        appendQrcode("receipts", imgdata + data);
                     });
                 } else {
-                    appendQrcode(data);
+                    appendQrcode("receipts", data);
                 }
                 return true;
 
@@ -313,56 +389,75 @@ function WPOSPrint() {
         }
     }
 
-    this.testReceiptPrinter = function () {
-        if (printmethod == "qz" || printmethod == "ht" || printmethod == "wp") {
-            testReceipt();
+    this.printOrderTicket = function(printer, record, orderid, flagtext){
+        var method = getPrintSetting(printer, 'method');
+        switch (method) {
+            case "qz":
+                alert("QZ-Print integration is no longer available, switch to the new webprint applet");
+                return false;
+            case "ht":
+            case "wp":
+                var data = getEscOrderTicket(record, orderid, flagtext);
+                sendESCPPrintData(printer, data + "\n\n\n\n" + gs_cut + "\r");
+                return true;
+            default :
+                return false;
+        }
+    };
+
+    this.testReceiptPrinter = function(printer) {
+        var method = getPrintSetting(printer, 'method');
+        if (method == "ht" || method == "wp") {
+            testReceipt(printer);
         } else {
+            if (method == "qz"){
+                alert("QZ-Print integration is no longer available, switch to the new webprint applet");
+                return;
+            }
             alert("Receipt printer not configured!");
         }
     };
 
-    function testReceipt() {
+    function testReceipt(printer) {
         var data = getEscReceiptHeader() + "\n\n\n\n" + gs_cut + "\r";
         getESCPImageString("https://" + document.location.hostname + WPOS.getConfigTable().pos.reclogo, function (imgdata) {
-            sendESCPPrintData(imgdata + data);
+            sendESCPPrintData(printer, imgdata + data);
         });
     }
 
     this.printQrCode = function () {
-        appendQrcode("");
+        appendQrcode("receipts", "");
     };
 
-    function appendQrcode(data) {
+    function appendQrcode(printer, data) {
         if (WPOS.getConfigTable().pos.recqrcode != "") {
             getESCPImageString("https://" + document.location.hostname + "/docs/qrcode.png", function (imgdata) {
-                sendESCPPrintData(data + imgdata + "\n\n\n\n" + gs_cut + "\r");
+                sendESCPPrintData(printer, data + imgdata + "\n\n\n\n" + gs_cut + "\r");
             });
         } else {
-            sendESCPPrintData(data + "\n\n\n\n" + gs_cut + "\r");
+            sendESCPPrintData(printer, data + "\n\n\n\n" + gs_cut + "\r");
         }
     }
 
-    function sendESCPPrintData(data) {
-        switch (printmethod) {
+    function sendESCPPrintData(printer, data) {
+        var method = getPrintSetting(printer, 'method');
+        switch (method) {
             case "qz":
-                if (curset.rectype == "serial") {
-                    sendSerialData(btoa(data));
-                } else {
-                    // set qz printer
-                    if (curprinter != curset.recprinter) {
-                        findPrinter(curset.recprinter);
-                    }
-                    qz.append64(btoa(data)); // append the data
-                    qz.print();
-                }
-                return true;
+                alert("QZ-Print integration is no longer available, switch to the new webprint applet");
+                return false;
             case "wp":
-                if (curset.rectype == "serial"){
-                    webprint.printSerial(btoa(data), curset.recport);
-                } else {
-                    webprint.printRaw(btoa(data), curset.recprinter);
+                switch(getPrintSetting(printer, 'type')){
+                    case "serial":
+                        webprint.printSerial(btoa(data), getPrintSetting(printer, 'port'));
+                        return true;
+                    case "raw":
+                        webprint.printRaw(btoa(data), getPrintSetting(printer, 'printer'));
+                        return true;
+                    case "tcp":
+                        webprint.printTcp(btoa(data), getPrintSetting(printer, 'printerip')+":"+getPrintSetting(printer, 'printerport'));
+                        return true;
                 }
-                return true;
+                return false;
             case "ht":
                 webprint.print(data);
                 return true;
@@ -391,7 +486,7 @@ function WPOSPrint() {
         var pwindow;
 
         function openPrintWindow() {
-            pwindow = window.open("http://" + curset.recip + ":" + curset.rectcpport + "/printwindow", 'AndroidPrintService');
+            pwindow = window.open("http://" + curset.serviceip + ":" + curset.serviceport + "/printwindow", 'AndroidPrintService');
             if (pwindow)
                 pwindow.blur();
             window.focus();
@@ -408,7 +503,7 @@ function WPOSPrint() {
         };
 
         function message(event) {
-            if (event.origin != "http://" + curset.recip + ":" + curset.rectcpport)
+            if (event.origin != "http://" + curset.serviceip + ":" + curset.serviceport)
                 return;
             if (event.data == "init") {
                 clearTimeout(timeOut);
@@ -432,12 +527,17 @@ function WPOSPrint() {
     var WebPrint = function (init, defPortCb, defPrinterCb, defReadyCb) {
 
         this.printRaw = function (data, printer) {
-            var request = {a: "printraw", data: data, printer: printer};
+            var request = {a: "printraw", printer: printer, data: data};
             sendAppletRequest(request);
         };
 
         this.printSerial = function (data, port) {
-            var request = {a: "printraw", data: data, port: port};
+            var request = {a: "printraw", port: port, data: data};
+            sendAppletRequest(request);
+        };
+
+        this.printTcp = function (data, socket) {
+            var request = {a: "printraw", socket: socket, data: data};
             sendAppletRequest(request);
         };
 
@@ -446,8 +546,8 @@ function WPOSPrint() {
             sendAppletRequest(request);
         };
 
-        this.openPort = function (port) {
-            var request = {a: "openport", port: port, settings: {baud: curset.recbaud, databits: curset.recdatabits, stopbits: curset.recstopbits, parity: curset.recparity, flow: curset.recflow}};
+        this.openPort = function (port, settings) {
+            var request = {a: "openport", port: port, settings: {baud: settings.baud, databits: settings.databits, stopbits: settings.stopbits, parity: settings.parity, flow: settings.flow}};
             sendAppletRequest(request);
         };
 
@@ -480,7 +580,7 @@ function WPOSPrint() {
         var wpready = false;
         function openPrintWindow() {
             wpready = false;
-            wpwindow = window.open("http://" + curset.recip + ":" + curset.rectcpport + "/printwindow", 'WebPrintService');
+            wpwindow = window.open("http://" + curset.serviceip + ":" + curset.serviceport + "/printwindow", 'WebPrintService');
             if (wpwindow)
                 wpwindow.blur();
             window.focus();
@@ -494,11 +594,11 @@ function WPOSPrint() {
             }
             window.addEventListener("message", handleWebPrintMessage, false);
             openPrintWindow();
-            wptimeOut = setTimeout(dispatchWebPrint, 2000);
+            wptimeOut = setTimeout(dispatchWebPrint, 2500);
         };
 
         function handleWebPrintMessage(event) {
-            if (event.origin != "http://" + curset.recip + ":" + curset.rectcpport)
+            if (event.origin != "http://" + curset.serviceip + ":" + curset.serviceport)
                 return;
             switch (event.data.a) {
                 case "init":
@@ -520,7 +620,10 @@ function WPOSPrint() {
                         localStorage.setItem("webprint_auth", response.cookie);
                     }
                     if (response.hasOwnProperty("ready")){
-                        if (defReadyCb instanceof Function) defReadyCb();
+                        if (defReadyCb instanceof Function){
+                            defReadyCb();
+                            defReadyCb = null;
+                        }
                     }
                     break;
                 case "error": // cannot contact print applet from relay window
@@ -536,8 +639,13 @@ function WPOSPrint() {
             var dlframe = $("#dlframe");
             dlframe.attr("src", "");
             if (answer) {
+                var installFile="WebPrint.jar";
+                if (navigator.appVersion.indexOf("Win")!=-1) installFile="WebPrint_windows_1_1.exe";
+                if (navigator.appVersion.indexOf("Mac")!=-1) installFile="WebPrint_macos_1_1.dmg";
+                if (navigator.appVersion.indexOf("X11")!=-1) installFile="WebPrint_unix_1_1.sh";
+                if (navigator.appVersion.indexOf("Linux")!=-1) installFile="WebPrint_unix_1_1.sh";
                 //window.open("/assets/libs/WebPrint.jar", '_blank');
-                dlframe.attr("src", "/assets/libs/WebPrint.jar");
+                dlframe.attr("src", "https://content.wallaceit.com.au/webprint/"+installFile);
             }
         }
 
@@ -584,28 +692,34 @@ function WPOSPrint() {
         cmd += esc_a_l + "Transaction Ref: " + record.ref + "\n";
         cmd += "Sale Time:       " + WPOS.util.getDateFromTimestamp(record.processdt) + "\n\n";
         // items
-        var leftstr, rightstr, item;
+        var item;
         for (var i in record.items) {
             item = record.items[i];
-            cmd += getEscTableRow(item.qty + " x " + item.name + " (" + WPOS.currency() + item.unit + ")", WPOS.currency() + item.price, false, false);
+            cmd += getEscTableRow(item.qty + " x " + item.name + " (" + WPOS.util.currencyFormat(item.unit, false, true) + ")", WPOS.util.currencyFormat(item.price, false, true), false, false);
+            if (item.hasOwnProperty('mod')){
+                for (var x=0; x<item.mod.items.length; x++){
+                    var mod = item.mod.items[x];
+                    cmd+= '    '+(mod.hasOwnProperty('qty')?((mod.qty>0?'+':'')+mod.qty+' '):'')+mod.name+(mod.hasOwnProperty('value')?': '+mod.value:'')+' ('+WPOS.util.currencyFormat(mod.price, false, true)+')\n';
+                }
+            }
         }
         cmd += '\n';
         // totals
         // subtotal
         if (Object.keys(record.taxdata).length > 0 || record.discount > 0) { // only add if discount or taxes
-            cmd += getEscTableRow('Subtotal:', WPOS.currency() + record.subtotal, true, false);
+            cmd += getEscTableRow('Subtotal:', WPOS.util.currencyFormat(record.subtotal, false, true), true, false);
         }
         // taxes
         var taxstr;
         for (i in record.taxdata) {
-            taxstr = WPOS.getTaxTable()[i];
+            taxstr = WPOS.getTaxTable().items[i];
             taxstr = taxstr.name + ' (' + taxstr.value + '%)';
-            cmd += getEscTableRow(taxstr, WPOS.currency() + record.taxdata[i], false, false);
+            cmd += getEscTableRow(taxstr, WPOS.util.currencyFormat(record.taxdata[i], false, true), false, false);
         }
         // discount
-        cmd += (record.discount > 0 ? getEscTableRow(record.discount + '% Discount', WPOS.currency() + Math.abs(parseFloat(record.total) - (parseFloat(record.subtotal) + parseFloat(record.tax))).toFixed(2), false, false) : '');
+        cmd += (record.discount > 0 ? getEscTableRow(record.discount + '% Discount', WPOS.util.currencyFormat(Math.abs(parseFloat(record.total) - (parseFloat(record.subtotal) + parseFloat(record.tax))).toFixed(2), false, true), false, false) : '');
         // grand total
-        cmd += getEscTableRow('Total (' + record.numitems + ' item' + (record.numitems > 1 ? 's)' : ')') + ':', WPOS.currency() + record.total, true, true);
+        cmd += getEscTableRow('Total (' + record.numitems + ' item' + (record.numitems > 1 ? 's)' : ')') + ':', WPOS.util.currencyFormat(record.total, false, true), true, true);
         // payments
         var paymentreceipts = '';
         var method, amount;
@@ -625,10 +739,10 @@ function WPOSPrint() {
                     amount = (-amount).toFixed(2);
                 }
             }
-            cmd += getEscTableRow(WPOS.util.capFirstLetter(method) + ':', WPOS.currency() + amount, false, false);
+            cmd += getEscTableRow(WPOS.util.capFirstLetter(method) + ':', WPOS.util.currencyFormat(amount, false, true), false, false);
             if (method == 'cash') { // If cash print tender & change
-                cmd += getEscTableRow('Tendered:', WPOS.currency() + item.tender, false, false);
-                cmd += getEscTableRow('Change:', WPOS.currency() + item.change, false, false);
+                cmd += getEscTableRow('Tendered:', WPOS.util.currencyFormat(item.tender, false, true), false, false);
+                cmd += getEscTableRow('Change:', WPOS.util.currencyFormat(item.change, false, true), false, false);
             }
         }
         cmd += '\n';
@@ -641,7 +755,7 @@ function WPOSPrint() {
                 if (record.refunddata[i].processdt > lastreftime) {
                     lastrefindex = i;
                 }
-                cmd += getEscTableRow((WPOS.util.getDateFromTimestamp(record.refunddata[i].processdt) + ' (' + record.refunddata[i].items.length + ' items)'), (WPOS.util.capFirstLetter(record.refunddata[i].method) + '     ' + WPOS.currency() + record.refunddata[i].amount), false, false);
+                cmd += getEscTableRow((WPOS.util.getDateFromTimestamp(record.refunddata[i].processdt) + ' (' + record.refunddata[i].items.length + ' items)'), (WPOS.util.capFirstLetter(record.refunddata[i].method) + '     ' + WPOS.util.currencyFormat(record.refunddata[i].amount, false, true)), false, false);
             }
             cmd += '\n';
             // check for integrated receipt and replace if found
@@ -658,6 +772,39 @@ function WPOSPrint() {
         if (paymentreceipts != '' && WPOS.getLocalConfig().eftpos.receipts) cmd += esc_a_c + paymentreceipts;
         // footer
         cmd += esc_bold_on + esc_a_c + WPOS.getConfigTable().pos.recfooter + font_reset + "\r";
+
+        return cmd;
+    }
+
+    function getEscOrderTicket(record, orderid, flagtext) {
+        console.log(record);
+        console.log(orderid);
+        // send cash draw command to the printer
+        // header
+        var bizname = WPOS.getConfigTable().general.bizname;
+        // header
+        var cmd = esc_init + esc_a_c + esc_double + bizname + "\n" + font_reset + '\n';
+        // transdetails
+        var order = record.orderdata[orderid];
+        cmd += esc_a_l +"Transaction Ref: " + record.ref + "\n";
+        cmd +=          "Order Time:      " + WPOS.util.getDateFromTimestamp(order.processdt) + "\n";
+        if (order.hasOwnProperty('moddt'))
+            cmd +=      "Modified Time:   " + WPOS.util.getDateFromTimestamp(order.moddt) + "\n\n";
+        cmd +=       esc_a_c + esc_double+ 'Order #' +order.id + (flagtext?'\n'+flagtext:'') + font_reset + "\n";
+        cmd +=       esc_a_c + esc_bold_on + (order.tablenum>0?"Table #: " + order.tablenum:"Take Away") +  font_reset + "\n\n";
+        // items
+        var item;
+        for (var i in record.orderdata[orderid].items) {
+            item = record.items[record.orderdata[orderid].items[i]];
+            cmd += getEscTableRow(item.qty + " x " + item.name + " (" + WPOS.util.currencyFormat(item.unit, false, true) + ")", WPOS.util.currencyFormat(item.price, false, true), false, false);
+            if (item.hasOwnProperty('mod')) {
+                for (var x = 0; x < item.mod.items.length; x++) {
+                    var mod = item.mod.items[x];
+                    cmd += '    ' + (mod.hasOwnProperty('qty') ? ((mod.qty > 0 ? '+' : '') + mod.qty + ' ') : '') + mod.name + (mod.hasOwnProperty('value') ? ': ' + mod.value : '') + ' (' + WPOS.util.currencyFormat(mod.price, false, true) + ')\n';
+                }
+            }
+        }
+        cmd += '\n';
 
         return cmd;
     }
@@ -714,20 +861,14 @@ function WPOSPrint() {
         for (var pix = 0; pix < imageData.length; pix += 4) {
             pixArr.push((imageData[pix] == 0));
         }
-        // create the byte array and buffer; could use Uint8ClampedArray when available for optimization
-        //var buf = new ArrayBuffer(pixArr.length);
-        //var final = new Uint8ClampedArray(buf);
-        //var fi = 0;
+        // create the byte array
         var final = [];
         // this function adds bytes to the array
         function appendBytes() {
             for (var i = 0; i < arguments.length; i++) {
                 final.push(arguments[i]);
-                //final[fi] = arguments[i];
-                //fi++;
             }
         }
-
         // Set the line spacing to 24 dots, the height of each "stripe" of the image that we're drawing.
         appendBytes(0x1B, 0x33, 24);
         // Starting from x = 0, read 24 bits down. The offset variable keeps track of our global 'y'position in the image.
@@ -766,7 +907,7 @@ function WPOSPrint() {
         // Restore the line spacing to the default of 30 dots.
         appendBytes(0x1B, 0x33, 30);
         // convert the array into a bytestring and return
-        final = WPOS.util.utf8ArrayToStr(final);
+        final = WPOS.util.ArrayToByteStr(final);
 
         return final;
     }
@@ -790,25 +931,33 @@ function WPOSPrint() {
         var item;
         for (var i in record.items) {
             item = record.items[i];
-            html += '<tr><td>' + item.qty + "x " + item.name + " (" + WPOS.currency() + item.unit + ")" + '</td><td style="text-align: right;">' + WPOS.currency() + item.price + '</td></tr>';
+            // item mod details
+            var modStr = "";
+            if (item.hasOwnProperty('mod')){
+                for (var x=0; x<item.mod.items.length; x++){
+                    var mod = item.mod.items[x];
+                    modStr+= '<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+(mod.hasOwnProperty('qty')?((mod.qty>0?'+ ':'')+mod.qty+' '):'')+mod.name+(mod.hasOwnProperty('value')?': '+mod.value:'')+' ('+WPOS.util.currencyFormat(mod.price)+')';
+                }
+            }
+            html += '<tr><td>' + item.qty + " x " + item.name + " (" + WPOS.util.currencyFormat(item.unit) + ")" + modStr + '</td><td style="text-align: right; vertical-align: top;">' + WPOS.util.currencyFormat(item.price) + '</td></tr>';
         }
         html += '<tr style="height: 5px;"><td></td><td></td></tr>';
         // totals
         // subtotal
         if (Object.keys(record.taxdata).length > 0 || record.discount > 0) { // only add if discount or taxes
-            html += '<tr><td><b>Subtotal: </b></td><td style="text-align: right;"><b style="text-decoration: overline;">' + WPOS.currency() + record.subtotal + '</b></td></tr>';
+            html += '<tr><td><b>Subtotal: </b></td><td style="text-align: right;"><b style="text-decoration: overline;">' + WPOS.util.currencyFormat(record.subtotal) + '</b></td></tr>';
         }
         // taxes
         var taxstr;
         for (i in record.taxdata) {
-            taxstr = WPOS.getTaxTable()[i];
+            taxstr = WPOS.getTaxTable().items[i];
             taxstr = taxstr.name + ' (' + taxstr.value + '%)';
-            html += '<tr><td>' + taxstr + ':</td><td style="text-align: right;">' + WPOS.currency() + record.taxdata[i] + '</td></tr>';
+            html += '<tr><td>' + taxstr + ':</td><td style="text-align: right;">' + WPOS.util.currencyFormat(record.taxdata[i]) + '</td></tr>';
         }
         // discount
-        html += (record.discount > 0 ? '<tr><td>' + record.discount + '% Discount</td><td style="text-align: right;">' + WPOS.currency() + Math.abs(parseFloat(record.total) - (parseFloat(record.subtotal) + parseFloat(record.tax))).toFixed(2) + '</td></tr>' : '');
+        html += (record.discount > 0 ? '<tr><td>' + record.discount + '% Discount</td><td style="text-align: right;">' + WPOS.util.currencyFormat(Math.abs(parseFloat(record.total) - (parseFloat(record.subtotal) + parseFloat(record.tax))).toFixed(2)) + '</td></tr>' : '');
         // grand total
-        html += '<tr><td><b>Total (' + record.numitems + ' items): </b></td><td style="text-align: right;"><b style="text-decoration: overline;">' + WPOS.currency() + record.total + '</b></td></tr>';
+        html += '<tr><td><b>Total (' + record.numitems + ' items): </b></td><td style="text-align: right;"><b style="text-decoration: overline;">' + WPOS.util.currencyFormat(record.total) + '</b></td></tr>';
         html += '<tr style="height: 2px;"><td></td><td></td></tr>';
         // payments
         var paymentreceipts = '';
@@ -829,11 +978,11 @@ function WPOSPrint() {
                     amount = (-amount).toFixed(2);
                 }
             }
-            html += '<tr><td>' + WPOS.util.capFirstLetter(method) + ':</td><td style="text-align: right;">' + WPOS.currency() + amount + '</td></tr>';
+            html += '<tr><td>' + WPOS.util.capFirstLetter(method) + ':</td><td style="text-align: right;">' + WPOS.util.currencyFormat(amount) + '</td></tr>';
             if (method == 'cash') {
                 // If cash print tender & change.
-                html += '<tr><td>Tendered:</td><td style="text-align: right;">' + WPOS.currency() + item.tender + '</td></tr>';
-                html += '<tr><td>Change:</td><td style="text-align: right;">' + WPOS.currency() + item.change + '</td></tr>';
+                html += '<tr><td>Tendered:</td><td style="text-align: right;">' + WPOS.util.currencyFormat(item.tender) + '</td></tr>';
+                html += '<tr><td>Change:</td><td style="text-align: right;">' + WPOS.util.currencyFormat(item.change) + '</td></tr>';
             }
 
         }
@@ -847,7 +996,7 @@ function WPOSPrint() {
                 if (record.refunddata[i].processdt > lastreftime) {
                     lastrefindex = i;
                 }
-                html += '<tr><td>' + WPOS.util.getDateFromTimestamp(record.refunddata[i].processdt) + ' (' + record.refunddata[i].items.length + ' items)</p></td><td><p style="font-size: 13px; display: inline-block;">' + WPOS.util.capFirstLetter(record.refunddata[i].method) + '</p><p style="font-size: 13px; display: inline-block; float: right;">' + WPOS.currency() + record.refunddata[i].amount + '</td></tr>';
+                html += '<tr><td>' + WPOS.util.getDateFromTimestamp(record.refunddata[i].processdt) + ' (' + record.refunddata[i].items.length + ' items)</p></td><td><p style="font-size: 13px; display: inline-block;">' + WPOS.util.capFirstLetter(record.refunddata[i].method) + '</p><p style="font-size: 13px; display: inline-block; float: right;">' + WPOS.util.currencyFormat(record.refunddata[i].amount) + '</td></tr>';
             }
             html += '</table>';
             // check for integrated receipt and replace if found
@@ -887,8 +1036,8 @@ function WPOSPrint() {
         printw.document.close();
 
         // close only after printed, This is only implemented properly in firefox but can be used for others soon (part of html5 spec)
-        if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1)
-            printw.addEventListener('afterprint', function(e){ printw.close(); });
+        //if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1)
+        //printw.addEventListener('afterprint', function(e){ printw.close(); });
 
         printw.focus();
         printw.print();
