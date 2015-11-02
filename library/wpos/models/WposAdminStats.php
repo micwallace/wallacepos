@@ -248,7 +248,7 @@ class WposAdminStats {
                 $itemtax = json_decode($saleitem['tax']);
 
                 if ($itemtax->total==0){
-                    if (!array_key_exists("Untaxed", $stats)){
+                    if (!array_key_exists(-1, $stats)){
                         $stats[-1] = new stdClass();
                         $stats[-1]->refs = [];
                         $stats[-1]->name = "Untaxed";
