@@ -22,11 +22,11 @@
 <div style="text-align: center;">
     <div id="install_view">
         <h4>Installing System</h4>
-        <h4>Do not leave the page until the process is complete</h4>
+        <h5>Do not leave the page until the process is complete</h5>
     </div>
     <div id="complete_view" class="hide">
         <h4>Installation Complete</h4>
-        <h4>Check the below frame for errors</h4>
+        <h5>Check the below frame for errors. If successful <a href="/admin">click here</a> to login.</h5>
     </div>
     <iframe id="installframe" style="width: 100%; height: 200px; overflow: auto;"></iframe>
 </div>

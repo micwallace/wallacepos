@@ -79,45 +79,33 @@ WallacePOS requires:
     ```
         sudo apt-get update
         sudo apt-get install nodejs && apt-get install npm
-        cd %/your_install_dir%
-        sudo npm install
+        cd %/your_install_dir%/api
+        sudo npm install socket.io
     ```
 
 ## Installation & Startup
 
-1. Clone your chosen WallacePOS release to %your_install_dir% if you haven't done so already.
+1. Clone the latest WallacePOS release to %your_install_dir% if you haven't done so already.
+   The installation dir must be your Apache document root directory!
 
-2. Configure the database by copying %your_install_dir%/library/wpos/dbconfig_template.php to %your_install_dir%/library/wpos/dbconfig.php and fill in your own values.
+2. Visit /installer in your browser & follow the installation wizard.
 
-3. Install the database schema & templates:
-
-    1. Enable the /library/installer/index.php file by removing the die(); command at the start
-    2. Access library/installer/?install from the web browser to install the database schema
-
-    OR
-
-    1. Manually install the database schema at %your_install_dir%/library/installer/schemas/install.sql using your favoured sql management method.
-    2. Copy docs-template folder to docs, make sure it is writable by your apache user (eg. www-data)
-
-4. Login to the admin dashboard at /admin using credentials admin:admin, from the menu go to Settings -> Utilities and click the Start button under Feed Server
-
-5. Change default passwords in Settings -> Staff & Admins!
+3. Login to the admin dashboard at /admin, from the menu go to Settings -> Utilities and click the Start button under Feed Server.
 
 ## Deploying using dokku
 
 To deploy WallacePOS on dokku:
 
-1. Install [dokku-buildpack-multi](https://github.com/pauldub/dokku-multi-buildpack) on your dokku host
+1. Install [dokku-buildpack-multi](https://github.com/pauldub/dokku-multi-buildpack) on your dokku host.
 
-2. Fork the WallacePOS to a PRIVATE repo (IMPORTANT),  copy /library/wpos/dbconfig_template.php to dbconfig.php and fill in your own values
+2. Fork the WallacePOS to a PRIVATE repo (IMPORTANT), edit /library/wpos/.dbconfig.json and fill in your own values.
 
     **OR**
 
-   Use my [dokku mysql plugin](https://github.com/micwallace/dokku-mysql-server-plugin) to create and link the database automagically
+   Use my [dokku mysql plugin](https://github.com/micwallace/dokku-mysql-server-plugin) to create and link the database automagically.   
 
-3. Deploy in the usual manner.
+3. Commit deploy in the usual manner.
 
-4. Login to the admin dashboard at /admin using credentials admin:admin & change the default passwords in Settings -> Staff & Admins!
+4. Access /installer/?install from the web browser to install the database schema & templates
 
-
-
+5. Login to the admin dashboard at /admin using credentials admin:admin & change the default passwords in Settings -> Staff & Admins!
