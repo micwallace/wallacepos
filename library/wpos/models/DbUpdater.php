@@ -63,6 +63,9 @@ class DbUpdater {
                     // Setup general info
                     echo("Setup variables processed.\n");
                 }
+                // start node server (restart to be safe)
+                $socket = new WposSocketControl();
+                $socket->restartSocketServer(['error'=>'OK']);
             }
         } catch (Exception $e){
             return $e->getMessage();
@@ -249,6 +252,10 @@ class DbUpdater {
                     WposAdminSettings::putValue('general', 'currencyformat', '$~2~.~,~0');
                     WposAdminSettings::putValue('general', 'version', '1.2');
             }
+            // restart node server
+            $socket = new WposSocketControl();
+            $socket->restartSocketServer(['error'=>'OK']);
+
             return "Update Completed Successfully!";
         } catch (Exception $e){
             echo $this->db->_db->errorInfo()[0];

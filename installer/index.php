@@ -162,12 +162,29 @@ function writeDatabaseConfig(){
     return true;
 }
 
+function addAnalytics($type){
+    // Get cURL resource
+    $curl = curl_init();
+    // Set some options - we are passing in a useragent too here
+    curl_setopt_array($curl, array(
+        CURLOPT_RETURNTRANSFER => 1,
+        CURLOPT_URL => 'https://admin.wallaceit.com.au/customerapi/stats/add/'.$type.'?hostname='.$_SERVER['SERVER_NAME'].'&version=1.2',
+        CURLOPT_USERAGENT => 'WallacePOS_Installer'
+    ));
+    // Send the request & save response to $resp
+    $resp = curl_exec($curl);
+    // Close request to clear up some resources
+    curl_close($curl);
+}
+
 session_start();
 // installer scripts
 // update
 if (isset($_REQUEST['upgrade']) && isset($_REQUEST['version'])){
     $dbUpdater = new DbUpdater();
     $result = $dbUpdater->upgrade($_REQUEST['version']);
+    // register analytics
+    addAnalytics("upgrade");
     echo($result);
     exit;
 }
@@ -177,6 +194,8 @@ if (isset($_REQUEST['install'])){
         $_REQUEST['setupvars'] = $_SESSION['setupvars'];
     $dbUpdater = new DbUpdater();
     $result = $dbUpdater->install();
+    // register analytics
+    addAnalytics("install");
     echo($result);
     exit;
 }

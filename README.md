@@ -90,7 +90,7 @@ WallacePOS requires:
 
 2. Visit /installer in your browser & follow the installation wizard.
 
-3. Login to the admin dashboard at /admin, from the menu go to Settings -> Utilities and click the Start button under Feed Server.
+3. Login to the admin dashboard at /admin, from the menu go to Settings -> Utilities and make sure the feed server has been started successfully.
 
 ## Deploying using dokku
 
