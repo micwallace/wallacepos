@@ -45,7 +45,7 @@ class DbUpdater {
             return "Database detected, skipping full installation.";
         }
         // Install database
-        $schemapath = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/installer/schemas/install.sql";
+        $schemapath = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."installer/schemas/install.sql";
         if (!file_exists($schemapath)){
             return "Schema does not exist";
         }
@@ -90,7 +90,7 @@ class DbUpdater {
                 return "Must be logged in as admin";
             }
         }
-        $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/installer/schemas/update".$version.".sql";
+        $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."installer/schemas/update".$version.".sql";
         if (!file_exists($path)){
             return "Schema does not exist";
         }
