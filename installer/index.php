@@ -223,12 +223,12 @@ if (isset($_REQUEST['checkdb'])){
 }
 
 if (isset($_REQUEST['doinstall'])){
-    $_SESSION['setupvars'] = json_encode(["adminhash"=>md5($_REQUEST['password'])]);
+    $_SESSION['setupvars'] = json_encode(["adminhash"=>hash('sha256', $_REQUEST['password'])]);
     $_SESSION['install_screen'] = 4;
 }
 
 if (isset($_REQUEST['doupgrade'])){
-    $_SESSION['setupvars'] = json_encode(["adminhash"=>md5($_REQUEST['password'])]);
+    $_SESSION['setupvars'] = json_encode(["adminhash"=>hash('sha256', $_REQUEST['password'])]);
     $_SESSION['install_screen'] = 4;
 }
 

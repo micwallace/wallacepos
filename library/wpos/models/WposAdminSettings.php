@@ -199,6 +199,13 @@ class WposAdminSettings {
                     unset($this->data->gcontactcode);
                 }
 
+                // generate new qr code
+                if ($this->name == "pos"){
+                    if ($this->data->recqrcode !== $configbk->recqrcode && $this->data->recqrcode!=""){
+                        $this->generateQRCode();
+                    }
+                }
+
                 foreach ($this->curconfig as $key=>$value){
                     if (isset($this->data->{$key})){ // update the config value if specified in the data
                         $this->curconfig->{$key} = $this->data->{$key};
@@ -208,12 +215,7 @@ class WposAdminSettings {
                 if ($this->configMdl->edit($this->name, json_encode($this->curconfig))===false){
                     $result['error'] = "Could not update config record: ".$this->configMdl->errorInfo;
                 } else {
-                    // generate new qr code
-                    if ($this->name == "pos"){
-                        if ($this->data->recqrcode !== $configbk->recqrcode && $this->data->recqrcode!=""){
-                            $this->generateQRCode();
-                        }
-                    }
+
                     $conf = $this->curconfig;
                     if ($this->name=="general"){
                         unset($conf->gcontacttoken);
@@ -265,7 +267,7 @@ class WposAdminSettings {
         include($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'library/phpqrcode.php');
         //echo("Creating QR code");
         $path = "/docs/qrcode.png";
-        QRcode::png($this->data->recqrcode, $_SERVER['DOCUMENT_ROOT'].$path, QR_ECLEVEL_L, 6, 1);
+        QRcode::png($this->data->recqrcode, $_SERVER['DOCUMENT_ROOT'].$path, QR_ECLEVEL_L, 5.5, 1);
     }
 
 }

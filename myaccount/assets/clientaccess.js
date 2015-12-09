@@ -143,7 +143,7 @@ function WPOSClientDash(){
         var username = userfield.val();
         var password = passfield.val();
         // hash password
-        password = WPOS.util.md5(password);
+        password = WPOS.util.SHA256(password);
         // authenticate
         curuser = WPOS.sendJsonData("auth", JSON.stringify({username: username, password: password}));
         if (curuser!==false){

@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS `auth` (
 -- Table structure for table `auth`
 --
 INSERT INTO `auth` (`id`, `username`, `name`, `password`, `token`, `uuid`, `admin`, `disabled`, `permissions`) VALUES
-(1, 'admin', 'admin', '282942cb291cc5fc15e8d42a91bcad45', '', '', 1, 0, ''),
-(2, 'staff', 'staff', '63eacd4bd19d78626da0f1c366d1db3e', '', '5346788d0a8ae', 0, 0, '{"sections":{"access":"yes","dashboard":"realtime","reports":0,"graph":0,"sales":1,"invoices":1,"items":1,"stock":1,"suppliers":1,"customers":1},"apicalls":["adminconfig\/get","stats\/general","graph\/general","stock\/get","stock\/history","suppliers\/get","invoices\/get"]}');
+(1, 'admin', 'admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', '', '', 1, 0, ''),
+(2, 'staff', 'staff', '1562206543da764123c21bd524674f0a8aaf49c8a89744c97352fe677f7e4006', '', '5346788d0a8ae', 0, 0, '{"sections":{"access":"yes","dashboard":"realtime","reports":0,"graph":0,"sales":1,"invoices":1,"items":1,"stock":1,"suppliers":1,"customers":1},"apicalls":["adminconfig\/get","stats\/general","graph\/general","stock\/get","stock\/history","suppliers\/get","invoices\/get"]}');
 
 -- --------------------------------------------------------
 

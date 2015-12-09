@@ -94,7 +94,7 @@ function WOMSPluginBase(){
         var username = userfield.val();
         var password = passfield.val();
         // hash password
-        password = WOMS.util.md5(password);
+        password = WOMS.util.SHA256(password);
         // authenticate
         var user = WOMS.sendJsonData("auth", JSON.stringify({username: username, password: password}));
         $(loginbtn).prop('disabled', false);
@@ -122,7 +122,7 @@ function WOMSPluginBase(){
             alert(passres);
             return;
         }
-        data.pass = WOMS.util.md5(data.pass);
+        data.pass = WOMS.util.SHA256(data.pass);
         // send data
         WOMS.util.showLoader();
         var result = WOMS.sendJsonData('register', JSON.stringify(data));
@@ -161,7 +161,7 @@ function WOMSPluginBase(){
             alert(passres);
             return;
         }
-        data.pass = WOMS.util.md5(data.pass);
+        data.pass = WOMS.util.SHA256(data.pass);
         // send data
         WOMS.util.showLoader();
         var result = WOMS.sendJsonData('resetpassword', JSON.stringify(data));

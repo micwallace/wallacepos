@@ -178,7 +178,7 @@ function WPOS() {
         var username = userfield.val();
         var password = passfield.val();
         // hash password
-        password = WPOS.util.md5(password);
+        password = WPOS.util.SHA256(password);
         // authenticate
         if (authenticate(username, password) === true) {
             userfield.val('');
@@ -941,7 +941,7 @@ function WPOS() {
         } else {
             // generate a md5 UUID using datestamp and rand for entropy and return the result
             var date = new Date().getTime();
-            uuid = WPOS.util.md5((date * Math.random()).toString());
+            uuid = WPOS.util.SHA256((date * Math.random()).toString());
             localStorage.setItem("wpos_devuuid", uuid);
         }
         return uuid;

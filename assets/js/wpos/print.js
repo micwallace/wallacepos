@@ -51,11 +51,16 @@ function WPOSPrint(kitchenMode) {
             cashdraw: false,
             serviceip: "127.0.0.1",
             serviceport: 8080,
-            usekitchen: false,
-            usebar: false,
+            escpreceiptmode: 'text',
             printers: {}
         }
     };
+
+    function getGlobalPrintSetting(setting){
+        if (curset.hasOwnProperty(setting))
+            return curset[setting];
+        return defaultsettings.global[setting];
+    }
 
     function getPrintSetting(printer, setting){
         if (curset.printers[printer].hasOwnProperty(setting))
@@ -196,6 +201,7 @@ function WPOSPrint(kitchenMode) {
         }
         $("#cashdraw").prop("checked", curset.cashdraw);
         $("#recask").val(curset.recask);
+        $("#escpreceiptmode").val(curset.escpreceiptmode);
         // show service options if needed
         if (doesAnyPrinterHave('method', 'wp') || doesAnyPrinterHave('method', 'ht')) {
             $(".printserviceoptions").show();
@@ -204,7 +210,6 @@ function WPOSPrint(kitchenMode) {
         } else {
             $(".printserviceoptions").hide();
         }
-        // hide kitchen / bar settings
     }
 
     this.populatePortsList = function (ports) {
@@ -351,7 +356,7 @@ function WPOSPrint(kitchenMode) {
                 return false;
             case "ht":
             case "wp":
-                sendESCPPrintData(printer, esc_a_c + text + "\n\n\n\n" + gs_cut + "\r");
+                sendESCPPrintData(printer, esc_init + esc_a_c + text + "\n\n\n\n" + gs_cut + "\r");
                 return true;
             default :
                 return false;
@@ -367,25 +372,35 @@ function WPOSPrint(kitchenMode) {
         var method = getPrintSetting('receipts', 'method');
         switch (method) {
             case "br":
-                browserPrintHtml(getHtmlReceipt(record), false);
+                browserPrintHtml(getHtmlReceipt(record, false), false);
                 return true;
             case "qz":
                 alert("QZ-Print integration is no longer available, switch to the new webprint applet");
                 return false;
             case "ht":
             case "wp":
-                var data = getEscReceipt(record);
-                if (WPOS.getConfigTable().pos.recprintlogo == true) {
-                    getESCPImageString("https://" + document.location.hostname + WPOS.getConfigTable().pos.reclogo, function (imgdata) {
-                        appendQrcode("receipts", imgdata + data);
-                    });
+                if (getGlobalPrintSetting('escpreceiptmode')=='text') {
+                    var data = getEscReceipt(record);
+                    printESCPReceipt(data);
                 } else {
-                    appendQrcode("receipts", data);
+                    // bitmap mode printing
+                    var html = getHtmlReceipt(record, true);
+                    getESCPHtmlString(html, printESCPReceipt);
                 }
                 return true;
 
             default :
                 return false;
+        }
+    }
+
+    function printESCPReceipt(data){
+        if (WPOS.getConfigTable().pos.recprintlogo == true) {
+            getESCPImageString("https://" + document.location.hostname + WPOS.getConfigTable().pos.reclogo, function (imgdata) {
+                appendQrcode("receipts", imgdata + data);
+            });
+        } else {
+            appendQrcode("receipts", data);
         }
     }
 
@@ -832,7 +847,6 @@ function WPOSPrint(kitchenMode) {
         img = new Image();
         img.onload = function () {
             // Create an empty canvas element
-            //var canvas = document.createElement("canvas");
             var canvas = document.createElement('canvas');
             canvas.width = img.width;
             canvas.height = img.height;
@@ -847,19 +861,92 @@ function WPOSPrint(kitchenMode) {
         img.src = url;
     }
 
+    this.testBitmapReceipt = function(ref){
+        var record = WPOS.trans.getTransactionRecord(ref!=null?ref:"1449222132735-1-5125");
+        var html = getHtmlReceipt(record, true);
+        getESCPHtmlString(html, function(data){
+            sendESCPPrintData('receipts', data + "\n\n\n" + gs_cut);
+        });
+    };
+
+    function getHtmlHeight(html){
+        var tempId = 'tmp-'+Math.floor(Math.random()*99999);//generating unique id just in case
+        var frame = $('<iframe id="frame-'+tempId+'"/>')
+            .appendTo(document.body)
+            .css('left','-10000em');
+        frame.contents().find('head').append('<style type="text/css"> body { font-size: 14px; padding: 0; margin: 0; }</style>');
+        var body = frame.contents().find('body');
+        var elem = $(html).css('position','absolute')
+            .css('height','auto')
+            .css('width','576px')
+            .css('font-size', '1.5em')
+            .appendTo(body)
+            .addClass(tempId).show();
+        body.append(elem);
+        var temp_elem = body.children('.'+tempId);
+        var h = temp_elem.height();
+        frame.remove();
+        return h;
+    }
+
+    function getESCPHtmlString(html, callback){
+        var canvas = document.getElementById('receipt_canvas');
+        var ctx = canvas.getContext('2d');
+        html =  '<div style="font-size: 1.7em; width: 576px; font-family: sans-serif !important;">' +
+                        html +
+                '</div>';
+        var height = getHtmlHeight(html);
+        console.log(height);
+        height = (Math.round(height/64)*64)+128; // height apparently has to be a multiple of 64
+        console.log(height);
+        canvas.height = height;
+        var data = '<svg xmlns="http://www.w3.org/2000/svg" width="576" height="'+height+'">' +
+                        '<foreignObject width="100%" height="100%">' +
+                            '<html xmlns="http://www.w3.org/1999/xhtml">' +
+                            '<head><style type="text/css"> body { font-size: 14px; padding: 0; margin: 0; }</style></head>' +
+                            '<body>'+
+                                html +
+                            '</body>' +
+                            '</html>' +
+                        '</foreignObject>' +
+                    '</svg>';
+
+        var DOMURL = window.URL || window.webkitURL || window;
+        var img = new Image();
+        var svg = new Blob([data], {type: 'image/svg+xml;charset=utf-8'});
+        var url = DOMURL.createObjectURL(svg);
+
+        // fill background
+        ctx.rect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle="white";
+        ctx.fill();
+
+        // draw image when loaded
+        img.onload = function () {
+            ctx.drawImage(img, 0, 0);
+            DOMURL.revokeObjectURL(url);
+            var bytedata = esc_init + getESCPImageSlices(ctx, canvas) + font_reset;
+            callback(bytedata);
+        };
+        img.src = url;
+    }
+
+    // used to print bitmaps using "ESC *" command
+    // for some reason this has issues printing images with width > 511, although the theoretical limit with density setting 33 is 576
     function getESCPImageSlices(context, canvas) {
         var width = canvas.width;
         var height = canvas.height;
         var nL = Math.round(width % 256);
-        var nH = Math.round(height / 256);
+        var nH = Math.round(width / 256);
         var dotDensity = 33;
+        var threshhold = 127;
         // read each pixel and put into a boolean array
         var imageData = context.getImageData(0, 0, width, height);
         imageData = imageData.data;
         // create a boolean array of pixels
         var pixArr = [];
         for (var pix = 0; pix < imageData.length; pix += 4) {
-            pixArr.push((imageData[pix] == 0));
+            pixArr.push(((imageData[pix+1] < threshhold) || (imageData[pix+2] < threshhold) || (imageData[pix+3] < threshhold)));
         }
         // create the byte array
         var final = [];
@@ -912,11 +999,73 @@ function WPOSPrint(kitchenMode) {
         return final;
     }
 
-    function getHtmlReceipt(record) {
+    // used to print bitmaps using "GS v 0" command
+    // This is the best ESC/P manual I have found explaining the difference: https://www.spansion.com/downloads/MB9B310_AN706-00093.pdf
+    // It's a nicer implementation than ESC * but for some reason there's an issue printing graphics longer than 576
+    function getESCPImageBitmap(context, canvas){
+        var width = canvas.width;
+        var height = canvas.height;
+        var xL = Math.round((width/8) % 256); // width in bytes
+        var xH = Math.round((width/8) / 256);
+        var yL = Math.round(height % 256); // height in bits (dots)
+        var yH = Math.round(height / 256);
+        var modeDensity = 48;
+        var threshold = 127;
+        console.log(xL+" "+xH+" "+yL+" "+yH);
+        // read each pixel and put into a boolean array
+        var imageData = context.getImageData(0, 0, width, height);
+        imageData = imageData.data;
+        // create a boolean array of pixels
+        var pixArr = [];
+        for (var pix = 0; pix < imageData.length; pix += 4) {
+            pixArr.push((imageData[pix] < threshold));
+        }
+        // create the byte array
+        var final = [];
+        // this function adds bytes to the array
+        function appendBytes() {
+            for (var i = 0; i < arguments.length; i++) {
+                final.push(arguments[i]);
+            }
+        }
+        // Init bitmap mode: GS v 0 modeDensity xL xH yL yH
+        appendBytes(0x1D, 0x76, 0x30, modeDensity, xL, xH, yL, yH);
+
+        var offset = 0;
+        while (offset < height) {
+            for (var x = 0; x < width; x+=8) {
+                var slice = 0;
+                // The 'b' variable keeps track of which bit in the byte we're recording.
+                for (var b = 0; b < 8; ++b) {
+                    // Calculate the location of the pixel we want in the bit array. It'll be at (y * width) + x + b.
+                    var i = (offset * width) + x + b;
+                    // If the image (or this stripe of the image)
+                    // is shorter than 24 dots, pad with zero.
+                    var bit;
+                    if (pixArr.hasOwnProperty(i)) bit = pixArr[i] ? 0x01 : 0x00; else bit = 0x00;
+                    // Finally, store our bit in the byte that we're currently scribbling to. Our current 'b' is actually the exact
+                    // opposite of where we want it to be in the byte, so subtract it from 7, shift our bit into place in a temp
+                    // byte, and OR it with the target byte to get it into the final byte.
+                    slice |= bit << (7 - b);    // shift bit and record byte
+                }
+                // Phew! Write the damn byte to the buffer
+                appendBytes(slice);
+            }
+            // We're done with this 24-dot high pass. Render a newline to bump the print head down to the next line and keep on trucking.
+            offset++;
+        }
+        // convert the array into a bytestring and return
+        return WPOS.util.ArrayToByteStr(final);
+    }
+
+    function getHtmlReceipt(record, hideimages) {
         var bizname = WPOS.getConfigTable().general.bizname;
         var recval = WPOS.getConfigTable().pos;
+        var html = '';
         // logo and header
-        var html = '<div style="padding-left: 5px; padding-right: 5px; text-align: center;"><img style="width: 260px;" src="' + recval.recemaillogo + '"/><br/>';
+        if (!hideimages) {
+            html += '<div style="padding-left: 5px; padding-right: 5px; text-align: center;"><img style="width: 260px;" src="' + recval.recemaillogo + '"/><br/>';
+        }
         html += '<h3 style="text-align: center; margin: 5px;">' + bizname + '</h3>';
         html += '<p style="text-align: center"><strong>' + recval.recline2 + '</strong>';
         if (recval.recline3 != "") {
@@ -924,10 +1073,10 @@ function WPOSPrint(kitchenMode) {
         }
         html += '</p>';
         // body
-        html += '<p style="padding-top: 5px;">Transaction Ref:&nbsp;&nbsp;' + record.ref + '<br/>';
-        html += 'Sale Time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + WPOS.util.getDateFromTimestamp(record.processdt) + '</p>';
+        html += '<p style="padding-top: 5px;">Transaction Ref: ' + record.ref + '<br/>';
+        html += 'Sale Time: ' + WPOS.util.getDateFromTimestamp(record.processdt) + '</p>';
         // items
-        html += '<table style="width: 100%; margin-bottom: 4px; font-size: 13px;">';
+        html += '<table style="width: 100%; margin-bottom: 4px;">';
         var item;
         for (var i in record.items) {
             item = record.items[i];
@@ -936,7 +1085,7 @@ function WPOSPrint(kitchenMode) {
             if (item.hasOwnProperty('mod')){
                 for (var x=0; x<item.mod.items.length; x++){
                     var mod = item.mod.items[x];
-                    modStr+= '<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'+(mod.hasOwnProperty('qty')?((mod.qty>0?'+ ':'')+mod.qty+' '):'')+mod.name+(mod.hasOwnProperty('value')?': '+mod.value:'')+' ('+WPOS.util.currencyFormat(mod.price)+')';
+                    modStr+= '<br/>'+(mod.hasOwnProperty('qty')?((mod.qty>0?'+ ':'')+mod.qty+' '):'')+mod.name+(mod.hasOwnProperty('value')?': '+mod.value:'')+' ('+WPOS.util.currencyFormat(mod.price)+')';
                 }
             }
             html += '<tr><td>' + item.qty + " x " + item.name + " (" + WPOS.util.currencyFormat(item.unit) + ")" + modStr + '</td><td style="text-align: right; vertical-align: top;">' + WPOS.util.currencyFormat(item.price) + '</td></tr>';
@@ -1012,10 +1161,15 @@ function WPOSPrint(kitchenMode) {
         if (paymentreceipts != '' && WPOS.getLocalConfig().eftpos.receipts) html += '<pre style="text-align: center; background-color: white;">' + paymentreceipts + '</pre>';
         // footer
         html += '<p style="text-align: center;"><strong>' + recval.recfooter + '</strong><br/>';
-        if (recval.recqrcode != "") {
-            html += '<img style="text-align: center;" height="99" src="/docs/qrcode.png"/>';
+
+        if (!hideimages) {
+            if (recval.recqrcode != "") {
+                html += '<img style="text-align: center;" height="99" src="/docs/qrcode.png"/>';
+            }
+            html += '</p></div>';
+        } else {
+            html += '</p>';
         }
-        html += '</p></div>';
         return html;
     }
 
@@ -1029,7 +1183,7 @@ function WPOSPrint(kitchenMode) {
             printw = window.open('', 'Wpos Receipt', 'height=600,width=300,scrollbars=yes');
             printw.document.write('<html><head><title>Wpos Receipt</title>');
         }
-        printw.document.write('<link media="all" href="/admin/assets/css/bootstrap.min.css" rel="stylesheet"/><link media="all" rel="stylesheet" href="/admin/assets/css/font-awesome.min.css"/><link media="all" rel="stylesheet" href="admin/assets/css/ace-fonts.css"/><link media="all" rel="stylesheet" href="admin/assets/css/ace.min.css"/>');
+        printw.document.write('<link media="all" href="/admin/assets/css/bootstrap.min.css" rel="stylesheet"/><link media="all" rel="stylesheet" href="/admin/assets/css/font-awesome.min.css"/><link media="all" rel="stylesheet" href="/admin/assets/css/ace-fonts.css"/><link media="all" rel="stylesheet" href="/admin/assets/css/ace.min.css"/>');
         printw.document.write('</head><body style="background-color: #FFFFFF;">');
         printw.document.write(html);
         printw.document.write('</body></html>');

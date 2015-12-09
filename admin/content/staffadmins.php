@@ -390,7 +390,7 @@
         }
         if (isnewitem || pass != ""){
             if (pass == cpass){
-                hpass = WPOS.util.md5(pass);
+                hpass = WPOS.util.SHA256(pass);
             } else {
                 alert("Passwords do not match");
                 return false;

@@ -162,7 +162,7 @@ function WPOSCustomers() {
         }
         var answer = confirm('Are you sure you want to set this users password and activate their account?');
         if (answer){
-            var hash = WPOS.util.md5(newpass);
+            var hash = WPOS.util.SHA256(newpass);
             var result = WPOS.sendJsonData("customers/setpassword", JSON.stringify({id:curcustid, hash: hash}));
             if (result!==false){
                 customers['disabled'] = 0;

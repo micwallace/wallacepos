@@ -52,7 +52,6 @@
     <script type="text/javascript" src="/assets/js/wpos/reports.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/print.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/orders.js"></script>
-    <script type="text/javascript" src="/assets/js/wpos/eftpos.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/utilities.js"></script>
     <!-- Websocket library -->
     <script type="text/javascript" src="/assets/libs/socketio/socket.io.min.js"></script>
@@ -468,7 +467,11 @@
                             <option value="ask">Always Ask</option>
                             <option value="email">Ask if not emailed</option>
                             <option value="print">Always Print</option>
-                        </select></label>
+                        </select></label><br/>
+                    <label>ESCP Receipt Mode: <select id="escpreceiptmode" onchange="WPOS.print.setGlobalPrintSetting('escpreceiptmode', $('#escpreceiptmode').val());">
+                        <option value="text">Text</option>
+                        <option value="bitmap">Bitmap (Unicode support)</option>
+                    </select></label>
                 </div>
             </div>
             <div id="printsettings_kitchen" class="order_terminal_options">
@@ -1015,5 +1018,6 @@
     Press Ok to restart now or Cancel to prevent the restart.
 </div>
 <iframe id="dlframe" style="width: 1px;height: 1px; border: 0;"></iframe>
+<canvas id="receipt_canvas" style="background-color: white; display: none;" width="576"></canvas>
 </body>
 </html>
