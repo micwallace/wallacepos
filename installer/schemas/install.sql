@@ -68,11 +68,11 @@ CREATE TABLE IF NOT EXISTS `config` (
 
 INSERT INTO `config` (`id`, `name`, `data`) VALUES
 (1, 'general', '{"version":"1.2","dateformat":"d\\/m\\/y","currencyformat":"$~2~.~,~0","accntype":"cash","bizname":"Wallace IT","biznumber":"9999 999 999","bizemail":"admin@wallacepos.com","bizaddress":"1 Some St","bizsuburb":"Someville","bizstate":"NSW","bizpostcode":"2000","bizcountry":"Australia","bizlogo":"\\/assets\\/images\\/receipt-logo.png","bizicon":"\\/icon.ico","gcontact":0,"gcontacttoken":""}'),
-(2, 'pos', '{"recline2":"Your business in the cloud","recline3":"an application by WallaceIT","reclogo":"\\/assets\\/images\\/receipt-logo-mono.png","recprintlogo":true,"recemaillogo":"\\/assets\\/images\\/receipt-logo.png","recfooter":"Thanks for shopping with us!","recqrcode":"https:\\/\\/wallaceit.com.au","salerange":"week","saledevice":"location","priceedit":"blank","cashrounding":"5"}'),
-(3, 'invoice', '{"defaultduedt":"+2 weeks","payinst":"Please contact us for payment instructions","emailmsg":"<div align=\\"left\\">Dear %name%,<br><\\/div><br>Please find the attached invoice.<br><br>Kind regards,<br>Administration"}'),
-(4, 'accounting', '{"xeroenabled":0,"xerotoken":"","xeroaccnmap":""}');
+(2, 'pos', '{"rectemplate":"receipt","recline2":"Your business in the cloud","recline3":"an application by WallaceIT","reclogo":"\\/assets\\/images\\/receipt-logo-mono.png","recprintlogo":true,"recemaillogo":"\\/assets\\/images\\/receipt-logo.png","recfooter":"Thanks for shopping with us!","recqrcode":"https:\\/\\/wallaceit.com.au","salerange":"week","saledevice":"location","priceedit":"blank","cashrounding":"5"}'),
+(3, 'invoice', '{"defaulttemplate":"invoice","defaultduedt":"+2 weeks","payinst":"Please contact us for payment instructions","emailmsg":"<div align=\\"left\\">Dear %name%,<br><\\/div><br>Please find the attached invoice.<br><br>Kind regards,<br>Administration"}'),
+(4, 'accounting', '{"xeroenabled":0,"xerotoken":"","xeroaccnmap":""}'),
+(5, 'templates', '{"invoice":{"name":"Default Invoice","type":"invoice","filename":"invoice.mustache"},"receipt":{"name":"Default Receipt","type":"receipt","filename":"receipt.mustache"}}');
 -- --------------------------------------------------------
-
 --
 -- Table structure for table `customers`
 --
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS `devices` (
 CREATE TABLE IF NOT EXISTS `device_map` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `deviceid` int(11) NOT NULL,
-  `uuid` char(32) NOT NULL,
+  `uuid` varchar(64) NOT NULL,
   `ip` varchar(66) NOT NULL,
   `useragent` varchar(256) NOT NULL,
   `dt` DATETIME NOT NULL,
@@ -221,7 +221,7 @@ CREATE TABLE IF NOT EXISTS `sale_items` (
   `name` varchar(66) NOT NULL,
   `description` varchar(128) NOT NULL,
   `taxid` varchar(11) NOT NULL,
-  `tax` decimal(12,2) NOT NULL,
+  `tax` varchar(2048) NOT NULL,
   `unit` decimal(12,2) NOT NULL,
   `price` decimal(12,2) NOT NULL,
   `refundqty` int(11) NOT NULL,
@@ -363,7 +363,7 @@ CREATE TABLE IF NOT EXISTS `tax_rules` (
 --
 INSERT INTO `tax_rules` (`id`, `data`) VALUES
 (1, '{"name":"No Tax", "inclusive":true, "mode":"single", "base":[], "locations":{}, "id":"1"}'),
-(2, '{"name":"GST", "inclusive":true, "mode":"single", "base":[1], "locations":{}, "id":"1"}');
+(2, '{"name":"GST", "inclusive":true, "mode":"single", "base":[1], "locations":{}, "id":"2"}');
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

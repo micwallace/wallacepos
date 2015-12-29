@@ -37,6 +37,7 @@ INSERT IGNORE INTO `tax_rules` (`id`, `data`) VALUES
 ALTER TABLE `device_map` ADD `ip` varchar(66) NOT NULL;
 ALTER TABLE `device_map` ADD `useragent` varchar(256) NOT NULL;
 ALTER TABLE `device_map` ADD `dt` DATETIME NOT NULL;
+ALTER TABLE `device_map` CHANGE `uuid` `uuid` VARCHAR(64) NOT NULL;
 
 -- Alter devices table
 ALTER TABLE `devices` ADD `data` varchar(2048) NOT NULL AFTER `locationid`;
@@ -50,3 +51,5 @@ ALTER TABLE `tax_items` DROP COLUMN `calcfunc`;
 ALTER TABLE `tax_items` CHANGE `divisor` `multiplier` varchar(8) not null;
 DELETE FROM `tax_items` WHERE `id`=1 AND `name`='No Tax';
 UPDATE `tax_items` SET `id`=1, `multiplier`='0.1', `type`='standard' WHERE `id`=2 AND `name`='GST';
+
+ALTER TABLE `sale_items` CHANGE `tax` `tax` VARCHAR( 2048 ) NOT NULL;
