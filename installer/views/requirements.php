@@ -92,13 +92,23 @@
                 <i class="icon icon-large icon-check <?php echo($deps['all']?"green":"red"); ?>"></i>
                 <strong><?php echo($deps['all']?"All Requirements Met":"Not all requirements met, correct the above to proceed"); ?></strong>
             </li>
+            <?php
+                if(!$deps['all']) {
+            ?>
+            <li>
+                <label><input type="checkbox" data-reqs-met="<?php echo($deps['all']); ?>" onchange="$('#next-button').prop('disabled', ($(this).is(':checked')?false:true))" />
+                &nbsp;Ignore requirements check</label>
+            </li>
+            <?php
+                }
+            ?>
         </ul>
         <hr/>
         <div style="height: 40px;">
             <button class="pull-left btn btn-primary" onclick="document.location.reload();">Refresh</button>
             <form method="post">
                 <input type="hidden" name="<?php echo($curversion>0?"doupgrade":"screen"); ?>" value="2">
-                <button type="submit" class="pull-right btn btn-primary" <?php echo($deps['all']?"":"disabled='disabled'"); ?> ><?php echo($curversion>0?"Upgrade":"Next"); ?></button>
+                <button id="next-button" type="submit" class="pull-right btn btn-primary" <?php echo($deps['all']?"":"disabled='disabled'"); ?> ><?php echo($curversion>0?"Upgrade":"Next"); ?></button>
             </form>
         </div>
     </div>
