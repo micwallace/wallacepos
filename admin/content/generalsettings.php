@@ -45,6 +45,7 @@
                         <div class="col-sm-5"><label>Currency Symbol:</label></div>
                         <div class="col-sm-5">
                         <select id="currency_symbol">
+                            <option value="R">R Rand</option>
                             <option value="$">$ Dollar</option>
                             <option value="€">€ Euro</option>
                             <option value="£">£ Pound</option>
