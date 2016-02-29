@@ -45,7 +45,6 @@
                         <div class="col-sm-5"><label>Currency Symbol:</label></div>
                         <div class="col-sm-5">
                         <select id="currency_symbol">
-                            <option value="R">R Rand</option>
                             <option value="$">$ Dollar</option>
                             <option value="€">€ Euro</option>
                             <option value="£">£ Pound</option>
@@ -53,6 +52,7 @@
                             <option value="₣">₣ Franc</option>
                             <option value="₤">₤ Lira</option>
                             <option value="﷼">﷼ Saudi Riyal</option>
+                            <option value="R">R Rand</option>
                             <!--<option value="₧">₧ Peseta</option> ! Encoding issues -->
                             <!--<option value="₹">₹ Indian Rupee</option> ! Encoding issues -->
                             <!--<option value="₨">₨ Rupee</option> ! Encoding issues -->
