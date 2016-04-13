@@ -607,7 +607,7 @@ function WPOSSales() {
         });
         totalpaid = totalpaid.toFixed(2);
         // if all payments are cash, apply cash rounding to total else reverse any currently applied rounding
-        if (allcash==false || paymentstable.children('tr').length==0){
+        if (roundcents==0 || allcash==false || paymentstable.children('tr').length==0){
             curgrandtotal = curtotal;
             curround = 0;
         } else {
@@ -615,10 +615,10 @@ function WPOSSales() {
             curround = curgrandtotal - curtotal;
         }
         // update payment sums
-        var balance = -(curgrandtotal - totalpaid);
+        var balance = -(curgrandtotal - totalpaid).toFixed(2);
         $("#salestotal").text(WPOS.util.currencyFormat(parseFloat(curgrandtotal).toFixed(2)));
         $("#paymentstotal").text(WPOS.util.currencyFormat(parseFloat(totalpaid).toFixed(2)));
-        $("#salesbalance").text(WPOS.util.currencyFormat(balance.toFixed(2)));
+        $("#salesbalance").text(WPOS.util.currencyFormat(balance));
         $("#saleschange").text(WPOS.util.currencyFormat((balance>=0?totalchange.toFixed(2):0.00)));
         salebalanced = balance == 0;
         curbalance = balance;
