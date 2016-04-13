@@ -22,25 +22,35 @@
 
 function WPOSTransactions() {
 
+    var transdialog = $("#transactiondiv");
+
     this.showTransactionDialog = function () {
         showTransactionView(1);
-        clearTransTable();
+        //clearTransTable();
         loadLocalTransactions();
-        $("#transactiondiv").dialog('open');
+        transdialog.dialog('open');
     };
 
     this.showTransactionTable = function(){
-        clearTransTable();
-        loadLocalTransactions();
+        //clearTransTable();
+        //loadLocalTransactions();
         showTransactionView(1);
-        $("#transactiondiv").dialog('open');
+        transdialog.dialog('open');
+        repositionDialog();
     };
 
     this.showTransactionInfo = function(ref){
         populateTransactionInfo(ref);
         showTransactionView(2);
-        $("#transactiondiv").dialog('open');
+        transdialog.dialog('open');
+        repositionDialog();
     };
+
+    function repositionDialog(){
+        transdialog.dialog({
+            position: { 'my': 'center', 'at': 'center' }
+        });
+    }
 
     this.recallLastTransaction = function(){
         var lastref = WPOS.sales.getLastRef();
@@ -49,13 +59,67 @@ function WPOSTransactions() {
             return;
         }
         WPOS.trans.showTransactionInfo(lastref);
-        $("#transactiondiv").dialog('open');
+        transdialog.dialog('open');
     };
 
-    var rows;
+    var tableData = [];
 
-    function insertIntoTransTable(gid, syncstat, ref, devloc, numitems, total, sdt, status, cacherow) {
-        var ostathtml, rowhtml;
+    var datatable = $('#transactiontable').dataTable(
+        { responsive: true,
+            "bProcessing": true,
+            "aaData": tableData,
+            "aaSorting": [[ 1, "desc" ]],
+            "aoColumns": [
+                { "sType": "string", "mData":function(data, type, val){ return getOfflineStatusHtml(data.ref) + "<br/>" + data.id;} },
+                { "sType": "numeric", "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
+                { "sType": "string", "mData":function(data, type, val){ return getDeviceLocationText(data.devid, data.locid); } },
+                { "sType": "numeric", "mData":"numitems" },
+                { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["total"]);} },
+                { "sType": "timestamp", "mData":function(data, type, val){return WPOS.util.getDateFromTimestamp(data.processdt);} },
+                { "sType": "html", "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data.ref));} },
+                { "sType": "html", mData:function(data,type,val){ return "<button class='btn btn-sm btn-primary' onclick='WPOS.trans.showTransactionInfo("+"\""+data.ref+"\""+")'>View</button>"; }, "bSortable": false }
+            ],
+            "columnDefs": [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                { "width": "60px" }
+            ]
+        }
+    );
+
+    function loadIntoTable(sales){
+        tableData = [];
+        for (var key in sales){
+            tableData.push(sales[key]);
+        }
+        datatable.fnClearTable();
+        datatable.fnAddData(tableData);
+    }
+
+    function getDeviceLocationText(deviceid, locationid){
+        var text = "";
+        text += WPOS.getConfigTable().devices.hasOwnProperty(deviceid) ? WPOS.getConfigTable().devices[deviceid].name : "Unknown";
+        text += " / " + (WPOS.getConfigTable().locations.hasOwnProperty(locationid) ? WPOS.getConfigTable().locations[locationid].name : "Unknown");
+        return text;
+    }
+
+    function getOfflineStatusHtml(ref){
+        var syncstat;
+        if (WPOS.sales.getOfflineSales().hasOwnProperty(ref)){
+            if (WPOS.sales.getOfflineSales()[ref].hasOwnProperty("id")){
+                syncstat = 2;
+            } else {
+                syncstat = 1;
+            }
+        } else {
+            syncstat = 3;
+        }
+        var ostathtml;
         switch (syncstat){
             case 1:
                 ostathtml = '<span class="label label-sm label-warning arrowed">offline</span>';
@@ -67,11 +131,7 @@ function WPOSTransactions() {
                 ostathtml = '<span class="label label-sm label-primary arrowed">synced</span>';
                 break;
         }
-        // put into array if cache is true
-        rowhtml = "<tr><td>" + gid + "<br/>" + ostathtml +"</td><td><a href='#' title='" + ref + "'>"+ ref.split('-')[2]+"</a></td><td>" + devloc + "</td><td>" + numitems + "</td><td>" + WPOS.util.currencyFormat(total) + "</td><td>" + sdt + "</td><td>" + getStatusHtml(status) + "</td><td><button class='btn btn-sm btn-primary' onclick='WPOS.trans.showTransactionInfo("+'"'+ref+'"'+")'>View</button></td></tr>";
-        if (cacherow) rows[ref] = rowhtml;
-        // add to table
-        $("#transtable").prepend(rowhtml);
+        return ostathtml;
     }
 
     function getStatusHtml(status){
@@ -96,18 +156,12 @@ function WPOSTransactions() {
         return stathtml;
     }
 
-    /**
-     * Clear all transactions in the UI table
-     */
-    function clearTransTable() {
-        $("#transtable").html("");
-    }
     /** Shows the specified view in the transactions window.
      *  @param {int} typeid
      *  @return void
      */
     function showTransactionView(typeid){
-        var transtable = $("#transactiontable");
+        var transtable = $("#transactiontablediv");
         var transinfo = $("#transactioninfo");
         switch (typeid){
             case 1:
@@ -330,7 +384,7 @@ function WPOSTransactions() {
         var treftable = $("#transrefitemtable");
         treftable.html("");
         for (var i = 0; i<record.items.length; i++){
-            treftable.append("<tr><td>"+getSaleItemData(ref, record.items[i].ref).name+"</td><td>"+record.items[i].numreturned+"</td></tr>");
+            treftable.append("<tr><td>"+getSaleItemData(ref, record.items[i].ref, record.items[i].id).name+"</td><td>"+record.items[i].numreturned+"</td></tr>");
         }
     }
 
@@ -371,10 +425,12 @@ function WPOSTransactions() {
         paydialog.dialog('open');
     }
 
-    function getSaleItemData(ref, itemref){
+    function getSaleItemData(ref, itemref, itemid){
         var items = getTransactionRecord(ref).items;
         for (var key in items){
             if (items[key].ref == itemref){
+                return items[key];
+            } else if (items[key].id == itemid){
                 return items[key];
             }
         }
@@ -382,9 +438,7 @@ function WPOSTransactions() {
     }
 
     function clearTransactions(){
-        clearTransTable();
         transtable = {};
-        rows = {};
     }
 
     var transtable = {};
@@ -394,33 +448,22 @@ function WPOSTransactions() {
         var salestable = WPOS.getSalesTable();
         // Populate synced records
         for (var ref in salestable) {
-                transtable[ref] = salestable[ref];
-                var devloc = WPOS.getConfigTable().devices[parseInt(salestable[ref].devid)].name+" / "+WPOS.getConfigTable().locations[parseInt(salestable[ref].locid)].name;
-                insertIntoTransTable(salestable[ref].id, 3, ref, devloc, salestable[ref].numitems, salestable[ref].total, WPOS.util.getDateFromTimestamp(salestable[ref].processdt), getTransactionStatus(ref), true);
+            transtable[ref] = salestable[ref];
         }
         // Populate offline records
         if (WPOS.hasOwnProperty('sales') && WPOS.sales.getOfflineSalesNum() > 0) {
             var olsales = WPOS.sales.getOfflineSales();
-            var syncstat, gid;
+            //var syncstat, gid;
             for (ref in olsales) {
                     // add to the transaction info table
                     delete transtable[ref];
                     transtable[ref] = olsales[ref];
-                    // calculate extra info and insert into UI table
-                    devloc = WPOS.getConfigTable().devices[transtable[ref].devid].name+" / "+WPOS.getConfigTable().locations[transtable[ref].locid].name;
-                    // is record an update?
-                    if (transtable[ref].hasOwnProperty('id')){
-                        syncstat = 2;
-                        gid=transtable[ref].id;
-                    } else {
-                        syncstat = 1;
-                        gid="";
-                    }
-                    insertIntoTransTable(gid, syncstat, ref, devloc, transtable[ref].numitems, transtable[ref].total, WPOS.util.getDateFromTimestamp(transtable[ref].processdt), getTransactionStatus(ref), true);
+
             }
 
         }
-
+        // load into datatables
+        loadIntoTable(transtable);
     }
 
     function getTransactionStatus(ref){
@@ -435,36 +478,6 @@ function WPOSTransactions() {
         }
         return 1;
     }
-
-    this.searchTransactions = function(){
-        var query = $("#transearchquery").val();
-        if (query==null){
-            alert("Please enter a search query");
-            return false;
-        }
-        searchLocalTransactions(query);
-        return true;
-    };
-
-    function searchLocalTransactions(query){
-        // clear the html table
-        clearTransTable();
-        // search in cached rows
-        for (var ref in rows){
-            // check row html first
-            if (rows[ref].indexOf(query)!==-1){
-                $("#transtable").prepend(rows[ref]);
-                // check json data
-            } else if (JSON.stringify(transtable[ref]).indexOf(query)!==-1){
-                $("#transtable").prepend(rows[ref]);
-            }
-        }
-    }
-
-    this.openRemoteSearchBox = function(){
-        $("#transearch").hide();
-        $("#remtransearch").show();
-    };
 
     this.searchRemote = function(){
         var searchdata =  {};
@@ -483,25 +496,16 @@ function WPOSTransactions() {
 
     function searchRemoteTransactions(searchdata) {
         remtrans = WPOS.sendJsonData("sales/search", JSON.stringify(searchdata));
-        clearTransTable();
-        if (remtrans !== false){
-            for (var ref in remtrans){
-                var devloc = WPOS.getConfigTable().devices[remtrans[ref].devid].name+" / "+WPOS.getConfigTable().locations[remtrans[ref].locid].name;
-                insertIntoTransTable(remtrans[ref].id, 3, ref, devloc, remtrans[ref].items.length, remtrans[ref].total, WPOS.util.getDateFromTimestamp(remtrans[ref].processdt), ((remtrans[ref].hasOwnProperty('void')) ? 2 : 1), false);
-            }
+        if (remtrans !== false) {
+            loadIntoTable(remtrans);
+            repositionDialog();
         }
     }
 
-    this.clearSearch = function(closeremote){
-        clearTransTable();
-        // load cached rows
-        for (var ref in rows){
-            $("#transtable").prepend(rows[ref]);
-        }
-        if (closeremote){
-            $("#remtransearch").hide();
-            $("#transearch").show();
-        }
+    this.clearSearch = function(){
+        loadIntoTable(transtable);
+        $("#remsearchref").val('');
+        repositionDialog();
     };
 
     this.updateSaleNotes = function(){

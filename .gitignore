@@ -1,4 +1,4 @@
 .idea/
 .jshintrc
 nbproject
-library/wpos/dbconfig.php
+library/wpos/.dbconfig.json

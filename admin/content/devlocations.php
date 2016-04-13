@@ -387,7 +387,7 @@
         var odisplyfield = $("#devorderdisplay");
         var kitchenidfield = $("#devkitchenid");
         if (id && id>0){
-        var dev = devices[id];
+            var dev = devices[id];
             idfield.val(dev.id);
             namefield.val(dev.name);
             locidfield.val(dev.locationid);
@@ -514,7 +514,8 @@
         $(locselect).html('');
         // populate tax records
         for (var key in locations){
-            $(locselect).append('<option class="locid-'+locations[key].id+'" value="'+locations[key].id+'">'+locations[key].name+'</option>');
+            if (key!=0)
+                $(locselect).append('<option class="locid-'+locations[key].id+'" value="'+locations[key].id+'">'+locations[key].name+'</option>');
         }
     }
 

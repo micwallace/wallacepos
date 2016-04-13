@@ -52,8 +52,6 @@ class DbConfig
      * @var string
      */
     private static $_dsnPrefix = 'mysql';
-
-    private static $_loadConfig = true;
     /**
      * @var
      */
@@ -73,8 +71,7 @@ class DbConfig
      */
     public function __construct()
     {
-        if (self::$_loadConfig)
-            $this->getConf();
+        $this->getConf();
 
         $dsn = self::$_dsnPrefix . ':host=' . self::$_hostname . ';port=' . self::$_port . ';dbname=' . self::$_database;
 
@@ -108,17 +105,17 @@ class DbConfig
             self::$_database = substr($url["path"],1);
             self::$_hostname = $url['host'];
             self::$_port = $url["port"];
-        } else if (file_exists($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/dbconfig.php')){
-            // legacy config (still used for alpha/demo versions)
-            require($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/dbconfig.php');
+        } else if (file_exists($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/.dbconfig.json')){
+            // json config
+            $dbConfig = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'library/wpos/.dbconfig.json'), true);
             self::$_username = $dbConfig['user'];
             self::$_password = $dbConfig['pass'];
             self::$_database = $dbConfig["database"];
             self::$_hostname = $dbConfig['host'];
             self::$_port = $dbConfig["port"];
-        } else if (file_exists($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/.dbconfig.json')){
-            // json config
-            $dbConfig = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'library/wpos/.dbconfig.json'), true);
+        } else if (file_exists($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/dbconfig.php')){
+            // legacy config (still used for alpha/demo versions)
+            require($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/dbconfig.php');
             self::$_username = $dbConfig['user'];
             self::$_password = $dbConfig['pass'];
             self::$_database = $dbConfig["database"];
@@ -128,23 +125,6 @@ class DbConfig
 
         $conf = ["host"=>self::$_hostname, "port"=>self::$_port, "user"=>self::$_username, "pass"=>self::$_password, "db"=>self::$_database,];
         return $conf;
-    }
-
-    public static function testConf($host, $port, $database, $user, $pass){
-        self::$_username = $user;
-        self::$_password = $pass;
-        self::$_database = $database;
-        self::$_hostname = $host;
-        self::$_port = $port;
-        self::$_loadConfig = false; // prevent config from being loaded, used for testing database connection
-        try {
-            $db = new DbConfig();
-        } catch (Exception $ex){
-            self::$_loadConfig = true;
-            return $ex->getMessage();
-        }
-        self::$_loadConfig = true;
-        return true;
     }
 
     /**

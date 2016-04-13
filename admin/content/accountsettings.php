@@ -144,6 +144,10 @@
                 <input id="taxitemid" type="hidden"/></td>
         </tr>
         <tr>
+            <td style="text-align: right;"><label>Alt Name:&nbsp;</label></td>
+            <td><input id="taxitemaltname" type="text"/></td>
+        </tr>
+        <tr>
             <td style="text-align: right;"><label>Type:&nbsp;</label></td>
             <td><select style="width: 180px;" id="taxitemtype"><option value="standard">Standard</option></select></td>
         </tr>
@@ -564,6 +568,7 @@
         }
         var item = taxtable.items[id];
         $("#taxitemname").val(item.name);
+        $("#taxitemaltname").val(item.altname);
         $("#taxitemtype").val(item.type);
         $("#taxitemvalue").val(item.value);
         $("#edittaxitemdialog").dialog("open");
@@ -572,6 +577,7 @@
         WPOS.util.showLoader();
         var item = {};
         item.name = $("#taxitemname").val();
+        item.altname = $("#taxitemaltname").val();
         item.type = $("#taxitemtype").val();
         item.value = $("#taxitemvalue").val();
         var id = $("#taxitemid").val();

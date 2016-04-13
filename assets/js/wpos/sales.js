@@ -176,11 +176,11 @@ function WPOSItems() {
         // check if a priced item is already present in the sale and if so increment it's qty
         if (item.price==""){
             // insert item into table
-            addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description});
+            addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description, alt_name:item.alt_name});
         } else {
             if (!isItemAdded(item.id, true)){
                 // insert item into table
-                addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description});
+                addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description, alt_name:item.alt_name});
             }
         }
         $("#codeinput").val('');
@@ -204,8 +204,9 @@ function WPOSItems() {
     this.openItemModDialog = function(elem){
         itemrow = $(elem).parent().parent();
         var data = itemrow.find('.itemid').data('options');
-        console.log(data);
+        //console.log(data);
         $("#itemdesc").val(data.desc);
+        $("#itemaltname").val(data.alt_name);
         // get stored item mods
         var itemid = itemrow.find('.itemid').val();
         modtable.html('');
@@ -607,7 +608,7 @@ function WPOSSales() {
         });
         totalpaid = totalpaid.toFixed(2);
         // if all payments are cash, apply cash rounding to total else reverse any currently applied rounding
-        if (allcash==false || paymentstable.children('tr').length==0){
+        if (roundcents==0 || allcash==false || paymentstable.children('tr').length==0){
             curgrandtotal = curtotal;
             curround = 0;
         } else {
@@ -615,13 +616,14 @@ function WPOSSales() {
             curround = curgrandtotal - curtotal;
         }
         // update payment sums
-        var balance = -(curgrandtotal - totalpaid);
+        var balance = -(curgrandtotal - totalpaid).toFixed(2);
         $("#salestotal").text(WPOS.util.currencyFormat(parseFloat(curgrandtotal).toFixed(2)));
         $("#paymentstotal").text(WPOS.util.currencyFormat(parseFloat(totalpaid).toFixed(2)));
-        $("#salesbalance").text(WPOS.util.currencyFormat(balance.toFixed(2)));
+        $("#salesbalance").text(WPOS.util.currencyFormat(balance));
         $("#saleschange").text(WPOS.util.currencyFormat((balance>=0?totalchange.toFixed(2):0.00)));
         salebalanced = balance == 0;
         curbalance = balance;
+        //console.log("GT:"+ curgrandtotal + "\nPAID:" + totalpaid+ "\nBALANCE:"+ balance + "\nROUNDCENTS:"+ roundcents + "\nROUNDCENTS:"+ curround);
     };
 
     this.updatePaymentChange = function(element){
@@ -656,6 +658,7 @@ function WPOSSales() {
      *
      */
     function clearSalesForm() {
+        $('#paymentsdiv').dialog('close');
         // clear sales form
         $("#itemtable").html('');
         // add a new order row
@@ -754,7 +757,7 @@ function WPOSSales() {
     };
 
     this.addAdditionalPayment = function(){
-        addPaymentRow(null, 0, 0, 0);
+        addPaymentRow('cash', 0, 0, 0);
     };
 
     this.removePayment = function(pitem){
@@ -853,19 +856,26 @@ function WPOSSales() {
         if (extraData)
             data = "data-paydata='"+JSON.stringify(extraData)+"'";
 
+        var curBefore = "", curAfter = "";
+        if (WPOS.util.getCurrencyPlacedAfter()){
+            curAfter = WPOS.util.getCurrencySymbol();
+        } else {
+            curBefore = WPOS.util.getCurrencySymbol();
+        }
+
         var payrow =  '<tr '+data+'><td>' +
             '<select class="paymethod" onchange="WPOS.sales.onPaymentMethodChange(this);">' +
             '<option value="eftpos" '+(method=='eftpos'?'selected':'')+'>Eftpos</option>' +
             '<option value="credit" '+(method=='credit'?'selected':'')+'>Credit</option>' +
             '<option value="cash" '+(method=='cash'?'selected':'')+'>Cash</option>' +
-            '<option value="check" '+(method=='check'?'selected':'')+'>Cheque</option>' +
+            '<option value="cheque" '+(method=='cheque'?'selected':'')+'>Cheque</option>' +
             '<option value="deposit" '+(method=='deposit'?'selected':'')+'>Deposit</option>' +
             exmethod+ '</select>' +
             '<div class="cashvals" '+(method!='cash'?'style="display: none"':'width:150px;')+'>' +
             '<div style="width: 100px; display: inline-block;">Tendered:</div><input onChange="WPOS.sales.updatePaymentChange($(this).parent());" class="paytender numpad" style="width:50px;" type="text" value="'+(method!='cash'?0.00:(tender!=null?tender:value))+'" />' +
             '<div style="width: 100px; display: inline-block;">Change:</div><input class="paychange" style="width:50px;" type="text" value="'+(method!='cash'?0.00:(change!=null?change:0.00))+'" readonly />' +
             '</div></td>' +
-            '<td>$<input onChange="WPOS.sales.updatePaymentSums();" class="payamount numpad" style="width:50px;" type="text" value="'+value+'" autocomplete="off"/></td>' +
+            '<td>'+curBefore+'<input onChange="WPOS.sales.updatePaymentSums();" class="payamount numpad" style="width:50px;" type="text" value="'+value+'" autocomplete="off"/>'+curAfter+'</td>' +
             '<td><button class="btn btn-xs btn-danger" onclick="WPOS.sales.removePayment($(this));">X</button></td></tr>';
 
         $("#paymentstable").append(payrow);
@@ -1068,10 +1078,11 @@ function WPOSSales() {
         // process the orders
         WPOS.orders.processOrder(salesobj, cursale);
         // print receipt or prompt
-        if (WPOS.getLocalConfig().recask == "print"){
+        var psetting = WPOS.print.getGlobalPrintSetting('recask');
+        if (psetting == "print"){
             WPOS.print.printReceipt(salesobj.ref);
         } else {
-            if (WPOS.getLocalConfig().recask == "email" && recemailed){
+            if (psetting == "email" && recemailed){
                 return; // receipt has been emailed
             }
             var answer = confirm("Would you like to print a receipt?");
@@ -1323,9 +1334,10 @@ function WPOSSales() {
             }
             refitems.append('<tr>' +
                 '<td><input size="4" class="refundqty" type="number" value="0" onchange="WPOS.sales.validateRefund();" autocomplete="off"/>' +
-                '<input class="refunditemid" type="hidden" value="'+(items[i].hasOwnProperty('id')?items[i].id:(i+1))+'"/>' + // temp fix for old db records not containing item id
+                '<input class="refunditemref" type="hidden" value="'+(items[i].hasOwnProperty('ref')?items[i].ref:0)+'"/>' +
+                '<input class="refunditemid" type="hidden" value="'+(items[i].hasOwnProperty('id')?items[i].id:0)+'"/>' + // temp fix for old db records not containing item ref
                 '<input class="refundsqty" type="hidden" value="'+(parseInt(items[i].qty)-refnum)+'"/>' +
-                '<input class="refundsunit" type="hidden" value="'+items[i].unit+'"/></td>' +
+                '<input class="refundsunit" type="hidden" value="'+(items[i].price/items[i].qty)+'"/></td>' +
                 '<td>'+items[i].qty+' x '+items[i].name+' ($'+items[i].price+')</td>' +
             '</tr>');
         }
@@ -1513,7 +1525,12 @@ function WPOSSales() {
             $("#refunditems").children("tr").each(function(index, item){
                 numreturned = $(item).find('.refundqty').val();
                 if (numreturned>0){
-                    items.push({"id": $(item).find('.refunditemid').val(), "numreturned": numreturned});
+                    var ref = $(item).find('.refunditemref').val();
+                    if (ref!=0){
+                        items.push({"ref": ref, "numreturned": numreturned});
+                    } else {
+                        items.push({"ref": $(item).find('.refunditemid').val(), "numreturned": numreturned});
+                    }
                 }
             });
             var refamtinput = $("#refundamount");

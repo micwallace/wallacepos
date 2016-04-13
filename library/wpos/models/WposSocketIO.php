@@ -33,7 +33,7 @@ class WposSocketIO {
     /**
      * @var string This hashkey provides authentication for php operations
      */
-    private $hashkey = "0798f20c2c513da7cad1af28ffa3012cdafd0e799e41912f006e6d46c8e99327";
+    private $hashkey = "dgqsy8DgvyKl6RhCngOuFzNosbnThPZnMHCpZZm58GGb7Nnr2Y1tzVVudRBAj1ad";
 
     /**
      * Initialise the elephantIO object and set the hashkey

@@ -284,7 +284,7 @@ function WPOSTransactions() {
         var refitemtbl = $("#refitemtable");
         refitemtbl.html("");
         for (var i = 0; i < record.items.length; i++) {
-            refitemtbl.append("<tr><td>" + getItemData(curref, record.items[i].ref).name + "</td><td>" + record.items[i].numreturned + "</td></tr>");
+            refitemtbl.append("<tr><td>" + getItemData(curref, record.items[i].ref, record.items[i].id).name + "</td><td>" + record.items[i].numreturned + "</td></tr>");
         }
         $("#refunddetails").show(); // show the refund only view.
         var mdialog = $('#miscdialog');
@@ -343,6 +343,7 @@ function WPOSTransactions() {
             $('#transitemid').val(item.id);
             $('#transitemsitemid').val(item.sitemid);
             $('#transitemname').val(item.name);
+            $('#transitemaltname').val(item.alt_name);
             $('#transitemdesc').val(item.desc);
             $('#transitemqty').val(item.qty);
             $('#transitemunit').val(item.unit);
@@ -442,14 +443,30 @@ function WPOSTransactions() {
         var mdialog = $('#miscdialog');
         mdialog.children("div").hide();
         mdialog.children("#geninvoiceform").show();
+
+        populateTemplateSelect($("#invoicetemplate"));
+
         mdialog.dialog('option', 'title', "Generate Invoice");
         mdialog.dialog('open');
     };
+
+    function populateTemplateSelect(element){
+        var templates = WPOS.getConfigTable()['templates'];
+        element.html('');
+        element.append('<option value="" selected="selected">Use Default</option>');
+        for (var i in templates){
+            if (templates[i].type=="invoice")
+                element.append('<option value="'+i+'">'+templates[i].name+'</option>');
+        }
+    }
 
     this.showEmailDialog = function(){
         var mdialog = $('#miscdialog');
         mdialog.children("div").hide();
         mdialog.children("#sendinvoiceform").show();
+
+        populateTemplateSelect($("#emlinvoicetemplate"));
+
         mdialog.dialog('option', 'title', "Email Invoice");
         mdialog.dialog('open');
         $("#emailsubject").val('Invoice #' + curref + " Attached");
@@ -502,7 +519,7 @@ function WPOSTransactions() {
     this.saveInvoiceItem = function() {
         WPOS.util.showLoader();
         var action, itemid = $("#transitemid").val();
-        var data = {id: curid, sitemid: $("#transitemsitemid").val(), qty: $("#transitemqty").val(), name: $('#transitemname').val(), desc: $('#transitemdesc').val(), unit: $('#transitemunit').val(), taxid: $('#transitemtaxid').val(), tax: JSON.parse($('#transitemtaxval').val()), price: $('#transitempriceval').val()};
+        var data = {id: curid, sitemid: $("#transitemsitemid").val(), qty: $("#transitemqty").val(), name: $('#transitemname').val(), alt_name: $('#transitemaltname').val(), desc: $('#transitemdesc').val(), unit: $('#transitemunit').val(), taxid: $('#transitemtaxid').val(), tax: JSON.parse($('#transitemtaxval').val()), price: $('#transitempriceval').val()};
         if (itemid == 0) {
             action = "invoices/items/add";
         } else {
@@ -642,7 +659,7 @@ function WPOSTransactions() {
         }
     };
 
-    this.generateInvoice = function(type, download) {
+    this.generateInvoice = function(type, download, template) {
         var link = "/api/invoices/generate?id=" + curid;
         if (type == "html") {
             link += "&type=html";
@@ -654,6 +671,7 @@ function WPOSTransactions() {
         } else {
             link += "&download=0";
         }
+        link += "&template="+template;
 
         window.open(link, '_blank');
     };
@@ -664,7 +682,8 @@ function WPOSTransactions() {
         var bcc = $("#emailbcc").val();
         var subject = $("#emailsubject").val();
         var message = $("#emailmessage").html();
-        var result = WPOS.sendJsonData("invoices/email", JSON.stringify({id: curid, to: to, cc: cc, bcc: bcc, subject: subject, message: message}));
+        var template = $("#emlinvoicetemplate").val();
+        var result = WPOS.sendJsonData("invoices/email", JSON.stringify({id: curid, to: to, cc: cc, bcc: bcc, subject: subject, message: message, template:template}));
         if (result !== false) {
             $("#miscdialog").dialog('close');
         }
@@ -725,10 +744,12 @@ function WPOSTransactions() {
         }
     }
 
-    function getItemData(ref, itemref) {
+    function getItemData(ref, itemref, itemid) {
         var items = transactions[ref].items;
         for (var key in items) {
             if (items[key].ref == itemref) {
+                return items[key];
+            } else if (items[key].id == itemid){
                 return items[key];
             }
         }
@@ -982,6 +1003,7 @@ function WPOSTransactions() {
                 select: function (event, ui) {
                     $('#transitemsitemid').val(ui.item.id);
                     $('#transitemname').val(ui.item.name);
+                    $('#transitemaltname').val(ui.item.alt_name);
                     $('#transitemdesc').val(ui.item.description);
                     $('#transitemqty').val(ui.item.qty);
                     $('#transitemunit').val(ui.item.price);

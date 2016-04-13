@@ -52,7 +52,6 @@
                             <option value="₣">₣ Franc</option>
                             <option value="₤">₤ Lira</option>
                             <option value="﷼">﷼ Saudi Riyal</option>
-                            <option value="R">R Rand</option>
                             <!--<option value="₧">₧ Peseta</option> ! Encoding issues -->
                             <!--<option value="₹">₹ Indian Rupee</option> ! Encoding issues -->
                             <!--<option value="₨">₨ Rupee</option> ! Encoding issues -->
@@ -131,31 +130,84 @@
         </div>
         <div class="widget-box transparent">
             <div class="widget-header widget-header-flat">
-                <h4 class="lighter">Google Contacts integration</h4>
+                <h4 class="lighter">Alternate Labels</h4>
             </div>
             <div class="widget-body" style="padding-top: 10px;">
+                <p>Alternate Labels are used when printing receipts in an alternate language.</p>
                 <form class="form-horizontal">
-                    <div class="space-4"></div>
                     <div class="form-group">
-                        <div class="col-sm-5"><label>Enable:</label></div>
-                        <div class="col-sm-5">
-                            <input type="checkbox" id="gcontact" value="1" />
-                        </div>
+                        <div class="col-sm-5"><label>Cash:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_cash" /></div>
                     </div>
                     <div class="space-4"></div>
                     <div class="form-group">
-                        <div class="col-sm-5"><label>Account:</label></div>
-                        <div class="col-sm-5">
-                            <a class="congaccn" style="display: none;" href="javascript:initGoogleAuth();">Connect Google Account</a>
-                            <a class="disgaccn" style="display: none;" href="javascript:removeGoogleAuth();">Disconnect Google Account</a>
-                        </div>
+                        <div class="col-sm-5"><label>Credit:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_credit" /></div>
                     </div>
                     <div class="space-4"></div>
                     <div class="form-group">
-                        <div class="col-sm-5"></div>
-                        <div class="col-sm-5">
-                            <input class="congaccn" style="display: none;" placeholder="Paste Google Auth Code" type="text" id="gcontactcode" />
-                        </div>
+                        <div class="col-sm-5"><label>Eftpos:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_eftpos" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Cheque:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_cheque" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Deposit:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_deposit" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Tendered:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_tendered" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Change:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_change" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Transaction Reference:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_transaction-ref" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Sale Time:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_sale-time" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Subtotal:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_subtotal" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Total:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_total" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Item:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_item" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Items:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_items" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Refund:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_refund" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Void Transaction:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_void-transaction" /></div>
                     </div>
                 </form>
             </div>
@@ -225,6 +277,37 @@
                 </form>
             </div>
         </div>
+        <div class="widget-box transparent">
+            <div class="widget-header widget-header-flat">
+                <h4 class="lighter">Google Contacts integration</h4>
+            </div>
+            <div class="widget-body" style="padding-top: 10px;">
+                <form class="form-horizontal">
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Enable:</label></div>
+                        <div class="col-sm-5">
+                            <input type="checkbox" id="gcontact" value="1" />
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>Account:</label></div>
+                        <div class="col-sm-5">
+                            <a class="congaccn" style="display: none;" href="javascript:initGoogleAuth();">Connect Google Account</a>
+                            <a class="disgaccn" style="display: none;" href="javascript:removeGoogleAuth();">Disconnect Google Account</a>
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"></div>
+                        <div class="col-sm-5">
+                            <input class="congaccn" style="display: none;" placeholder="Paste Google Auth Code" type="text" id="gcontactcode" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
     <div class="col-sm-12 align-center form-actions">
         <button class="btn btn-success" type="button" onclick="saveSettings();"><i class="icon-save align-top bigger-125"></i>Save</button>
@@ -237,9 +320,10 @@
         // show loader
         WPOS.util.showLoader();
         var data = {};
+        var altlabels = {};
         var currencyformat = [];
         $("form :input").each(function(){
-            if ($(this).prop('id').indexOf("currency")!==-1){
+            if ($(this).prop('id').indexOf("currency")===0){
                 switch ($(this).prop('id')){
                     case "currency_symbol":
                         currencyformat[0] = $(this).val();
@@ -257,10 +341,15 @@
                         currencyformat[4] = $(this).val();
                         break;
                 }
+            } else if ($(this).prop('id').indexOf("altlabel")===0){
+                var name = $(this).prop('id').split("_")[1];
+                altlabels[name] = $(this).val();
+            } else {
+                data[$(this).prop('id')] = $(this).val();
             }
-            data[$(this).prop('id')] = $(this).val();
         });
         data['currencyformat'] = currencyformat.join("~");
+        data['altlabels'] = altlabels;
         data['gcontact'] = $("#gcontact").is(":checked")?1:0;
         WPOS.sendJsonData("settings/general/set", JSON.stringify(data));
         // hide loader
@@ -278,8 +367,13 @@
                 $("#currency_decimalsep").val(format[2]);
                 $("#currency_thousandsep").val(format[3]);
                 $("#currency_symbolpos").val(format[4]);
+            } else if (i == "altlabels"){
+                for (var x in options.altlabels){
+                    $("#altlabel_"+x).val(options.altlabels[x]);
+                }
+            } else {
+                $("#" + i).val(options[i]);
             }
-            $("#"+i).val(options[i]);
         }
         setGoogleUI();
         $("#bizlogoprev").attr("src", options.bizlogo);

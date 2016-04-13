@@ -259,11 +259,14 @@ class TestData {
             $dbMdl->_db->exec("ALTER TABLE stored_items AUTO_INCREMENT = 1; TRUNCATE TABLE stored_items;");
             $dbMdl->_db->exec("ALTER TABLE stored_suppliers AUTO_INCREMENT = 1; TRUNCATE TABLE stored_suppliers;");
             $dbMdl->_db->exec("ALTER TABLE devices AUTO_INCREMENT = 1; TRUNCATE TABLE devices;");
+            $dbMdl->_db->exec("ALTER TABLE device_map AUTO_INCREMENT = 1; TRUNCATE TABLE device_map;");
             $dbMdl->_db->exec("ALTER TABLE locations AUTO_INCREMENT = 1; TRUNCATE TABLE locations;");
             $dbMdl->_db->exec("ALTER TABLE customers AUTO_INCREMENT = 1; TRUNCATE TABLE customers;");
             $dbMdl->_db->exec("ALTER TABLE customer_contacts AUTO_INCREMENT = 1; TRUNCATE TABLE customer_contacts;");
             $dbMdl->_db->exec("ALTER TABLE auth AUTO_INCREMENT = 1; TRUNCATE TABLE auth;");
             $dbMdl->_db->exec("ALTER TABLE config AUTO_INCREMENT = 1; TRUNCATE TABLE config;");
+            $dbMdl->_db->exec("ALTER TABLE tax_rules AUTO_INCREMENT = 1; TRUNCATE TABLE tax_rules;");
+            $dbMdl->_db->exec("ALTER TABLE tax_items AUTO_INCREMENT = 1; TRUNCATE TABLE tax_items;");
             $dbMdl->_db->exec($sql);
         } else {
             die("Could not import sql.");

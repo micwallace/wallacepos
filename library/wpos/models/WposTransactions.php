@@ -354,7 +354,7 @@ class WposTransactions {
                 die("Failed to load the transaction!");
             }
         }
-        $html = $this->generateInvoiceHtml();
+        $html = $this->generateInvoiceHtml($_REQUEST['template']);
         if (isset($_REQUEST['type']) && $_REQUEST['type']=="html"){
             if (isset($_REQUEST['download']) && $_REQUEST['download']==1){
                 header("Content-Type: application/stream");
@@ -386,7 +386,7 @@ class WposTransactions {
             }
         }
         // Generate Invoice PDF
-        $html = $this->generateInvoiceHtml();
+        $html = $this->generateInvoiceHtml($this->data->template);
         $pdf = $this->convertToPdf($html, 0);
         $attachment = [$pdf, "Invoice #".$this->trans->ref.".pdf"];
         $subject = (isset($this->data->subject)?$this->data->subject:"Invoice #".$this->trans->ref." Attached");
@@ -408,34 +408,17 @@ class WposTransactions {
 
     /**
      * Generate invoice html
+     * @param string $template
      * @return string
      */
-    private function generateInvoiceHtml(){
-        // copy invoice data, set tax values
-        /** @noinspection PhpUnusedLocalVariableInspection */
-        $invoice = $this->trans;
-        $taxMdl = new TaxItemsModel();
-        $taxdata = $taxMdl->get();
-        $taxes = [];
-        foreach ($taxdata as $value){
-            $taxes[$value['id']] = (object) $value;
-        }
-        // Get general settings
+    private function generateInvoiceHtml($template=""){
+        $tempMdl = new WposTemplates();
         $config = new WposAdminSettings();
-        $settings = $config->getSettingsObject("general");
-        $settings->payinst = $config->getSettingsObject("invoice")->payinst;
-        // Get customer record
-        $custMdl = new CustomerModel();
-        /** @noinspection PhpUnusedLocalVariableInspection */
-        $customer = (object) $custMdl->get($this->trans->custid)[0];
-        $utils = new WposAdminUtilities();
-        $utils->setCurrencyFormat($settings->currencyformat);
-        // start output buffer and capture template output
-        ob_start();
-        include $_SERVER['DOCUMENT_ROOT']."/docs/templates/invoice.php";
-        $html=ob_get_contents();
-        ob_end_clean();
-        return $html;
+        $invval = $config->getSettingsObject("invoice");
+        $genval = $config->getSettingsObject("general");
+        // create the data class
+        $data = new WposTemplateData($this->trans, ['general'=>$genval, 'invoice'=>$invval], true);
+        return $tempMdl->renderTemplate($template!=""?$template:$invval->defaulttemplate, $data);
     }
 
     /**

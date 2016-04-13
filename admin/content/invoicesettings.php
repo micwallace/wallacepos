@@ -42,6 +42,13 @@
                 </div>
                 <div class="space-4"></div>
                 <div class="form-group">
+                    <div class="col-sm-5"><label>Default Template:</label></div>
+                    <div class="col-sm-5">
+                        <select id="defaulttemplate"></select><br/>
+                    </div>
+                </div>
+                <div class="space-4"></div>
+                <div class="form-group">
                     <div class="col-sm-5"><label>Payment Instructions:</label></div>
                     <div class="col-sm-7">
                     <div id="payinst" style="height: 175px; border: 1px solid #E5E5E5;" class="wysiwyg-editor">
@@ -114,9 +121,20 @@
                 $("#"+i).val(options[i]);
             }
         }
+        refreshTemplateList(options.defaulttemplate);
         $("#payinst").html(options.payinst);
         $("#emailmsg").html(options.emailmsg);
         $("#bizlogoprev").attr("src", options.bizlogo);
+    }
+
+    function refreshTemplateList(selectedid){
+        var templates = WPOS.getConfigTable()['templates'];
+        var list = $("#defaulttemplate");
+        list.html('');
+        for (var i in templates){
+            if (templates[i].type=="invoice")
+                list.append('<option value="'+i+'" '+(i==selectedid?'selected="selected"':'')+'>'+templates[i].name+'</option>');
+        }
     }
 
     $('#bizlogofile').on('change',uploadLogo);

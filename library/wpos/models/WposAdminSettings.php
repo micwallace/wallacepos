@@ -112,7 +112,6 @@ class WposAdminSettings {
 
     /**
      * Get all config values as an array
-     * @internal param $name
      * @return bool|mixed
      */
     public function getAllSettings(){

@@ -262,7 +262,7 @@ class WposAdminItems {
             "realtime" => ['stats/general', 'graph/general'],
             "sales" => [],
             "invoices"=>['invoices/get'],
-            "items" => [],
+            "items" => ['suppliers/get'],
             "stock" => ['stock/get', 'stock/history'],
             "suppliers" => ['suppliers/get'],
             "customers" => [],
@@ -274,11 +274,11 @@ class WposAdminItems {
             "realtime" => [],
             "sales" => ['sales/delete', 'sales/deletevoid', 'sales/adminvoid'],
             "invoices"=> ['invoices/add' ,'invoices/edit', 'invoices/delete', 'invoices/items/add', 'invoices/items/edit', 'invoices/items/delete',
-                'invoices/payments/add','invoices/payments/edit','invoices/payments/delete','invoices/generate','invoices/email', 'sales/deletevoid', 'sales/adminvoid'],
+                'invoices/payments/add','invoices/payments/edit','invoices/payments/delete','invoices/generate','invoices/email'],
             "items" => ['items/add', 'items/edit', 'items/delete'],
             "stock" => ['stock/add', 'stock/set', 'stock/transfer'],
             "suppliers" => ['suppliers/add', 'suppliers/edit', 'suppliers/delete'],
-            "customers" => ['customers/add', 'customers/edit', 'customers/delete', 'customers/contacts/add', 'customers/contacts/edit', 'customers/contacts/delete'],
+            "customers" => ['customers/add', 'customers/edit', 'customers/delete', 'customers/contacts/add', 'customers/contacts/edit', 'customers/contacts/delete', 'customers/setaccess', 'customers/setpassword', 'customers/sendreset'],
         ]
     ];
 
@@ -561,7 +561,7 @@ class WposAdminItems {
         }
         $this->data->multiplier = WposAdminItems::calculateTaxMultiplier($this->data->value);
         $taxItemMdl = new TaxItemsModel();
-        $qresult = $taxItemMdl->create($this->data->name, $this->data->type, $this->data->value, $this->data->multiplier);
+        $qresult = $taxItemMdl->create($this->data->name, $this->data->altname, $this->data->type, $this->data->value, $this->data->multiplier);
         if ($qresult === false) {
             $result['error'] = "Could not add the tax item: ".$taxItemMdl->errorInfo;
         } else {
@@ -588,7 +588,7 @@ class WposAdminItems {
         }
         $this->data->multiplier = WposAdminItems::calculateTaxMultiplier($this->data->value);
         $taxItemMdl = new TaxItemsModel();
-        $qresult = $taxItemMdl->edit($this->data->id, $this->data->name, $this->data->type, $this->data->value, $this->data->multiplier);
+        $qresult = $taxItemMdl->edit($this->data->id, $this->data->name, $this->data->altname, $this->data->type, $this->data->value, $this->data->multiplier);
         if ($qresult === false) {
             $result['error'] = "Could not edit the tax item: ".$taxItemMdl->errorInfo;
         } else {

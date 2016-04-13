@@ -31,6 +31,7 @@
             </div>
         </div>
     </div>
+
     <div class="col-sm-7">
         <div class="widget-box transparent">
             <div class="widget-header widget-header-flat">
@@ -47,7 +48,6 @@
             </div>
         </div>
     </div>
-
     <div class="col-sm-5">
             <div class="widget-box transparent">
                 <div class="widget-header widget-header-flat">
@@ -65,6 +65,20 @@
                     </div>
                 </div>
             </div>
+    </div>
+    <div class="col-sm-7">
+        <div class="widget-box transparent">
+            <div class="widget-header widget-header-flat">
+                <h4 class="lighter">
+                    <i class="icon-edit blue"></i>
+                    Templates
+                </h4>
+            </div>
+            <div class="widget-body" style="height: 200px;">
+                <button class="btn btn-primary" onclick="changehash('!templates');">Template Editor</button>
+                <button class="btn btn-primary" onclick="restoreTemplates();">Restore Default Templates</button>
+            </div>
+        </div>
     </div>
 </div>
 <div id="logdialog" style="display:none; padding:10px; background-color: white;" title="Log Contents">
@@ -168,6 +182,12 @@
 
     function exportDB(){
         $("#dlframe").attr('src', 'https://'+document.location.host+'/api/wpos.php?a=db%2Fbackup');
+    }
+
+    function restoreTemplates(){
+        var answer = confirm("Are you sure you want to restore the default template files?");
+        if (answer)
+            WPOS.getJsonData('templates/restore');
     }
 
     $(function(){

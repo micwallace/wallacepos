@@ -45,7 +45,7 @@ class DbUpdater {
             return "Database detected, skipping full installation.";
         }
         // Install database
-        $schemapath = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."installer/schemas/install.sql";
+        $schemapath = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/installer/schemas/install.sql";
         if (!file_exists($schemapath)){
             return "Schema does not exist";
         }
@@ -63,9 +63,6 @@ class DbUpdater {
                     // Setup general info
                     echo("Setup variables processed.\n");
                 }
-                // start node server (restart to be safe)
-                $socket = new WposSocketControl();
-                $socket->restartSocketServer(['error'=>'OK']);
             }
         } catch (Exception $e){
             return $e->getMessage();
@@ -90,7 +87,7 @@ class DbUpdater {
                 return "Must be logged in as admin";
             }
         }
-        $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."installer/schemas/update".$version.".sql";
+        $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/installer/schemas/update".$version.".sql";
         if (!file_exists($path)){
             return "Schema does not exist";
         }
@@ -153,8 +150,8 @@ class DbUpdater {
                             $taxdata->values = new stdClass();
                             $taxdata->inclusive = true;
                             if ($item['tax']>0){
-                                $taxdata->values->{"1"} = $item['tax'];
-                                $taxdata->total = $item['tax'];
+                                $taxdata->values->{"1"} = floatval($item['tax']);
+                                $taxdata->total = floatval($item['tax']);
                             } else {
                                 $taxdata->total = 0;
                             }
@@ -251,11 +248,24 @@ class DbUpdater {
 
                     WposAdminSettings::putValue('general', 'currencyformat', '$~2~.~,~0');
                     WposAdminSettings::putValue('general', 'version', '1.2');
-            }
-            // restart node server
-            $socket = new WposSocketControl();
-            $socket->restartSocketServer(['error'=>'OK']);
 
+                    break;
+                case "1.3":
+                    // set default template values & copy templates
+                    WposAdminSettings::putValue('pos', 'rectemplate', 'receipt');
+                    WposAdminSettings::putValue('invoice', 'defaulttemplate', 'invoice');
+                    mkdir($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/templates/");
+                    WposTemplates::restoreDefaults();
+                    // put alternate language values
+                    $labels = json_decode('{"cash":"Cash","credit":"Credit","eftpos":"Eftpos","cheque":"Cheque","deposit":"Deposit","tendered":"Tendered","change":"Change","transaction-ref":"Transaction Ref","sale-time":"Sale Time","subtotal":"Subtotal","total":"Total","item":"Item","items":"Items","refund":"Refund","void-transaction":"Void Transaction"}}');
+                    WposAdminSettings::putValue('general', 'altlabels', $labels);
+                    // set updated receipt currency symbol support values
+                    WposAdminSettings::putValue('pos', 'reccurrency', '');
+                    WposAdminSettings::putValue('pos', 'reccurrency_codepage', 0);
+
+                    WposAdminSettings::putValue('general', 'version', '1.3');
+                    break;
+            }
             return "Update Completed Successfully!";
         } catch (Exception $e){
             echo $this->db->_db->errorInfo()[0];

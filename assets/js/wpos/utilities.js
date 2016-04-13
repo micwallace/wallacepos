@@ -259,25 +259,58 @@ function WPOSUtil() {
 
     this.roundToNearestCents = function(cents, value){
         var x = 100 / parseInt(cents);
-        var v = (Math.round(value * x) / x).toFixed(2);
-        return v;
+        return (Math.round(value * x) / x).toFixed(2);
     };
 
     var curformat = null;
     var printcursymbol = "";
     function loadCurrencyValues(){
         if (curformat==null){
-            printcursymbol = "";
+
             curformat = WPOS.getConfigTable().general.currencyformat.split('~');
-            if (WPOS.getConfigTable().pos.reccurrency!="")
-                printcursymbol = String.fromCharCode(parseInt(WPOS.getConfigTable().pos.reccurrency));
-            if (printcursymbol=="" && (curformat[0]=="£" || containsNonLatinCodepoints(curformat[0]))){
-                // check for unicode characters and set default alt character if so
-                printcursymbol = curformat[0]=="£"?String.fromCharCode(156):"$";
+            //if (WPOS.getConfigTable().pos.hasOwnProperty('reccurrency') && WPOS.getConfigTable().pos.reccurrency!="")
+                //printcursymbol = String.fromCharCode(parseInt(WPOS.getConfigTable().pos.reccurrency));
+            if (WPOS.hasOwnProperty('print')) {
+                printcursymbol = getPrintCurrencySymbol();
+                if (printcursymbol == "" && (curformat[0] == "£" || containsNonLatinCodepoints(curformat[0]))) {
+                    // check for unicode characters and set default alt character if so
+                    printcursymbol = curformat[0] == "£" ? String.fromCharCode(156) : "$";
+                }
             }
+
             setTimeout(function(){ curformat = null; }, 60000);
         }
     }
+
+    function getPrintCurrencySymbol(){
+        // check local setting first
+        var codepage, codes;
+        if (WPOS.print.getGlobalPrintSetting('currency_override') && WPOS.print.getGlobalPrintSetting('currency_codes')!=""){
+            codepage = WPOS.print.getGlobalPrintSetting('currency_codepage');
+            codes = WPOS.print.getGlobalPrintSetting('currency_codes').split(',');
+        } else if (WPOS.getConfigTable().pos.hasOwnProperty('reccurrency') && WPOS.getConfigTable().pos.reccurrency!="") {
+            codepage = WPOS.getConfigTable().pos.reccurrency_codepage;
+            codes = WPOS.getConfigTable().pos.reccurrency.split(',');
+        } else {
+            return "";
+        }
+        var result = "";
+        for (var i=0; i<codes.length; i++){
+            result += String.fromCharCode(parseInt(codes[i]));
+        }
+        if (codepage>0)
+            return WPOS.print.wrapWithCharacterSet(result, codepage);
+
+        return result;
+    }
+
+    this.reloadPrintCurrencySymbol = function(){
+        printcursymbol = getPrintCurrencySymbol();
+        if (printcursymbol=="" && (curformat[0]=="£" || containsNonLatinCodepoints(curformat[0]))){
+            // check for unicode characters and set default alt character if so
+            printcursymbol = curformat[0]=="£"?String.fromCharCode(156):"$";
+        }
+    };
 
     function containsNonLatinCodepoints(s) {
         return /[^\u0000-\u00ff]/.test(s);
@@ -288,6 +321,11 @@ function WPOSUtil() {
         return curformat[0];
     };
 
+    this.getCurrencyPlacedAfter = function(){
+        loadCurrencyValues();
+        return curformat[4]!=0;
+    };
+
     this.currencyFormat = function(value, nosymbol, usesymboloverride){
         loadCurrencyValues();
         var result = number_format(value, curformat[1], curformat[2], curformat[3]);
@@ -296,7 +334,7 @@ function WPOSUtil() {
             result = curformat[4]==0 ? (cursymbol + result) : (result + cursymbol);
         }
         return result;
-    }
+    };
     // javascript equiv of php's number_format
     function number_format(number, decimals, dec_point, thousands_sep) {
         //  discuss at: http://phpjs.org/functions/number_format/

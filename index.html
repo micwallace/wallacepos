@@ -26,6 +26,8 @@
     <!--[if lte IE 8]>
     <link rel="stylesheet" href="/assets/css/ace-ie.min.css"/>
     <![endif]-->
+    <link rel="stylesheet" href="/admin/assets/css/dataTables.bootstrap.css"/>
+    <link rel="stylesheet" href="/admin/assets/css/responsive.dataTables.min.css"/>
 
     <!-- UI FRAMEWORK SCRIPTS -->
     <!--[if !IE]> -->
@@ -44,6 +46,7 @@
     <script src="/assets/js/bootstrap.min.js"></script>
     <script src="/assets/js/typeahead-bs2.min.js"></script>
     <script src="/assets/js/jquery-ui-1.10.3.full.min.js"></script>
+    <script src="/assets/js/jquery.mustache.js"></script>
 
     <!-- Wpos Libraries -->
     <script type="text/javascript" src="/assets/js/wpos/core.js"></script>
@@ -52,6 +55,7 @@
     <script type="text/javascript" src="/assets/js/wpos/reports.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/print.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/orders.js"></script>
+    <script type="text/javascript" src="/assets/js/wpos/eftpos.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/utilities.js"></script>
     <!-- Websocket library -->
     <script type="text/javascript" src="/assets/libs/socketio/socket.io.min.js"></script>
@@ -64,19 +68,27 @@
     <link type="text/css" href="/assets/libs/jquery-keypad/jquery.keypad.css" rel="stylesheet">
     <script type="text/javascript" src="/assets/libs/jquery-keypad/jquery.plugin.min.js"></script>
     <script type="text/javascript" src="/assets/libs/jquery-keypad/jquery.keypad.min.js"></script>
+    <!-- Datatables -->
+    <script src="/admin/assets/js/jquery.dataTables.min.js"></script>
+    <script src="/admin/assets/js/datatableSorting.js"></script>
+    <script src="/admin/assets/js/jquery.dataTables.bootstrap.js"></script>
+    <script src="/admin/assets/js/dataTables.responsive.min.js"></script>
 </head>
-<body style="background-color: #000000; overflow: hidden;">
+<body>
 <div id="wrapper">
 <ul class="navbar overflow-hidden">
     <li><a href="#tabs-1">Sales</a></li>
     <li onclick="WPOS.reports.populateOverview();"><a href="#tabs-2">Reports</a></li>
     <li><a href="#tabs-3">Settings</a></li>
     <button onClick="WPOS.logout();" style="float:right; height: 45px;" class="btn">Logout</button>
+    <button title="Expand window" id="window_width_toggle" onClick="expandWindow();" style="float:right; vertical-align: middle; margin-top: 10px; margin-right: 5px; margin-left: 5px;" class="btn btn-xs btn-primary"><i class="icon icon-expand"></i></button>
+    <button title="Open Administration Dashboard" onClick="window.open('/admin');" style="float:right; vertical-align: middle; margin-top: 10px; margin-right: 5px; margin-left: 5px;" class="btn btn-xs btn-primary"><i class="icon icon-cog">&nbsp;Admin</i></button>
 </ul>
-<div id="tabs-1" style="padding: 5px; padding-top: 10px;">
+<div id="tabs-1">
     <div id="sales">
         <div style="width:100%;">
-            <div id="items" style="height:400px; padding:0; overflow-y: auto; overflow-x: hidden;" class="ui-widget-content">
+            <div id="watermark"></div>
+            <div id="items" style="padding:0;" class="ui-widget-content">
                 <div style="margin-bottom: 10px;">
                     <div class="inline">
                         <div class="inline">
@@ -93,7 +105,7 @@
                         <button class="btn btn-sm inline field-button" onclick="$.wscan.startScanning();"><i class="icon-barcode" style="vertical-align: top;"></i></button>
                     </div>
                 </div>
-                <div id="items_contain" style="overflow-x: auto;">
+                <div id="items_contain" style="overflow: auto; max-height: 458px;">
                 <table style="width: 100%;" class="table table-striped table-bordered">
                     <thead class="table-header">
                     <tr style="text-align: left">
@@ -113,12 +125,11 @@
                     </tbody>
                 </table>
                 </div>
-                <div id="watermark"></div>
                 <span id="invaliditemnotice" style="float: left; display: none;" class="text-warning bigger-110 red"><i
                         class="icon-warning-sign"></i>Invalid items marked in red will not be added to the sale</span>
                 <button style="float:right; font-size: 14px !important;" class="btn btn-sm btn-primary" onClick="WPOS.items.addManualItemRow();">Add Item</button>
             </div>
-            <div id="totals" style="display:inline-block; width:100%; margin-top:10px;">
+            <div id="totals">
                 <div style="display:inline-block; max-width:450px; vertical-align:top;">
                     <div class="totalsbox">
                         <div>
@@ -212,6 +223,7 @@
                     <div id="reportbuttons" class="inline hide" style="margin-right: 20px;">
                         <button class="btn btn-primary btn-sm" onclick="WPOS.reports.generateTakingsReport();">Takings Count</button>
                         <button class="btn btn-primary btn-sm" onclick="WPOS.reports.generateWhatsSellingReport();">What's Selling</button>
+                        <button class="btn btn-primary btn-sm" onclick="WPOS.reports.generateSellerReport();">Seller Report</button>
                     </div>
                     <div id="tyroreports" class="hide" style="display: inline-block;">
                         <select id="tyroreptype" style="height: 34px; vertical-align: bottom;">
@@ -352,287 +364,460 @@
     </div>
 </div>
 <div id="tabs-3">
-    <div class="widget-box transparent">
-        <div class="widget-header widget-header-flat">
-            <h4 class="lighter">
-                <i class="icon-cogs"></i>
-                General
-            </h4>
-        </div>
-        <div class="widget-body" style="padding-top: 10px; text-align: left;">
-            <label>Use On-screen keypad: <input id="keypadset" type="checkbox" style="vertical-align: top;" onclick="WPOS.setLocalConfigValue('keypad', $('#keypadset').is(':checked'))"></label>
-        </div>
-        <div class="widget-header widget-header-flat">
-            <h4 class="lighter">
-                <i class="icon-print"></i>
-                Printing
-            </h4>
-        </div>
-        <div class="widget-body" style="padding-top: 10px; text-align: left;">
-            <div id="printsettings_receipts">
-                <h4>Receipts</h4>
-                <div class="settings-row" style="display: inline-block;">
-                    <label>Method:
-                        <select class="psetting_method" onchange="WPOS.print.setPrintSetting('receipts', 'method', $(this).val())">
-                            <option value="br">
-                                browser printing
-                            </option>
-                            <option value="wp" class="wp-option">
-                                Web Print ESCP
-                            </option>
-                            <option value="ht" class="ht-option">
-                                Android HTTP ESCP
-                            </option>
-                        </select>
-                    </label>
-                </div>
-                <div class="advprintoptions settings-row" style="display: inline-block;">
-                    <label style="margin-right: 20px;">Type:
-                        <select class="psetting_type"  onchange="WPOS.print.setPrintSetting('receipts', 'type', $(this).val())">
-                            <option value="serial">
-                                Serial
-                            </option>
-                            <option value="raw">
-                                Raw
-                            </option>
-                            <option value="tcp">
-                                Raw TCP
-                            </option>
-                        </select>
-                    </label>
-                    <div class="tcpoptions" style="display: inline-block;">
-                        <label>Printer IP:
-                            <input class="psetting_printerip" onchange="WPOS.print.setPrintSetting('receipts', 'printerip', $(this).val());" placeholder="192.168.1.100" type="text">
-                        </label>
-                        <label>Printer Port:
-                            <input class="psetting_printerport" onchange="WPOS.print.setPrintSetting('receipts', 'printerport', $(this).val());" placeholder="9100" type="text">
-                        </label>
-                    </div>
-                    <div class="rawoptions" style="display: inline-block;">
-                        <label>Printer:
-                            <select class="psetting_printer" onchange="WPOS.print.setPrintSetting('receipts', 'printer', $(this).val());">
+    <div class="tabbable">
+        <ul class="nav nav-tabs tab-size-bigger" id="myTab">
+            <li class="active">
+                <a data-toggle="tab" href="#settings-tab-1">
+                    <i class="blue icon-cogs bigger-120"></i>
+                    General
+                </a>
+            </li>
 
-                            </select>
-                            <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePrinters();"><i class="icon-refresh"></i></button>
-                        </label>
-                    </div>
-                    <div class="serialoptions" style="display: inline-block;">
-                        <label>Port:
-                            <select class="psetting_port" onchange="WPOS.print.setPrintSetting('receipts', 'port', $(this).val());">
+            <li>
+                <a data-toggle="tab" href="#settings-tab-2">
+                    <i class="green icon-print bigger-120"></i>
+                    Printing
+                </a>
+            </li>
 
-                            </select>
-                            <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePorts();"><i class="icon-refresh"></i></button>
-                        </label>
-                        <label>Baud:
-                            <select class="psetting_baud" onchange="WPOS.print.setPrintSetting('receipts', 'baud', $(this).val());">
-                                <option value="4800">4800</option>
-                                <option value="9600">9600</option>
-                                <option value="19200">19200</option>
-                                <option value="38400">38400</option>
-                                <option value="57600">57600</option>
-                                <option value="115200">115200</option>
-                            </select>
-                        </label>
-                        <label>Data Bits:
-                            <select class="psetting_databits" onchange="WPOS.print.setPrintSetting('receipts', 'databits', $(this).val());">
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                            </select>
-                        </label>
-                        <label>Stop Bits:
-                            <select class="psetting_stopbits" onchange="WPOS.print.setPrintSetting('receipts', 'stopbits', $(this).val());">
-                                <option value="1">1</option>
-                                <option value="0">0</option>
-                            </select>
-                        </label>
-                        <label>Parity:
-                            <select class="psetting_parity" onchange="WPOS.print.setPrintSetting('receipts', 'parity', $(this).val());">
-                                <option value="none">none</option>
-                                <option value="even">even</option>
-                                <option value="odd">odd</option>
-                            </select>
-                        </label>
-                    </div>
-                </div>
-                <div class="settings-row printoptions" style="display: inline-block;">
-                    <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.testReceiptPrinter('receipts');">Test</button>
-                    <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.printQrCode();">Print QR</button>
-                </div>
-                <div class="settings-row cashdrawoptions">
-                    <label>Cash Draw Connected: <input onchange="WPOS.print.setGlobalPrintSetting('cashdraw', $('#cashdraw').is(':checked'));" id="cashdraw"  type="checkbox" style="margin-right:20px; vertical-align:top;" /></label>
-                    <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.openCashDraw();">Test</button>
-                </div>
-                <div class="settings-row">
-                    <label>Ask to print: <select id="recask" onchange="WPOS.print.setGlobalPrintSetting('recask', $('#recask').val());">
-                            <option value="ask">Always Ask</option>
-                            <option value="email">Ask if not emailed</option>
-                            <option value="print">Always Print</option>
-                        </select></label><br/>
-                    <label>ESCP Receipt Mode: <select id="escpreceiptmode" onchange="WPOS.print.setGlobalPrintSetting('escpreceiptmode', $('#escpreceiptmode').val());">
-                        <option value="text">Text</option>
-                        <option value="bitmap">Bitmap (Unicode support)</option>
-                    </select></label>
-                </div>
-            </div>
-            <div id="printsettings_kitchen" class="order_terminal_options">
-                <h4>Kitchen</h4>
-                <div class="settings-row" style="display: inline-block;">
-                    <label>Method:
-                        <select class="psetting_method" onchange="WPOS.print.setPrintSetting('kitchen', 'method', $(this).val())">
-                            <option value="wp" class="wp-option">
-                                Web Print ESCP
-                            </option>
-                            <option value="ht" class="ht-option">
-                                Android HTTP ESCP
-                            </option>
-                        </select>
-                    </label>
-                </div>
-                <div class="advprintoptions settings-row" style="display: inline-block;">
-                    <label style="margin-right: 20px;">Type:
-                        <select class="psetting_type"  onchange="WPOS.print.setPrintSetting('kitchen', 'type', $(this).val())">
-                            <option value="serial">
-                                Serial
-                            </option>
-                            <option value="raw">
-                                Raw
-                            </option>
-                            <option value="tcp">
-                                Raw TCP
-                            </option>
-                        </select>
-                    </label>
-                    <div class="tcpoptions" style="display: inline-block;">
-                        <label>Printer IP:
-                            <input class="psetting_printerip" onchange="WPOS.print.setPrintSetting('kitchen', 'printerip', $(this).val());" placeholder="192.168.1.100" type="text">
-                        </label>
-                        <label>Printer Port:
-                            <input class="psetting_printerport" onchange="WPOS.print.setPrintSetting('kitchen', 'printerport', $(this).val());" placeholder="9100" type="text">
-                        </label>
-                    </div>
-                    <div class="rawoptions" style="display: inline-block;">
-                        <label>Printer:
-                            <select class="psetting_printer" onchange="WPOS.print.setPrintSetting('kitchen', 'printer', $(this).val());">
+            <li class="eftpos_settings hide">
+                <a data-toggle="tab" href="#settings-tab-3">
+                    <i class="orange icon-credit-card bigger-120"></i>
+                    Eftpos
+                </a>
+            </li>
+        </ul>
 
-                            </select>
-                            <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePrinters();"><i class="icon-refresh"></i></button>
-                        </label>
+        <div class="tab-content no-border">
+            <div id="settings-tab-1" class="tab-pane fade in active">
+                <div class="widget-box transparent">
+                    <div class="widget-header widget-header-flat">
+                        <h4 class="lighter">
+                            <i class="icon-cogs"></i>
+                            General
+                        </h4>
                     </div>
-                    <div class="serialoptions" style="display: inline-block;">
-                        <label>Port:
-                            <select class="psetting_port" onchange="WPOS.print.setPrintSetting('kitchen', 'port', $(this).val());">
-
-                            </select>
-                            <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePorts();"><i class="icon-refresh"></i></button>
-                        </label>
-                        <label>Baud:
-                            <select class="psetting_baud" onchange="WPOS.print.setPrintSetting('kitchen', 'baud', $(this).val());">
-                                <option value="4800">4800</option>
-                                <option value="9600">9600</option>
-                                <option value="19200">19200</option>
-                                <option value="38400">38400</option>
-                                <option value="57600">57600</option>
-                                <option value="115200">115200</option>
-                            </select>
-                        </label>
-                        <label>Data Bits:
-                            <select class="psetting_databits" onchange="WPOS.print.setPrintSetting('kitchen', 'databits', $(this).val());">
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                            </select>
-                        </label>
-                        <label>Stop Bits:
-                            <select class="psetting_stopbits" onchange="WPOS.print.setPrintSetting('kitchen', 'stopbits', $(this).val());">
-                                <option value="1">1</option>
-                                <option value="0">0</option>
-                            </select>
-                        </label>
-                        <label>Parity:
-                            <select class="psetting_parity" onchange="WPOS.print.setPrintSetting('kitchen', 'parity', $(this).val());">
-                                <option value="none">none</option>
-                                <option value="even">even</option>
-                                <option value="odd">odd</option>
-                            </select>
-                        </label>
+                    <div class="widget-body" style="padding-top: 10px; text-align: left;">
+                        <label>Use On-screen keypad: <input id="keypadset" type="checkbox" style="vertical-align: top;" onclick="WPOS.setLocalConfigValue('keypad', $('#keypadset').is(':checked'))"></label>
                     </div>
                 </div>
-                <div class="settings-row printoptions" style="display: inline-block;">
-                    <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.testReceiptPrinter('kitchen');">Test</button>
-                </div>
             </div>
-            <div id="printsettings_reports">
-                <h4>Reports</h4>
-                <div class="settings-row" style="display: inline-block;">
-                    <label>Method:
-                    <select class="psetting_method" onchange="WPOS.print.setPrintSetting('reports', 'method', $(this).val())">
-                        <option value="br">
-                            browser printing
-                        </option>
-                        <option value="wp" class="wp-option">
-                            Web Print
-                        </option>
-                    </select></label>
-                </div>
-                <div class="advprintoptions settings-row" style="display: inline-block;">
-                    <label>Printer:
-                        <select class="psetting_printer" onchange="WPOS.print.setPrintSetting('reports', 'printer', $(this).val());">
+            <div id="settings-tab-2" class="tab-pane fade">
+                <div class="widget-box transparent">
+                    <div class="widget-header widget-header-flat">
+                        <h4 class="lighter">
+                            <i class="icon-print"></i>
+                            Receipt Printing
+                        </h4>
+                    </div>
+                    <div class="widget-body" style="padding-top: 10px; text-align: left;">
+                        <div id="printsettings_receipts">
+                            <div id="settings-list-1" class="panel-group accordion-style1 accordion-style2">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <a href="#settings-1-1" data-parent="#settings-list-1" data-toggle="collapse" class="accordion-toggle collapsed">
+                                            <i class="icon-chevron-left pull-right" data-icon-hide="icon-chevron-down" data-icon-show="icon-chevron-left"></i>
+                                            <i class="icon-cogs bigger-130"></i>
+                                            &nbsp; General
+                                        </a>
+                                    </div>
+                                    <div class="panel-collapse collapse" id="settings-1-1">
+                                        <div class="panel-body">
+                                            <div class="settings-row">
+                                                <label>Ask to print: <select id="recask" onchange="WPOS.print.setGlobalPrintSetting('recask', $('#recask').val());" style="margin-right: 20px;">
+                                                    <option value="ask">Always Ask</option>
+                                                    <option value="email">Ask if not emailed</option>
+                                                    <option value="print">Always Print</option>
+                                                </select></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <a href="#settings-1-2" data-parent="#settings-list-1" data-toggle="collapse" class="accordion-toggle">
+                                            <i class="icon-chevron-left pull-right" data-icon-hide="icon-chevron-down" data-icon-show="icon-chevron-left"></i>
+                                            <i class="icon-adjust bigger-130"></i>
+                                            &nbsp; Connection
+                                        </a>
+                                    </div>
+                                    <div class="panel-collapse in" id="settings-1-2">
+                                        <div class="panel-body">
+                                            <div class="settings-row" style="display: inline-block;">
+                                                <label style="margin-right: 20px;">Method:
+                                                    <select class="psetting_method" onchange="WPOS.print.setPrintSetting('receipts', 'method', $(this).val())">
+                                                        <option value="br">
+                                                            browser printing
+                                                        </option>
+                                                        <option value="wp" class="wp-option">
+                                                            Web Print ESCP
+                                                        </option>
+                                                        <option value="ht" class="ht-option">
+                                                            Android HTTP ESCP
+                                                        </option>
+                                                    </select>
+                                                </label>
+                                                <label class="advprintoptions">Type:
+                                                    <select class="psetting_type"  onchange="WPOS.print.setPrintSetting('receipts', 'type', $(this).val())">
+                                                        <option value="serial">
+                                                            Serial
+                                                        </option>
+                                                        <option value="raw">
+                                                            Raw
+                                                        </option>
+                                                        <option value="tcp">
+                                                            Raw TCP
+                                                        </option>
+                                                    </select>
+                                                </label>
+                                            </div>
+                                            <div class="advprintoptions settings-row" style="display: inline-block;">
+                                                <div class="tcpoptions" style="display: inline-block;">
+                                                    <label style="margin-right: 20px;">Printer IP:
+                                                        <input class="psetting_printerip" size="16" onchange="WPOS.print.setPrintSetting('receipts', 'printerip', $(this).val());" placeholder="192.168.1.100" type="text">
+                                                    </label>
+                                                    <label>Printer Port:
+                                                        <input class="psetting_printerport" size="6" onchange="WPOS.print.setPrintSetting('receipts', 'printerport', $(this).val());" placeholder="9100" type="text">
+                                                    </label>
+                                                </div>
+                                                <div class="rawoptions" style="display: inline-block;">
+                                                    <label>Printer:
+                                                        <select class="psetting_printer" onchange="WPOS.print.setPrintSetting('receipts', 'printer', $(this).val());">
 
-                        </select>
-                        <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePrinters();"><i class="icon-refresh"></i></button>
-                    </label>
+                                                        </select>
+                                                        <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePrinters();"><i class="icon-refresh"></i></button>
+                                                    </label>
+                                                </div>
+                                                <div class="serialoptions" style="display: inline-block;">
+                                                    <label>Port:
+                                                        <select class="psetting_port" onchange="WPOS.print.setPrintSetting('receipts', 'port', $(this).val());"></select>
+                                                        <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePorts();"><i class="icon-refresh"></i></button>
+                                                    </label>
+                                                    <label>Baud:
+                                                        <select class="psetting_baud" onchange="WPOS.print.setPrintSetting('receipts', 'baud', $(this).val());">
+                                                            <option value="4800">4800</option>
+                                                            <option value="9600">9600</option>
+                                                            <option value="19200">19200</option>
+                                                            <option value="38400">38400</option>
+                                                            <option value="57600">57600</option>
+                                                            <option value="115200">115200</option>
+                                                        </select>
+                                                    </label>
+                                                    <label>Data Bits:
+                                                        <select class="psetting_databits" onchange="WPOS.print.setPrintSetting('receipts', 'databits', $(this).val());">
+                                                            <option value="7">7</option>
+                                                            <option value="8">8</option>
+                                                        </select>
+                                                    </label>
+                                                    <label>Stop Bits:
+                                                        <select class="psetting_stopbits" onchange="WPOS.print.setPrintSetting('receipts', 'stopbits', $(this).val());">
+                                                            <option value="1">1</option>
+                                                            <option value="0">0</option>
+                                                        </select>
+                                                    </label>
+                                                    <label>Parity:
+                                                        <select class="psetting_parity" onchange="WPOS.print.setPrintSetting('receipts', 'parity', $(this).val());">
+                                                            <option value="none">None</option>
+                                                            <option value="even">Even</option>
+                                                            <option value="odd">Odd</option>
+                                                        </select>
+                                                    </label>
+                                                    <label>Flow Control:
+                                                        <select class="psetting_flow" onchange="WPOS.print.setPrintSetting('receipts', 'flow', $(this).val());">
+                                                            <option value="none">None</option>
+                                                            <option value="xonxoff">XON/XOFF</option>
+                                                            <option value="rtscts">RTS/CTS</option>
+                                                        </select>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="settings-row printoptions" style="display: inline-block;">
+                                                <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.testReceiptPrinter('receipts');">Test</button>
+                                                <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.printQrCode();">Print QR</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel panel-default escpoptions">
+                                    <div class="panel-heading">
+                                        <a href="#settings-1-3" data-parent="#settings-list-1" data-toggle="collapse" class="accordion-toggle collapsed">
+                                            <i class="icon-chevron-left pull-right" data-icon-hide="icon-chevron-down" data-icon-show="icon-chevron-left"></i>
+                                            <i class="icon-dollar bigger-130"></i>
+                                            &nbsp; Cashdraw, Cutter & Page Feed
+                                        </a>
+                                    </div>
+                                    <div class="panel-collapse collapse" id="settings-1-3">
+                                        <div class="panel-body">
+                                            <div class="settings-row">
+                                                <label>Cash Draw Connected: <input onchange="WPOS.print.setGlobalPrintSetting('cashdraw', $('#cashdraw').is(':checked'));" id="cashdraw"  type="checkbox" style="margin-right:20px; vertical-align:top;" /></label>
+                                                <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.openCashDraw();">Test</button>
+                                            </div>
+                                            <div class="settings-row">
+                                                <label style="margin-right: 20px;">Cutter Command:
+                                                    <select class="psetting_cutter" onchange="WPOS.print.setPrintSetting('receipts', 'cutter', $(this).val());">
+                                                        <option value="none">None</option>
+                                                        <option value="gs_full">GS full cut</option>
+                                                        <option value="gs_partial">GS partial cut</option>
+                                                        <option value="esc_full">ESC full cut</option>
+                                                        <option value="esc_partial">ESC partial cut</option>
+                                                    </select>
+                                                </label>
+                                                <label>Page Feed:
+                                                    <input class="psetting_feed" type="number" onchange="WPOS.print.setPrintSetting('receipts', 'feed', parseInt($(this).val()));">
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <a href="#settings-1-4" data-parent="#settings-list-1" data-toggle="collapse" class="accordion-toggle collapsed">
+                                            <i class="icon-chevron-left pull-right" data-icon-hide="icon-chevron-down" data-icon-show="icon-chevron-left"></i>
+                                            <i class="icon-list bigger-130"></i>
+                                            &nbsp; Format & Layout
+                                        </a>
+                                    </div>
+                                    <div class="panel-collapse collapse" id="settings-1-4">
+                                        <div class="panel-body">
+                                            <div class="settings-row escpoptions">
+                                                <label style="margin-right:20px">ESCP Receipt Mode: <select id="escpreceiptmode" onchange="WPOS.print.setGlobalPrintSetting('escpreceiptmode', $('#escpreceiptmode').val());">
+                                                    <option value="text">Text</option>
+                                                    <option value="bitmap">Bitmap (Unicode support)</option>
+                                                </select></label>
+
+                                            </div>
+                                            <div class="settings-row">
+                                                <label id="rectemplatefield" style="margin-right:20px">Receipt Template: <select id="rectemplate" onchange="WPOS.print.setGlobalPrintSetting('rectemplate', $('#rectemplate').val());">
+                                                </select></label>
+                                                <label class="broptions" style="margin-right:20px">Invoice Template: <select id="invtemplate" onchange="WPOS.print.setGlobalPrintSetting('invtemplate', $('#invtemplate').val());" style="margin-right: 20px;">
+                                                </select></label>
+                                                <label class="broptions"><input type="checkbox" id="printinv" onchange="WPOS.print.setGlobalPrintSetting('printinv', $('#printinv').is(':checked'));"/> Print Invoices By Default</label>
+                                            </div>
+                                            <div class="settings-row escptextmodeoptions">
+                                                <label style="margin-right: 20px;">Language:
+                                                <select id="rec_language" onchange="WPOS.print.setGlobalPrintSetting('rec_language', $('#rec_language').val());">
+                                                    <option value="primary">Primary</option>
+                                                    <option value="mixed">Mixed</option>
+                                                    <option value="alternate">Alternate</option>
+                                                </select>
+                                                </label>
+                                                <label>Orientation
+                                                    <select id="rec_orientation" onchange="WPOS.print.setGlobalPrintSetting('rec_orientation', $('#rec_orientation').val());">
+                                                        <option value="ltr">Left to Right</option>
+                                                        <option value="rtl">Right to Left</option>
+                                                    </select>
+                                                </label>
+                                            </div>
+                                            <div class="settings-row escptextmodeoptions">
+                                                <label>Alternate Charset & codepage:
+                                                    <select id="alt_charset" onchange="WPOS.print.setGlobalPrintSetting('alt_charset', $('#alt_charset').val());">
+                                                        <option value="pc864">PC864</option>
+                                                        <option value="pc1256">PC1256</option>
+                                                    </select>
+                                                    <input id="alt_codepage" onchange="WPOS.print.setGlobalPrintSetting('alt_codepage', $('#alt_codepage').val());" type="number" />
+                                                </label>
+                                            </div>
+                                            <div class="settings-row escptextmodeoptions">
+                                                <label>Override currency character
+                                                    <input type="checkbox" id="currency_override" onchange="WPOS.print.setGlobalPrintSetting('currency_override', $('#currency_override').is(':checked'));"/>
+                                                </label><br/>
+                                                <label style="margin-right:20px">
+                                                    Currency Codepage:
+                                                    <input id="currency_codepage" onchange="WPOS.print.setGlobalPrintSetting('currency_codepage', $('#currency_codepage').val());" type="number" />
+                                                </label>
+                                                <label>
+                                                    Currency Codes:
+                                                    <input id="currency_codes" onchange="WPOS.print.setGlobalPrintSetting('currency_codes', $('#currency_codes').val());" type="text" />
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="printsettings_kitchen" class="order_terminal_options widget-box transparent">
+                            <div class="widget-header widget-header-flat">
+                                <h4 class="lighter">
+                                    <i class="icon-print"></i>
+                                    Order Ticket Printing
+                                </h4>
+                            </div>
+                            <div class="settings-row" style="display: inline-block;">
+                                <label>Method:
+                                    <select class="psetting_method" onchange="WPOS.print.setPrintSetting('kitchen', 'method', $(this).val())">
+                                        <option value="wp" class="wp-option">
+                                            Web Print ESCP
+                                        </option>
+                                        <option value="ht" class="ht-option">
+                                            Android HTTP ESCP
+                                        </option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="advprintoptions settings-row" style="display: inline-block;">
+                                <label style="margin-right: 20px;">Type:
+                                    <select class="psetting_type"  onchange="WPOS.print.setPrintSetting('kitchen', 'type', $(this).val())">
+                                        <option value="serial">
+                                            Serial
+                                        </option>
+                                        <option value="raw">
+                                            Raw
+                                        </option>
+                                        <option value="tcp">
+                                            Raw TCP
+                                        </option>
+                                    </select>
+                                </label>
+                                <div class="tcpoptions" style="display: inline-block;">
+                                    <label style="margin-right: 20px">Printer IP:
+                                        <input class="psetting_printerip" size="16" onchange="WPOS.print.setPrintSetting('kitchen', 'printerip', $(this).val());" placeholder="192.168.1.100" type="text">
+                                    </label>
+                                    <label>Printer Port:
+                                        <input class="psetting_printerport" size="6" onchange="WPOS.print.setPrintSetting('kitchen', 'printerport', $(this).val());" placeholder="9100" type="text">
+                                    </label>
+                                </div>
+                                <div class="rawoptions" style="display: inline-block;">
+                                    <label>Printer:
+                                        <select class="psetting_printer" onchange="WPOS.print.setPrintSetting('kitchen', 'printer', $(this).val());">
+
+                                        </select>
+                                        <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePrinters();"><i class="icon-refresh"></i></button>
+                                    </label>
+                                </div>
+                                <div class="serialoptions" style="display: inline-block;">
+                                    <label>Port:
+                                        <select class="psetting_port" onchange="WPOS.print.setPrintSetting('kitchen', 'port', $(this).val());">
+
+                                        </select>
+                                        <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePorts();"><i class="icon-refresh"></i></button>
+                                    </label><br/>
+                                    <label>Baud:
+                                        <select class="psetting_baud" onchange="WPOS.print.setPrintSetting('kitchen', 'baud', $(this).val());">
+                                            <option value="4800">4800</option>
+                                            <option value="9600">9600</option>
+                                            <option value="19200">19200</option>
+                                            <option value="38400">38400</option>
+                                            <option value="57600">57600</option>
+                                            <option value="115200">115200</option>
+                                        </select>
+                                    </label>
+                                    <label>Data Bits:
+                                        <select class="psetting_databits" onchange="WPOS.print.setPrintSetting('kitchen', 'databits', $(this).val());">
+                                            <option value="7">7</option>
+                                            <option value="8">8</option>
+                                        </select>
+                                    </label>
+                                    <label>Stop Bits:
+                                        <select class="psetting_stopbits" onchange="WPOS.print.setPrintSetting('kitchen', 'stopbits', $(this).val());">
+                                            <option value="1">1</option>
+                                            <option value="0">0</option>
+                                        </select>
+                                    </label>
+                                    <label>Parity:
+                                        <select class="psetting_parity" onchange="WPOS.print.setPrintSetting('kitchen', 'parity', $(this).val());">
+                                            <option value="none">none</option>
+                                            <option value="even">even</option>
+                                            <option value="odd">odd</option>
+                                        </select>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="settings-row printoptions" style="display: inline-block;">
+                                <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.testReceiptPrinter('kitchen');">Test</button>
+                            </div>
+                        </div>
+                        <div id="printsettings_reports" class="widget-box transparent">
+                            <div class="widget-header widget-header-flat">
+                                <h4 class="lighter">
+                                    <i class="icon-print"></i>
+                                    Report Printing
+                                </h4>
+                            </div>
+                            <div class="settings-row" style="display: inline-block;">
+                                <label>Method:
+                                    <select class="psetting_method" onchange="WPOS.print.setPrintSetting('reports', 'method', $(this).val())">
+                                        <option value="br">
+                                            browser printing
+                                        </option>
+                                        <option value="wp" class="wp-option">
+                                            Web Print
+                                        </option>
+                                    </select></label>
+                            </div>
+                            <div class="advprintoptions settings-row" style="display: inline-block;">
+                                <label>Printer:
+                                    <select class="psetting_printer" onchange="WPOS.print.setPrintSetting('reports', 'printer', $(this).val());">
+
+                                    </select>
+                                    <button class="btn btn-primary btn-xs field-button" onclick="WPOS.print.populatePrinters();"><i class="icon-refresh"></i></button>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="printserviceoptions widget-box transparent" style="padding-top: 10px; text-align: left;">
+                            <div class="widget-header widget-header-flat">
+                                <h4 class="lighter">
+                                    <i class="icon-cogs"></i>
+                                    Print Service options (WebPrint/Android)
+                                </h4>
+                            </div>
+                            <div class="settings-row" style="display: inline-block;">
+                                <label>IP Address: <input id="serviceip" type="text" onchange="WPOS.print.setGlobalPrintSetting('serviceip', $(this).val());" value="127.0.0.1"></label>
+                                <label>Port: <input id="serviceport" type="text" onchange="WPOS.print.setGlobalPrintSetting('serviceport', $(this).val());" value="8080"></label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="printserviceoptions">
-                <h4>Print Service (WebPrint/Android options):</h4>
-                <div class="settings-row" style="display: inline-block;">
-                    <label>IP Address: <input id="serviceip" type="text" onchange="WPOS.print.setGlobalPrintSetting('serviceip', $(this).val());" value="127.0.0.1"></label>
-                    <label>Port: <input id="serviceport" type="text" onchange="WPOS.print.setGlobalPrintSetting('serviceport', $(this).val());" value="8080"></label>
+            <div id="settings-tab-3" class="tab-pane fade eftpos_settings hide">
+                <div class="widget-box transparent">
+                    <div class="widget-header widget-header-flat">
+                        <h4 class="lighter">
+                            <i class="icon-credit-card"></i>
+                            Integrated Eftpos
+                        </h4>
+                    </div>
+                    <div class="widget-body eftpos_settings hide" style="padding-top: 10px; text-align: left;">
+                        <div class="settings-row" style="display: inline-block;">
+                            <label>Provider:
+                                <select id="eftposprovider" style="vertical-align: middle; margin-right: 20px;" onchange="WPOS.eftpos.setEftposSetting('provider', $('#eftposenabled').val());">
+                                    <option value="tyro">Tyro</option>
+                                </select></label>
+                            <label>Enabled: <input id="eftposenabled" type="checkbox" onclick="WPOS.eftpos.setEftposSetting('enabled', $('#eftposenabled').is(':checked'));" style="vertical-align: top; margin-right: 20px;"></label>
+                            <label>Integrated Receipts: <input id="eftposreceipts" type="checkbox" onclick="WPOS.eftpos.setEftposSetting('receipts', $('#eftposreceipts').is(':checked'));" style="vertical-align: top;"></label>
+                        </div>
+                        <div id="eftrecsettings" class="settings-row" style="display: inline-block;">
+                            <label>Print Merchant Receipts: <select id="eftposmerchrec" style="margin-right: 20px;" onchange="WPOS.eftpos.setEftposSetting('merchrec', $('#eftposmerchrec option:selected').val());">
+                                <option value="ask">Always Ask</option>
+                                <option value="print">Always Print</option>
+                                <option value="never">Never</option>
+                            </select></label>
+                            <label>Print Declined Customer Receipts: <select id="eftposcustrec" onchange="WPOS.eftpos.setEftposSetting('custrec', $('#eftposcustrec option:selected').val());">
+                                <option value="ask">Always Ask</option>
+                                <option value="print">Always Print</option>
+                                <option value="never">Never</option>
+                            </select></label>
+                        </div>
+                        <div id="tyroprovopt" class="settings-row eftposprovopt hide" style="display: inline-block;">
+                            <label>Merchant ID: <input type="text" id="tyromid" style="margin-right: 20px; width: 60px;"/></label>
+                            <label>Terminal ID: <input type="text" id="tyrotid" style="margin-right: 20px; width: 60px;"/></label>
+                            <button class="btn-primary btn-xs btn" onclick="WPOS.eftpos.doTyroPairing();">Start Tyro Pairing</button>
+                            <button class="btn-primary btn-xs btn" onclick="WPOS.eftpos.openTyroConfiguration();">Open Terminal Config</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="widget-header widget-header-flat eftpos_settings hide">
-            <h4 class="lighter">
-                <i class="icon-credit-card"></i>
-                Integrated Eftpos
-            </h4>
-        </div>
-        <div class="widget-body eftpos_settings hide" style="padding-top: 10px; text-align: left;">
-            <div class="settings-row" style="display: inline-block;">
-             <label>Provider:
-             <select id="eftposprovider" style="vertical-align: middle; margin-right: 20px;" onchange="WPOS.eftpos.setEftposSetting('provider', $('#eftposenabled').val());">
-                <option value="tyro">Tyro</option>
-             </select></label>
-             <label>Enabled: <input id="eftposenabled" type="checkbox" onclick="WPOS.eftpos.setEftposSetting('enabled', $('#eftposenabled').is(':checked'));" style="vertical-align: top; margin-right: 20px;"></label>
-             <label>Integrated Receipts: <input id="eftposreceipts" type="checkbox" onclick="WPOS.eftpos.setEftposSetting('receipts', $('#eftposreceipts').is(':checked'));" style="vertical-align: top;"></label>
-            </div>
-            <div id="eftrecsettings" class="settings-row" style="display: inline-block;">
-                <label>Print Merchant Receipts: <select id="eftposmerchrec" style="margin-right: 20px;" onchange="WPOS.eftpos.setEftposSetting('merchrec', $('#eftposmerchrec option:selected').val());">
-                    <option value="ask">Always Ask</option>
-                    <option value="print">Always Print</option>
-                    <option value="never">Never</option>
-                </select></label>
-                <label>Print Declined Customer Receipts: <select id="eftposcustrec" onchange="WPOS.eftpos.setEftposSetting('custrec', $('#eftposcustrec option:selected').val());">
-                    <option value="ask">Always Ask</option>
-                    <option value="print">Always Print</option>
-                    <option value="never">Never</option>
-                </select></label>
-            </div>
-            <div id="tyroprovopt" class="settings-row eftposprovopt hide" style="display: inline-block;">
-                <label>Merchant ID: <input type="text" id="tyromid" style="margin-right: 20px; width: 60px;"/></label>
-                <label>Terminal ID: <input type="text" id="tyrotid" style="margin-right: 20px; width: 60px;"/></label>
-                <button class="btn-primary btn-xs btn" onclick="WPOS.eftpos.doTyroPairing();">Start Tyro Pairing</button>
-                <button class="btn-primary btn-xs btn" onclick="WPOS.eftpos.openTyroConfiguration();">Open Terminal Config</button>
             </div>
         </div>
     </div>
 </div>
 <div id="statusbar" style="width:100%; position:absolute; bottom:0; height:40px; background-color:#666666; padding-top: 10px;">
-    <div id="printstat" style="float:left; height: 40px; vertical-align: middle; margin-left: 5px; margin-right: 5px;">
+    <div id="printstat" style="float:left; height: 30px; vertical-align: middle; margin-left: 5px; margin-right: 5px;">
         <i class="icon-print icon-large white"></i>&nbsp;<span id="printstattxt" class="white">Initializing...</span>
     </div>
-    <div id="wposstat" style="float:right; height: 40px; vertical-align: middle;"><span id="wposstattxt" class="white">WPOS is Online</span>
-    <span id="wposstaticon" class="badge badge-success" style="margin-left: 5px; margin-right: 5px;"><i class="icon-ok"></i></span></div>
-</div>
+    <div id="wposstat" style="float:right; height: 30px; vertical-align: middle;">
+        <span id="wposstattxt" class="white">WPOS is Online</span>
+        <span id="wposstaticon" class="badge badge-success" style="margin-left: 5px; margin-right: 5px;"><i class="icon-ok"></i></span>
+    </div>
+</div><iframe id="dlframe" style="width: 1px;height: 1px; border: 0; position: absolute; bottom: 0; left: 0; z-index: -1;"></iframe>
 </div>
 <div id="modaldiv" class="login-layout" style="background-color:#000000; z-index: 1000;">
     <div id="loginbox" class="login-box widget-box visible no-border">
@@ -725,23 +910,16 @@
         <button class="btn btn-primary" onclick="$('#custdiv').dialog('close');">Close</button>
     </div>
 </div>
-<div id="transactiondiv" style="display:none; padding: 4px; min-height: 200px;" title="Recent Transactions">
-    <div id="transdivcontain" style="width: 100%;">
-    <div id="transactiontable" style="width: 100%; margin: 0; padding:0;">
-        <div id="transearch">
-            <input type="hidden" autofocus="autofocus" />
-            <label>Local Search: <input id="transearchquery" type="text" onkeypress="if(event.keyCode == 13){WPOS.trans.searchTransactions();}"/></label>
-            <button onclick="WPOS.trans.searchTransactions();" class="btn btn-sm btn-primary">Go</button>
-            <button onclick="WPOS.trans.clearSearch();" class="btn btn-sm btn-warning">X</button>
-            <button onclick="WPOS.trans.openRemoteSearchBox();" class="btn btn-sm btn-success">Lookup All</button>
-        </div>
-        <div id="remtransearch" style="display: none;">
-            <label>Ref: <input id="remsearchref" type="text"/></label>
+<div id="transactiondiv" style="display:none; padding: 4px; min-height: 450px;" title="Recent Transactions">
+    <div id="transactiontablediv" style="width: 100%; margin: 0; padding:0;">
+        <div id="remtransearch">
+            <label>Global Ref Lookup:</label><br/>
+            <label>Reference: <input id="remsearchref" type="text"/></label>
             <button onclick="WPOS.trans.searchRemote();" class="btn btn-sm btn-primary">Go</button>
-            <button onclick="WPOS.trans.clearSearch(true);" class="btn btn-sm btn-warning">X</button>
+            <button onclick="WPOS.trans.clearSearch();" class="btn btn-sm btn-warning">X</button>
         </div>
-        <div style="overflow: auto; max-height: 550px;">
-        <table style="text-align: left;" class="table table-striped table-bordered table-hover">
+        <div style="overflow: auto; max-height: 100vh;">
+        <table id="transactiontable" style="text-align: left;" class="table table-striped table-bordered table-hover">
             <thead class="table-header">
             <tr>
                 <th>GID</th>
@@ -754,7 +932,7 @@
                 <th></th>
             </tr>
             </thead>
-            <tbody id="transtable" class="ui-widget-content">
+            <tbody class="ui-widget-content">
             </tbody>
         </table>
         </div>
@@ -882,7 +1060,6 @@
             </div>
         </div>
     </div>
-    </div>
 </div>
 <div id="voiddiv" style="display:none; padding:5px;" title="Void Details">
     <label class="fixedlabel">Time: </label><span id="transreftime"></span><br/>
@@ -974,6 +1151,10 @@
         Description:<br/>
         <textarea id="itemdesc"></textarea>
     </label><br/>
+    <label class="fixedlabel">
+        Alt Name:<br/>
+        <input type="text" id="itemaltname"/>
+    </label><br/>
     <label class="fixedlabel">Modifiers: </label>
     <table class="table table-stripped table-responsive">
         <thead>
@@ -1017,7 +1198,6 @@
     The terminal will restart in <span id="resettimeval">10</span> seconds.<br/><br/>
     Press Ok to restart now or Cancel to prevent the restart.
 </div>
-<iframe id="dlframe" style="width: 1px;height: 1px; border: 0;"></iframe>
 <canvas id="receipt_canvas" style="background-color: white; display: none;" width="576"></canvas>
 </body>
 </html>

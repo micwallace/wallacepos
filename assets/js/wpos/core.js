@@ -41,40 +41,43 @@ function WPOS() {
     };
     var cacheloaded = 1;
     this.checkCacheUpdate = function(){
+            var appCache = window.applicationCache;
             // check if cache exists, if the app is loaded for the first time, we don't need to wait for an update
-            if (window.applicationCache.status == window.applicationCache.UNCACHED){
+            if (appCache.status == appCache.UNCACHED){
                 console.log("Application cache not yet loaded.");
                 WPOS.initLogin();
                 return;
             }
             // For chrome, the UNCACHED status is never seen, instead listen for the cached event, cache has finished loading the first time
-            window.applicationCache.addEventListener('cached', function(e) {
+            appCache.addEventListener('cached', function(e) {
                 console.log("Cache loaded for the first time, no need for reload.");
                 WPOS.initLogin();
             });
             // wait for update to finish: check after applying event listener aswell, we may have missed the event.
-            window.applicationCache.addEventListener('updateready', function(e) {
+            appCache.addEventListener('updateready', function(e) {
                 console.log("Appcache update finished, reloading...");
                 setLoadingBar(100, "Loading...");
+                appCache.swapCache();
                 location.reload();
             });
-            window.applicationCache.addEventListener('noupdate', function(e) {
+            appCache.addEventListener('noupdate', function(e) {
                 console.log("No appcache update found");
                 WPOS.initLogin();
             });
-            window.applicationCache.addEventListener('progress', function(e) {
+            appCache.addEventListener('progress', function(e) {
                 var loaded = parseInt((100/ e.total)*e.loaded);
                 cacheloaded = isNaN(loaded)?(cacheloaded+1):loaded;
                 //console.log(cacheloaded);
                 setLoadingBar(cacheloaded, "Updating application...");
             });
-            window.applicationCache.addEventListener('downloading', function(e) {
+            appCache.addEventListener('downloading', function(e) {
                 console.log("Updating appcache");
                 setLoadingBar(1, "Updating application...");
             });
-            if (window.applicationCache.status == window.applicationCache.UPDATEREADY){
+            if (appCache.status == appCache.UPDATEREADY){
                 console.log("Appcache update finished, reloading...");
                 setLoadingBar(100, "Loading...");
+                appCache.swapCache();
                 location.reload();
             }
     };
@@ -415,7 +418,7 @@ function WPOS() {
 
     function initDataSuccess(loginloader){
         if (loginloader){
-            setLoadingBar(100, "Initializing the awesome...");
+            setLoadingBar(100, "Massaging the data...");
             $("title").text("WallacePOS - Your POS in the cloud");
             WPOS.initPlugins();
             setTimeout('$("#modaldiv").hide();', 500);
@@ -761,6 +764,10 @@ function WPOS() {
             loadConfigTable();
         }
         return configtable;
+    };
+
+    this.refreshConfigTable = function () {
+        fetchConfigTable();
     };
 
     this.isOrderTerminal = function () {
@@ -1284,11 +1291,8 @@ $(function () {
         autoOpen: false,
         title_html: true,
         open    : function (event, ui) {
-            var tdiv = $("#transdivcontain");
-            tdiv.css("width", tdiv.width()+"px");
         },
         close   : function (event, ui) {
-            $("#transdivcontain").css("width", "100%");
         },
         create: function( event, ui ) {
             // Set maxWidth
@@ -1435,25 +1439,104 @@ $(function () {
     $(".numpad").on("click", function () {
         $(this).focus().select();
     });
-    // keyboard field navigation
+    // keyboard field navigation & shortcuts
     $(document.documentElement).keydown(function (event) {
         // handle cursor keys
-        var e = jQuery.Event("keydown");
         var x;
-        if (event.keyCode == 37) {
-            $(".keypad-popup").hide();
-            x = $('input:not(:disabled), textarea:not(:disabled)');
-            x.eq(x.index(document.activeElement) - 1).focus().trigger('click');
+        var keypad = $(".keypad-popup");
+        var paymentsopen = $("#paymentsdiv").is(":visible");
+        switch (event.which){
+            case 37: // left arrow
+                keypad.hide();
+                x = $('input:not(:disabled), textarea:not(:disabled)');
+                x.eq(x.index(document.activeElement) - 1).trigger('click').focus();
+                break;
+            case 39: // right arrow
+                keypad.hide();
+                x = $('input:not(:disabled), textarea:not(:disabled)');
+                x.eq(x.index(document.activeElement) + 1).trigger('click').focus();
+                break;
+            case 45: // insert
+                if ($(":focus").attr('id')=="codeinput"){
+                    WPOS.items.addManualItemRow();
+                } else {
+                    $("#codeinput").trigger('click').focus();
+                }
+                break;
+            case 46: // delete
+                WPOS.sales.userAbortSale();
+                break;
+            case 36: // home
 
-        } else if (event.keyCode == 39) {
-            $(".keypad-popup").hide();
-            x = $('input:not(:disabled), textarea:not(:disabled)');
-            x.eq(x.index(document.activeElement) + 1).focus().trigger('click');
+                break;
+            case 35: // end
+                if (paymentsopen) {
+                    WPOS.sales.processSale();
+                } else {
+                    WPOS.sales.showPaymentDialog();
+                }
+                break;
+        }
+        if (paymentsopen) {
+            switch (event.which){
+                case 90:
+                    WPOS.sales.addPayment('cash');
+                    break;
+                case 88:
+                    WPOS.sales.addPayment('credit');
+                    break;
+                case 67:
+                    WPOS.sales.addPayment('eftpos');
+                    break;
+                case 86:
+                    WPOS.sales.addPayment('cheque');
+                    break;
+            }
         }
     });
 
     // dev/demo quick login
     if (document.location.host=="alpha.wallacepos.com"){
-        $("#logindiv").append('<button class="btn btn-primary btn-sm" onclick="$(\'#username\').val(\'admin\');$(\'#password\').val(\'admin\'); WPOS.userLogin();">Dev Login</button>');
+        $("#logindiv").append('<button class="btn btn-primary btn-sm" onclick="$(\'#username\').val(\'admin\');$(\'#password\').val(\'admin\'); WPOS.userLogin();">Dev Login</button><button class="btn btn-primary btn-sm" onclick="$(\'#modaldiv\').hide();">Hide Login</button>');
     }
+
+    // window size
+    if (WPOS.getLocalConfig().hasOwnProperty("window_size"))
+        $("#wrapper").css("max-width", WPOS.getLocalConfig()["window_size"]);
+
+    // set padding for item list
+    function setItemListPadding(){
+        $("#items").css("margin-bottom", (80 + $("#totals").height()) +"px");
+    }
+    setItemListPadding();
+    window.onresize = function(event) {
+        setItemListPadding();
+    };
 });
+
+function expandWindow(){
+    var wrapper = $("#wrapper");
+    var maxWidth = wrapper.css("max-width");
+    switch (maxWidth){
+        case "960px":
+            wrapper.css("max-width", "1152px");
+            WPOS.setLocalConfigValue("window_size", "1152px");
+            break;
+        case "1152px":
+            wrapper.css("max-width", "1280px");
+            WPOS.setLocalConfigValue("window_size", "1280px");
+            break;
+        case "1280px":
+            wrapper.css("max-width", "1366px");
+            WPOS.setLocalConfigValue("window_size", "1366px");
+            break;
+        case "1366px":
+            wrapper.css("max-width", "none");
+            WPOS.setLocalConfigValue("window_size", "none");
+            break;
+        default:
+            wrapper.css("max-width", "960px");
+            WPOS.setLocalConfigValue("window_size", "960px");
+            break;
+    }
+}

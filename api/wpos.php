@@ -318,7 +318,6 @@ function routeApiCall($action, $data, $result) {
             $custMdl = new WposAdminCustomers($data);
             $result = $custMdl->deleteContact($result);
             break;
-        // TODO: Add to permissions
         case "customers/setaccess":
             $custMdl = new WposAdminCustomers($data);
             $result = $custMdl->setAccess($result);
@@ -331,7 +330,6 @@ function routeApiCall($action, $data, $result) {
             $custMdl = new WposAdminCustomers($data);
             $result = $custMdl->sendResetEmail($result);
             break;
-        // End to-do
         // USERS
         case "users/get":
             $data = new WposPosData();
@@ -716,6 +714,16 @@ function routeApiCall($action, $data, $result) {
         case "devices/registrations/delete":
             $setup = new WposPosSetup($data);
             $result = $setup->deleteDeviceRegistration($result);
+            break;
+        case "templates/get":
+            $result = WposTemplates::getTemplates($result);
+            break;
+        case "templates/edit":
+            $tempMdl = new WposTemplates($data);
+            $result = $tempMdl->editTemplate($result);
+            break;
+        case "templates/restore":
+            WposTemplates::restoreDefaults();
             break;
 
         default:

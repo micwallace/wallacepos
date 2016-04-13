@@ -147,7 +147,6 @@ class Auth{
     /**
      * Checks whether the current user has permission to execute the requested API operation
      * @param $apiAction
-     * @internal param $apiaction
      * @return bool
      */
     public function isUserAllowed($apiAction){

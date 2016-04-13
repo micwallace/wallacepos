@@ -74,13 +74,10 @@ class WposPosSetup
 
         // Get general & global pos configuration
         $WposConfig = new WposAdminSettings();
-        $general = $WposConfig->getSettingsObject("general");
-        $pos = $WposConfig->getSettingsObject("pos");
-        if ($general === false || $pos === false){
-            $result['error'] = "Global config could not be retrieved!";
-        }
-        $result['data']->general = $general;
-        $result['data']->pos = $pos;
+        $settings = $WposConfig->getAllSettings();
+        $result['data']->general = $settings['general'];
+        $result['data']->pos = $settings['pos'];
+        $result['data']->invoice = $settings['invoice'];
 
         // get devices and locations
         if (($result['data']->devices=$this->getDevices())===false || ($result['data']->locations=$this->getLocations())===false){
@@ -97,6 +94,14 @@ class WposPosSetup
             $result['data']->tax = $tax['data'];
         } else {
             $result['error'] = $tax['error'];
+        }
+
+        // get templates
+        $templates = WposTemplates::getTemplates();
+        if ($templates['error']=="OK"){
+            $result['data']->templates = $templates['data'];
+        } else {
+            $result['error'] = $templates['error'];
         }
 
         return $result;
@@ -135,6 +140,14 @@ class WposPosSetup
             $result['data']->tax = $tax['data'];
         } else {
             $result['error'] = $tax['error'];
+        }
+
+        // get templates
+        $templates = WposTemplates::getTemplates();
+        if ($templates['error']=="OK"){
+            $result['data']->templates = $templates['data'];
+        } else {
+            $result['error'] = $templates['error'];
         }
 
         return $result;
@@ -231,15 +244,15 @@ class WposPosSetup
 
                 return $result;
             } else {
-                // create a new location using the provided name
+                // create a new device using the provided name; default to general register for now
                 $deviceData = new stdClass();
                 $deviceData->name = $this->data->devicename;
                 $deviceData->locationid = $this->data->locationid;
-                $deviceData->type = $this->data->deviceType;
-                $deviceData->ordertype = $this->data->deviceOrderType;
-                $deviceData->orderdisplay = $this->data->deviceOrderDisplay;
-                $deviceData->kitchenid = $this->data->kitchenId;
-                $deviceData->barid = $this->data->barId;
+                $deviceData->type = "general_register";
+                $deviceData->ordertype = "printer";
+                $deviceData->orderdisplay = 1;
+                $deviceData->kitchenid = 0;
+                $deviceData->barid = 0;
                 if (($newid = $this->addNewDevice($deviceData))!==false) {
                     $this->data->deviceid = $newid;
                 } else {
@@ -302,13 +315,7 @@ class WposPosSetup
      */
     private function addNewDevice($data)
     {
-        $newid  = $this->devMdl->create($data);
-        if ($newid !== false) {
-            $this->data->id = $newid;
-            return true;
-        } else {
-            return false;
-        }
+        return $this->devMdl->create($data);
     }
 
     /**
@@ -327,9 +334,10 @@ class WposPosSetup
             $result['error'] = "The location id specified does not exist";
             return $result;
          }
-         if (!$this->addNewDevice($this->data)){
+         if (($newid = $this->addNewDevice($this->data))===false){
             $result['error'] = "Could not add the device: ".$this->devMdl->errorInfo;
          } else {
+            $this->data->id = $newid;
             // log data
             Logger::write("New device added", "CONFIG", json_encode($this->data));
             $result['data'] = $this->data;

@@ -112,7 +112,9 @@ class WposInvoices {
         } else {
             $invoices = array_merge($invoices, $oinvoices);
             foreach ($invoices as $invoice){
-                $invoicedata[$invoice['ref']] = json_decode($invoice['data']);
+                $jsondata = json_decode($invoice['data']);
+                $jsondata->type = $invoice['type'];
+                $invoicedata[$invoice['ref']] = $jsondata;
             }
             $result['data'] = $invoicedata;
         }

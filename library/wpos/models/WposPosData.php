@@ -211,7 +211,9 @@ class WposPosData
         if (is_array($dbSales)) {
             $sales = [];
             foreach ($dbSales as $sale) {
-                $sales[$sale['ref']] = json_decode($sale['data'], true);
+                $salejson = json_decode($sale['data']);
+                $salejson->type = $sale['type'];
+                $sales[$sale['ref']] = $salejson;
             }
             $result['data'] = $sales;
         } else if ($dbSales === false) {

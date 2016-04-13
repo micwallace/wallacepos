@@ -45,7 +45,7 @@ class WposAdminUtilities {
      * @param bool $includetime
      * @return bool|string
      */
-    public static function getDateFromTimeStamp($timestamp, $dateformat, $includetime = true){
+    public static function getDateFromTimeStamp($timestamp, $dateformat= null, $includetime = true){
         if ($dateformat==null){
             $confMdl = new ConfigModel();
             $conf = $confMdl->get('general');

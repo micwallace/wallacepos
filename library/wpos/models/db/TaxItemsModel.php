@@ -48,10 +48,10 @@ class TaxItemsModel extends DbConfig
      * @param $multiplier
      * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
      */
-    public function create($name, $type, $value, $multiplier)
+    public function create($name, $altname, $type, $value, $multiplier)
     {
-        $sql          = "INSERT INTO tax_items (name, type, value, multiplier) VALUES (:name, :type, :value, :multiplier);";
-        $placeholders = [":name"=>$name, ":type"=>$type, ":value"=>$value, ":multiplier"=>$multiplier];
+        $sql          = "INSERT INTO tax_items (name, altname, type, value, multiplier) VALUES (:name, :altname, :type, :value, :multiplier);";
+        $placeholders = [":name"=>$name, ":altname"=>$altname, ":type"=>$type, ":value"=>$value, ":multiplier"=>$multiplier];
 
         return $this->insert($sql, $placeholders);
     }
@@ -91,11 +91,11 @@ class TaxItemsModel extends DbConfig
      * @param $multiplier
      * @return bool|int Returns false on an unexpected failure or the number of rows affected by the operation
      */
-    public function edit($id, $name, $type, $value, $multiplier)
+    public function edit($id, $name, $altname, $type, $value, $multiplier)
     {
 
-        $sql          = "UPDATE tax_items SET name= :name, type= :type, value= :value, multiplier= :multiplier WHERE id= :id;";
-        $placeholders = [":id"=>$id, ":name"=>$name, ":type"=>$type, ":value"=>$value, ":multiplier"=>$multiplier];
+        $sql          = "UPDATE tax_items SET name= :name, altname= :altname, type= :type, value= :value, multiplier= :multiplier WHERE id= :id;";
+        $placeholders = [":id"=>$id, ":name"=>$name, ":altname"=>$altname, ":type"=>$type, ":value"=>$value, ":multiplier"=>$multiplier];
 
         return $this->update($sql, $placeholders);
     }

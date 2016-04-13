@@ -2,6 +2,13 @@
  * WPOS Websocket update relay, node.js sever.
  * @type {*}
  */
+
+//var fs = require('fs');
+/*var options = {
+    key: fs.readFileSync('/etc/apache2/certs/wallacepos.com-ssl-wildcard.key').toString(),
+    cert: fs.readFileSync('/etc/apache2/certs/wallacepos-com-ssl-wildcard.crt').toString(),
+    ca: fs.readFileSync('/etc/apache2/certs/sub.class2.code.ca.crt').toString()
+};*/
 var http = require('http');
 var app = http.createServer(wshandler);
 
@@ -16,7 +23,7 @@ function wshandler(req, res) {
 var devices = {};
 var sessions = {};
 
-var hashkey = "0798f20c2c513da7cad1af28ffa3012cdafd0e799e41912f006e6d46c8e99327"; // key for php interaction, provides extra security
+var hashkey = "dgqsy8DgvyKl6RhCngOuFzNosbnThPZnMHCpZZm58GGb7Nnr2Y1tzVVudRBAj1ad"; // key for php interaction, provides extra security
 
 io.sockets.on('connection', function (socket) {
     // START AUTHENTICATION

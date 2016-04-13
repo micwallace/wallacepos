@@ -71,6 +71,12 @@
                             <input id="itemid" type="hidden"/></td>
                     </tr>
                     <tr>
+                        <td style="text-align: right;"><label>Alternate Name:&nbsp;</label></td>
+                        <td><input id="itemaltname" type="text"/><br/>
+                            <small>Alternate language name</small>
+                        </td>
+                    </tr>
+                    <tr>
                         <td style="text-align: right;"><label>Description:&nbsp;</label></td>
                         <td><input id="itemdesc" type="text"/></td>
                     </tr>
@@ -145,10 +151,16 @@
 </div>
 <div id="adddialog" class="hide">
     <table>
-       <tr>
+        <tr>
            <td style="text-align: right;"><label>Name:&nbsp;</label></td>
            <td><input id="newitemname" type="text"/><br/></td>
-       </tr>
+        </tr>
+        <tr>
+            <td style="text-align: right;"><label>Alternate Name:&nbsp;</label></td>
+            <td><input id="newitemaltname" type="text"/><br/>
+                <small>Alternate language name</small>
+            </td>
+        </tr>
         <tr>
             <td style="text-align: right;"><label>Description:&nbsp;</label></td>
             <td><input id="newitemdesc" type="text"/></td>
@@ -326,6 +338,7 @@
         var item = stock[id];
         $("#itemid").val(item.id);
         $("#itemname").val(item.name);
+        $("#itemaltname").val(item.alt_name);
         $("#itemdesc").val(item.description);
         $("#itemqty").val(item.qty);
         $("#itemtax").val(item.taxid);
@@ -384,6 +397,7 @@
             item.code = $("#newitemcode").val();
             item.qty = $("#newitemqty").val();
             item.name = $("#newitemname").val();
+            item.alt_name = $("#newitemaltname").val();
             item.description = $("#newitemdesc").val();
             item.taxid = $("#newitemtax").val();
             item.price = $("#newitemprice").val();
@@ -402,6 +416,7 @@
             item.code = $("#itemcode").val();
             item.qty = $("#itemqty").val();
             item.name = $("#itemname").val();
+            item.alt_name = $("#itemaltname").val();
             item.description = $("#itemdesc").val();
             item.taxid = $("#itemtax").val();
             item.price = $("#itemprice").val();

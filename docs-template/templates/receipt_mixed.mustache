@@ -1,0 +1,155 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <style type="text/css">
+        table {
+            width: 100%;
+            margin-bottom: 4px;
+            text-align: left;
+        }
+        table:first-child {
+            margin-top: 8px;
+        }
+    </style>
+{{#thermalprint}}
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif !important;
+            font-size: 14px;
+            padding: 0;
+            margin: 0;
+        }
+        body div {
+            font-size: 1.7em;
+            padding: 0;
+            margin: 0;
+        }
+        tr td:first-child{
+            width:1%;
+            white-space:nowrap;
+            vertical-align: top;
+        }
+        bdi {
+            font-size: 125% !important;
+            line-height: 95%;
+        }
+    </style>
+{{/thermalprint}}
+{{^thermalprint}}
+    <style type="text/css">
+        @import url(/admin/assets/css/bootstrap.min.css);
+        @import url(/admin/assets/css/font-awesome.min.css);
+        @import url(/admin/assets/css/ace-fonts.css);
+        @import url(/admin/assets/css/ace.min.css);
+
+        body {
+            background-color: #FFFFFF;
+            font-size: default !important;
+        }
+        p, tr, strong, b {
+            font-size: 13px;
+        }
+        body div {
+            font-size: inherit !important;
+        }
+        tr td:first-child{
+            width:1%;
+            white-space:nowrap;
+            vertical-align: top;
+        }
+        #container {
+            width:300px;
+            margin: 5px auto;
+            padding-left: 5px;
+            padding-right: 5px;
+            text-align: center;
+        }
+    </style>
+{{/thermalprint}}
+</head>
+<body>
+<div id="container">
+
+    {{^thermalprint}}
+        <img style="width: 260px;" src="{{logo_url}}"/><br/>
+    {{/thermalprint}}
+
+    <h3 style="text-align: center; margin: 4px;">{{header_line1}}</h3>
+    <strong style="text-align: center">{{header_line2}}</strong>
+    {{#header_line3}}
+        <br/><strong style="text-align: center">{{header_line3}}</strong>
+    {{/header_line3}}
+
+    <table style="width: 100%; margin-bottom: 4px; margin-top: 6px;">
+        <tr>
+            <td>Transaction Ref:</td>
+            <td>{{sale_ref}}</td>
+        </tr>
+        <tr>
+            <td>Sale Time: </td>
+            <td>{{sale_dt}}</td>
+        </tr>
+    </table>
+
+    <table style="width: 100%; margin-bottom: 4px;">
+        {{#sale_items}}
+            <tr><td>{{qty}} x </td><td>{{name}} ({{#currency}}{{unit}}{{/currency}}) {{#alt_name}}<br/><bdi>{{alt_name}}</bdi>{{/alt_name}}</td><td style="text-align: right; vertical-align: top;">{{#currency}}{{price}}{{/currency}}</td></tr>
+            {{#mod.items}}
+                <tr><td></td><td>{{#qty}}+ {{qty}} {{/qty}}{{name}}{{#value}} {{value}}: {{/value}} ({{#currency}}{{price}}{{/currency}})</td><td></td></tr>
+            {{/mod.items}}
+        {{/sale_items}}
+
+        <tr style="height: 5px;"><td></td><td></td><td></td></tr>
+
+        {{#show_subtotal}}
+            <tr><td colspan="2"><b>Subtotal: </b></td><td style="text-align: right;"><b style="text-decoration: overline;">{{#currency}}{{sale_subtotal}}{{/currency}}</b></td></tr>
+        {{/show_subtotal}}
+
+        {{#sale_tax}}
+            <tr><td colspan="2">{{label}}:</td><td style="text-align: right;">{{value}}</td></tr>
+        {{/sale_tax}}
+
+        {{#sale_discount}}
+            <tr><td colspan="2">{{sale_discount}}% Discount</td><td style="text-align: right;">{{sale_discountamt}}</td></tr>
+        {{/sale_discount}}
+
+        <tr><td colspan="2"><b>Total ({{sale_numitems}} items): </b></td><td style="text-align: right;"><b style="text-decoration: overline;">{{#currency}}{{sale_total}}{{/currency}}</b></td></tr>
+        <tr style="height: 2px;"><td></td><td></td><td></td></tr>
+
+        {{#sale_payments}}
+            <tr><td colspan="2">{{label}}:</td><td style="text-align: right;">{{#currency}}{{amount}}{{/currency}}</td></tr>
+        {{/sale_payments}}
+    </table>
+
+    {{#sale_hasrefunds}}
+        <p style="margin-top: 0; margin-bottom: 5px;">
+            <strong>Refund</strong>
+        </p>
+        <table style="width: 100%; margin-bottom: 5px;">
+        {{#sale_refunds}}
+            <tr><td>{{datetime}}<br/>({{numitems}} items)</td><td style="vertical-align: top;">{{method}}</td><td style="text-align: right; vertical-align: top;">{{#currency}}{{amount}}{{/currency}}</td></tr>
+        {{/sale_refunds}}
+        </table>
+    {{/sale_hasrefunds}}
+
+    {{#sale_void}}
+        <h2 style="text-align: center; color: #dc322f; margin-top: 5px;">VOID TRANSACTION</h2>
+    {{/sale_void}}
+
+    {{#eftpos_receipts}}
+        <pre style="text-align: center; background-color: white;">{{eftpos_receipts}}</pre>
+    {{/eftpos_receipts}}
+
+    {{#footer}}
+        <strong style="text-align: center;">{{footer}}</strong><br/>
+    {{/footer}}
+
+    {{^thermalprint}}
+        {{#qrcode_url}}
+        <img style="text-align: center; height: 75px; margin-top: 4px;" src="{{qrcode_url}}"/>
+        {{/qrcode_url}}
+    {{/thermalprint}}
+
+    </div>
+</body>
+</html>

@@ -635,97 +635,14 @@ class WposPosSale {
         return $result;
     }
 
-    /**
-     * Email the sale receipt to the specified address
-     * @param $email
-     * @return mixed
-     */
     private function emailReceipt($email){
-        // get config
+        $tempMdl = new WposTemplates();
         $config = new WposAdminSettings();
         $recval = $config->getSettingsObject("pos");
         $genval = $config->getSettingsObject("general");
-        $utils = new WposAdminUtilities();
-        $utils->setCurrencyFormat($genval->currencyformat);
-        // create receipt
-        $html = '<div style="padding: 10px; padding-left: 5px; padding-right: 5px; margin-top:5px; width:300px; margin: auto; background-color:#FFFFFF;"><img width="95%" src="http://'.$_SERVER['SERVER_ADDR'].$recval->recemaillogo.'"/><br/>';
-        $html.= '<h3 style="text-align: center; margin: 5px;">'.$genval->bizname.'</h3>';
-        $html.= '<p style="text-align: center"><strong>'.$recval->recline2.'</strong>';
-        if ($recval->recline3 != ""){
-            $html.= '<br/><strong style="text-align: center">'.$recval->recline3.'</strong>';
-        }
-        $html.='</p>';
-        // body
-        $html .= '<p style="padding-top: 5px;">Transaction Ref:&nbsp;&nbsp;' . $this->ref . '<br/>';
-        $html .= 'Sale Time:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . WposAdminUtilities::getDateFromTimeStamp($this->jsonobj->processdt, $genval->dateformat) . '</p>';
-        // items
-        $html .= '<table style="width: 100%; margin-bottom: 4px; font-size: 13px;">';
-        foreach ($this->jsonobj->items as $item){
-            // item mod details
-            $modStr = "";
-            if (isset($item->mod)){
-                foreach ($item->mod->items as $mod){
-                    $modStr.= '<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.(isset($mod->qty)?(($mod->qty>0?'+ ':'').$mod->qty.' '):'').$mod->name.(isset($mod->value)?': '.$mod->value:'').' ('.$utils->currencyFormat($mod->price).')';
-                }
-            }
-            $html.='<tr><td>'. $item->qty . "x " . $item->name . " (" . $utils->currencyFormat($item->unit) . ")". $modStr .'</td><td style="text-align: right;">'.$utils->currencyFormat($item->price).'</td></tr>';
-        }
-        $html.='<tr style="height: 5px;"><td></td><td></td></tr>';
-        // totals
-        // subtotal
-        $taxcount = count(get_object_vars($this->jsonobj->taxdata));
-        if ($taxcount>0 || $this->jsonobj->discount>0){ // only add if discount or taxes
-            $html.= '<tr><td><b>Subtotal: </b></td><td style="text-align: right;"><b style="text-decoration: overline;">'. $utils->currencyFormat($this->jsonobj->subtotal) .'</b></td></tr>';
-        }
-        // taxes
-        if ($taxcount){
-            $taxMdl = new TaxItemsModel();
-            $taxes = $taxMdl->get();
-            foreach ($taxes as $tax){
-                $taxes[$tax['id']] = $tax;
-            }
-            foreach ($this->jsonobj->taxdata as $key => $tax){
-                $taxstr = $taxes[$key];
-                $taxstr = $taxstr['name'].' ('.$taxstr['value'].'%)';
-                $html.= '<tr><td>'.$taxstr.':</td><td style="text-align: right;">'. $utils->currencyFormat($tax).'</td></tr>';
-            }
-        }
-        // discount
-        $html.= ($this->jsonobj->discount>0?'<tr><td>'.$this->jsonobj->discount.'% Discount</td><td style="text-align: right;">'. $utils->currencyFormat(abs(floatval($this->jsonobj->total)-(floatval($this->jsonobj->subtotal) + floatval($this->jsonobj->tax)))) .'</td></tr>':'');
-        // grand total
-        $html.= '<tr><td><b>Total ('.$this->jsonobj->numitems.' items): </b></td><td style="text-align: right;"><b style="text-decoration: overline;">'. $utils->currencyFormat($this->jsonobj->total) .'</b></td></tr>';
-        $html.='<tr style="height: 2px;"><td></td><td></td></tr>';
-        // payments
-        foreach ($this->jsonobj->payments as $payment){
-            $html.='<tr><td><span style="font-size: 14px;">' . ucfirst($payment->method) . '</p></td><td style="text-align: right;"><p style="font-size: 14px;">'. $utils->currencyFormat($payment->amount).'</span></td></tr>';
-            if ($payment->method=='cash'){ // If cash print tender & change
-                $html.='<tr><td>Tendered:</td><td style="text-align: right;">'. $utils->currencyFormat($payment->tender).'</td></tr>';
-                $html.='<tr><td>Change:</td><td style="text-align: right;">'. $utils->currencyFormat($payment->change).'</td></tr>';
-            }
-        }
-        $html.='</table>';
-        // refunds
-        if (isset($this->jsonobj->refunddata)){
-            $html.= '<p style="margin-top: 0; margin-bottom: 5px; font-size: 13px;"><strong>Refund</strong></p><table style="width: 100%; font-size: 13px;">';
-            foreach ($this->jsonobj->refundata as $refund){
-                $html.= '<tr><td>'.WposAdminUtilities::getDateFromTimeStamp($refund->processdt, $genval->dateformat).' ('.sizeof($refund->items).' items)</td><td>'.ucfirst($refund->method).'<span style="float: right;">'.$refund->amount.'</span></td></tr>';
-            }
-            $html.= '</table>';
-        }
-        // void
-        if (isset($this->jsonobj->voiddata)){
-            $html.= '<h2 style="text-align: center; color: #dc322f; margin-top: 5px;">VOID SALE</h2>';
-        }
-        // footer
-        $html.='<p style="text-align: center;"><strong>'.$recval->recfooter.'</strong><br/>';
-        if ($recval->recqrcode!=""){
-            $html.='<img style="text-align: center;" height="99" src="http://'.$_SERVER['SERVER_ADDR'].'/wpos/asset/images/qrcode.png"/>';
-        }
-        $html.='</p></div>';
-
-        $template = '<html><head><link media="all" href="https://'.$_SERVER['SERVER_NAME'].'/wpos/admin/assets/css/bootstrap.min.css" rel="stylesheet"/><link media="all" rel="stylesheet" href="https://'.$_SERVER['SERVER_NAME'].'/wpos/admin/assets/css/font-awesome.min.css"/><link media="all" rel="stylesheet" href="https://'.$_SERVER['SERVER_NAME'].'/wpos/admin/assets/css/ace-fonts.css"/><link media="all" rel="stylesheet" href="https://'.$_SERVER['SERVER_ADDR'].'/wpos/admin/assets/css/ace.min.css"/></head><body>%message%</body>';
-
-        $html = str_replace("%message%", $html, $template);
+        // create the data class
+        $data = new WposTemplateData($this->jsonobj, ['general'=>$genval, 'pos'=>$recval]);
+        $html = $tempMdl->renderTemplate($recval->rectemplate, $data);
 
         $wposMail = new WposMail($genval);
 

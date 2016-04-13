@@ -18,6 +18,13 @@
             <div class="widget-body" style="padding-top: 10px;">
                 <form class="form-horizontal">
                     <div class="form-group">
+                        <div class="col-sm-5"><label>Default Template:</label></div>
+                        <div class="col-sm-5">
+                            <select id="rectemplate"></select><br/>
+                            <small>not used for ESCP text-mode receipts</small>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <div class="col-sm-5"><label>Header Line 2:</label></div>
                         <div class="col-sm-5"><input type="text" id="recline2" /></div>
                     </div>
@@ -45,10 +52,19 @@
                     </div>
                     <div class="space-4"></div>
                     <div class="form-group">
-                        <label class="col-sm-5">Receipt Currency Character:</label>
+                        <label class="col-sm-5">Receipt Currency Characters:</label>
                         <div class="col-sm-5">
                             <input type="text" id="reccurrency" /><br/>
-                            <small>Supply an alternate decimal charcode or leave blank to disable</small>
+                            <small>Used for ESC/P text-mode printing.</small>
+                            <small>Supply alternate decimal character codes separated by a comma or leave blank to disable.</small>
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <label class="col-sm-5">Receipt Currency Codepage:</label>
+                        <div class="col-sm-5">
+                            <input type="number" id="reccurrency_codepage" /><br/>
+                            <small>Alternate codepage used to print the currency characters above.</small>
                         </div>
                     </div>
                     <div class="space-4"></div>
@@ -175,9 +191,20 @@
             if (options.recprintlogo==true){
                 $("#recprintlogo").prop("checked", "checked");
             }
+            refreshTemplateList(options['rectemplate']);
             // set logo images
             $("#reclogoprev").attr("src", options.reclogo);
             $("#emaillogoprev").attr("src", options.recemaillogo);
+        }
+
+        function refreshTemplateList(selectedid){
+            var templates = WPOS.getConfigTable()['templates'];
+            var list = $("#rectemplate");
+            list.html('');
+            for (var i in templates){
+                if (templates[i].type=="receipt")
+                    list.append('<option value="'+i+'" '+(i==selectedid?'selected="selected"':'')+'>'+templates[i].name+'</option>');
+            }
         }
 
         $('#reclogofile').on('change',uploadRecLogo);

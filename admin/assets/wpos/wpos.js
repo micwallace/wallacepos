@@ -500,6 +500,15 @@ function WPOSAdmin(){
         this.transactions.refreshTaxSelects();
     };
 
+    this.updateConfig = function(key, data){
+        key = key.split("~");
+        switch(key.length){
+            case 1: configtable[key[0]] = data; return;
+            case 2: configtable[key[0]][key[1]] = data; return;
+            case 3: configtable[key[0]][key[1]][key[2]] = data; return;
+        }
+    };
+
     // CSV export functions
     this.initSave = function(filename, data){
         var dlelem = $('#dlelem');

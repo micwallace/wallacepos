@@ -1,0 +1,156 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>
+ # فاتورة {{sale_ref}}
+    </title>
+    <style type="text/css">
+
+        body {
+            font-family: Verdana, Geneva, sans-serif;
+            margin-left: 35px;
+            margin-right: 45px;
+        }
+
+        th {
+            border: 1px solid #666666;
+            background-color: #D3D3D3;
+        }
+
+        h2 {
+            margin-bottom: 0;
+        }
+
+        p.notop {
+            margin-top: 0;
+        }
+
+    </style>
+</head>
+<body>
+<table width="100%">
+    <tr>
+        <td width="60%" valign="top">
+            <img style="max-width: 300px; width: auto;" width="300" src="{{logo_url}}"/>
+            <h2>{{business_name}}</h2>
+            <p class="notop">
+                {{business_address}}<br />
+                {{business_suburb}}
+                {{business_state}} {{business_postcode}} {{business_country}}<br />
+                {{business_number}}
+            </p>
+        </td>
+        <td width="40%" align="right" valign="top">
+            <h2 lang="ar" dir="rtl">فاتورة ضريبية</h2>
+            <p class="notop">
+                <bdi lang="ar" dir="rtl">فاتورة</bdi> # {{sale_ref}}<br/>
+                <bdi lang="ar" dir="rtl">تاريخ الفاتورة</bdi> :&nbsp;&nbsp;{{sale_dt}}<br />
+                {{#invoice_duedt}}<bdi lang="ar" dir="rtl">تاريخ الاستحقاق</bdi> :&nbsp;&nbsp;{{invoice_duedt}}{{/invoice_duedt}}
+            </p>
+        </td>
+    </tr>
+</table>
+<p>
+{{#customer}}
+    {{customer.name}}<br />
+    {{customer.address}}<br />
+    {{customer.suburb}}<br />
+    {{customer.state}} {{customer.postcode}} {{customer.country}}<br />
+{{/customer}}
+{{^customer}}
+    <bdi lang="ar" dir="rtl">نقاط البيع العملاء</bdi>
+{{/customer}}
+</p>
+<br />
+<table width="100%">
+    <tr>
+        <th width="15%">كمية</th>
+        <th width="40%" lang="ar" dir="rtl">العنصر</th>
+        <th width="15%" align="right" lang="ar" dir="rtl">وحدة</th>
+        <th width="15%" align="right" lang="ar" dir="rtl">ضريبة</th>
+        <th width="15%" align="right" lang="ar" dir="rtl">كلفة</th>
+    </tr>
+    {{#sale_items}}
+    <tr>
+        <td style="vertical-align: top;" align="center">{{qty}}
+        <td style="vertical-align: top;">
+        <strong>{{#alt_name}}<bdi>{{alt_name}}</bdi>{{/alt_name}}{{^alt_name}}{{name}}{{/alt_name}}</strong><br/>
+            {{#mod.items}}
+                {{#qty}}+ {{qty}} {{/qty}}{{name}}{{#value}}: {{value}}{{/value}} ({{#currency}}{{price}}{{/currency}})<br/>
+            {{/mod.items}}
+            {{desc}}
+        </td>
+        <td style="vertical-align: top;" align="right">{{#currency}}{{unit}}{{/currency}}</td>
+        <td style="vertical-align: top;" align="right">
+            {{#tax.items}}
+                {{label}} {{#currency}}{{value}}{{/currency}}<br/>
+            {{/tax.items}}
+            {{^tax.items}}
+                {{#currency}}0{{/currency}}
+            {{/tax.items}}
+        </td>
+        <td style="vertical-align: top;" align="right">{{#currency}}{{price}}{{/currency}}</td>
+    </tr>
+    {{/sale_items}}
+    <tr>
+        <td colspan="2"></td>
+        <td colspan="3"><hr /></td>
+    </tr>
+    <tr>
+        <td colspan="4" align="right">
+            <bdi lang="ar" dir="rtl">حاصل الجمع</bdi>:
+        </td>
+        <td align="right">
+            {{#currency}}{{sale_subtotal}}{{/currency}}
+        </td>
+    </tr>
+    {{#sale_tax}}
+    <tr>
+        <td colspan="4" align="right">
+            {{label}}:
+        </td>
+        <td align="right">
+            {{#currency}}{{value}}{{/currency}}
+        </td>
+    </tr>
+    {{/sale_tax}}
+    {{#sale_discount}}
+    <tr>
+        <td colspan="4" align="right">
+            <bdi lang="ar" dir="rtl">تخفيض السعر</bdi> ({{sale_discount}}%):
+        </td>
+        <td align="right">
+            {{#currency}}{{sale_discountamt}}{{/currency}}
+        </td>
+    </tr>
+    {{/sale_discount}}
+    <tr>
+        <td colspan="4" align="right">
+            <bdi lang="ar" dir="rtl">المجموع الإجمالي</bdi>:
+        </td>
+        <td align="right">
+            {{#currency}}{{sale_total}}{{/currency}}
+        </td>
+    </tr>
+    <tr>
+        <td colspan="4" align="right">
+            <bdi lang="ar" dir="rtl">المبلغ المدفوع</bdi>:
+        </td>
+        <td align="right">
+                {{#currency}}{{invoice_paid}}{{/currency}}
+        </td>
+    </tr>
+    <tr>
+        <td colspan="4" align="right">
+            <bdi lang="ar" dir="rtl">المبلغ المستحق</bdi>:
+        </td>
+        <td align="right">
+            {{#currency}}{{invoice_balance}}{{/currency}}
+        </td>
+    </tr>
+</table>
+<div style="margin-top: 20px; text-align: center;">
+    {{payment_instructions}}
+</div>
+</body>
+</html>

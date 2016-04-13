@@ -675,6 +675,8 @@
                 <div class="space-4"></div>
                 <label class="fixedlabel">Name: </label><input type="text" id="transitemname"/>
                 <div class="space-4"></div>
+                <label class="fixedlabel">Alt Name: </label><input type="text" id="transitemaltname"/><br/><small>Alternate language name</small>
+                <div class="space-4"></div>
                 <label class="fixedlabel">Description: </label><textarea style="width: 178px;" id="transitemdesc"></textarea>
                 <div class="space-4"></div>
                 <label class="fixedlabel">Unit: </label><input type="text" id="transitemunit" onchange="WPOS.transactions.calculateItemTotals();"/>
@@ -705,14 +707,19 @@
         </div>
         <div id="miscdialog" class="hide">
             <div id="geninvoiceform" style="text-align: center; min-width: 150px;">
+                <h3>Invoice Template</h3>
+                <select id="invoicetemplate">
+                </select>
                 <h3>View</h3>
-                <button onclick="WPOS.transactions.generateInvoice('html', 0);" class="btn btn-sm btn-primary" style="padding: 5px;">HTML</button>
-                <button onclick="WPOS.transactions.generateInvoice('pdf', 0);" class="btn btn-sm btn-primary" style="padding: 5px;">PDF</button>
+                <button onclick="WPOS.transactions.generateInvoice('html', 0, $('#invoicetemplate').val());" class="btn btn-sm btn-primary" style="padding: 5px;">HTML</button>
+                <button onclick="WPOS.transactions.generateInvoice('pdf', 0, $('#invoicetemplate').val());" class="btn btn-sm btn-primary" style="padding: 5px;">PDF</button>
                 <h3>Download</h3>
-                <button onclick="WPOS.transactions.generateInvoice('html', 1);" class="btn btn-sm btn-primary" style="padding: 5px;">HTML</button>
-                <button onclick="WPOS.transactions.generateInvoice('pdf', 1);" class="btn btn-sm btn-primary" style="padding: 5px;">PDF</button>
+                <button onclick="WPOS.transactions.generateInvoice('html', 1, $('#invoicetemplate').val());" class="btn btn-sm btn-primary" style="padding: 5px;">HTML</button>
+                <button onclick="WPOS.transactions.generateInvoice('pdf', 1, $('#invoicetemplate').val());" class="btn btn-sm btn-primary" style="padding: 5px;">PDF</button>
             </div>
             <div id="sendinvoiceform" style="min-width: 420px;">
+                <label class="smfixedlabel inline">Invoice Template: </label><div class="inline"><select id="emlinvoicetemplate"></select></div>
+                <div class="space-4"></div>
                 <label class="smfixedlabel inline">TO: </label><div class="inline"><input type="text" placeholder="Enter recipients..." id="emailto" class="email-input" name="tags"/></div>
                 <div class="space-4"></div>
                 <label class="smfixedlabel inline">CC: </label><div class="inline"><input type="text" placeholder="Enter recipients..." id="emailcc" class="email-input" name="tags"/></div>

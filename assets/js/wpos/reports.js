@@ -230,6 +230,101 @@ function WPOSReports() {
         return '<div style="text-align: center; margin-bottom: 5px;"><h3>' + name + '</h3><h5>' + WPOS.util.getShortDate(null) + ' - ' + config.devicename + ' - ' + config.locationname + '</h5></div>';
     };
 
+    function getSellerStats(){
+        var sales = getTodaysRecords(true);
+        var sale;
+        var emptfloat = parseFloat("0.00");
+        var stime = new Date();
+        var etime = new Date();
+        stime.setHours(0);
+        stime.setMinutes(0);
+        stime.setSeconds(0);
+        stime = stime.getTime();
+        etime.setHours(23);
+        etime.setMinutes(59);
+        etime.setSeconds(59);
+        etime = etime.getTime();
+
+        var data = {};
+        var salestat;
+        for (var key in sales) {
+            sale = sales[key];
+            salestat = getTransactionStatus(sale);
+            var userid;
+            switch (salestat) {
+                case 2:
+                    userid = sale.voiddata.userid;
+                    if (data.hasOwnProperty(userid)) {
+                        data[userid].voidrefs.push(sale.ref);
+                        data[userid].voidnum++;
+                        data[userid].voidtotal += parseFloat(sale.total);
+                    } else {
+                        data[userid] = {};
+                        data[userid].salerefs = [];
+                        data[userid].salenum = 0;
+                        data[userid].saleamount = 0;
+                        data[userid].refrefs = [];
+                        data[userid].refnum = 0;
+                        data[userid].refamount = 0;
+                        data[userid].voidrefs = [sale.ref];
+                        data[userid].voidnum = 1;
+                        data[userid].voidamount = parseFloat(sale.total);
+                    }
+                    break;
+                case 3:
+                    // cycle though all refunds and add to total
+                    for (var i in sale.refunddata) {
+                        var amount = parseFloat(sale.refunddata[i].amount);
+                        userid = sale.refunddata[i].userid;
+                        if (data.hasOwnProperty(userid)) {
+                            data[userid].refrefs.push(sale.ref);
+                            data[userid].refnum++;
+                            data[userid].reftotal += parseFloat(amount);
+                        } else {
+                            data[userid] = {};
+                            data[userid].salerefs = [];
+                            data[userid].salenum = 0;
+                            data[userid].saletotal = 0;
+                            data[userid].refrefs = [sale.ref];
+                            data[userid].refnum = 1;
+                            data[userid].reftotal = parseFloat(amount);
+                            data[userid].voidrefs = [];
+                            data[userid].voidnum = 0;
+                            data[userid].voidtotal = 0;
+                        }
+                    }
+                    // count refund as a sale, but only if it was sold today
+                    if (sale.processdt < stime || sale.processdt > etime) {
+                        break; // the sale was not made today
+                    }
+                case 1:
+                    if (data.hasOwnProperty(sale.userid)) {
+                        data[sale.userid].salerefs.push(sale.ref);
+                        data[sale.userid].salenum++;
+                        data[sale.userid].saletotal += parseFloat(sale.total);
+                    } else {
+                        data[sale.userid] = {};
+                        data[sale.userid].salerefs = [sale.ref];
+                        data[sale.userid].salenum = 1;
+                        data[sale.userid].saletotal = parseFloat(sale.total);
+                        data[sale.userid].refrefs = [];
+                        data[sale.userid].refnum = 0;
+                        data[sale.userid].reftotal = 0;
+                        data[sale.userid].voidrefs = [];
+                        data[sale.userid].voidnum = 0;
+                        data[sale.userid].voidtotal = 0;
+                    }
+            }
+        }
+        for (var x in data){
+            data[x].balance = (data[x].saletotal - data[x].reftotal).toFixed(2);
+            data[x].saletotal = data[x].saletotal.toFixed(2);
+            data[x].reftotal = data[x].reftotal.toFixed(2);
+        }
+
+        return data;
+    }
+
     function getWhatsSellingStats() {
         var itemstats = {items: [], totalsold: 0};
         var records = getTodaysRecords(false);
@@ -280,6 +375,22 @@ function WPOSReports() {
         for (var id in stats.items) {
             item = stats.items[id];
             html += '<tr><td>' + item.name + '</td><td>' + item.qty + '</td><td>' + WPOS.util.currencyFormat(item.total) + '</td></tr>';
+        }
+
+        html += '</tbody></table>';
+        // put into report window
+        $("#reportcontain").html(html);
+    };
+
+    this.generateSellerReport = function () {
+        var html = reportheader("Seller Takings") + '<table style="width:100%;" class="table table-stripped"><thead><tr><th>User</th><th>Sales</th><th>Voids</th><th>Refunds</th><th>Balance</th></tr></thead><tbody>';
+        var stats = getSellerStats();
+        var item;
+        var users = WPOS.getConfigTable().users;
+        for (var id in stats) {
+            item = stats[id];
+            var user = users.hasOwnProperty(id) ? users[id].username : 'Unknown';
+            html += '<tr><td>' + user + '</td><td>' + WPOS.util.currencyFormat(item.saletotal) + ' ('+item.salenum+')' + '</td><td>' + WPOS.util.currencyFormat(item.voidtotal) + ' ('+item.voidnum+')' + '</td><td>' + WPOS.util.currencyFormat(item.reftotal) + ' ('+item.refnum+')' + '</td><td>' + WPOS.util.currencyFormat(item.balance) + '</td></tr>';
         }
 
         html += '</tbody></table>';
