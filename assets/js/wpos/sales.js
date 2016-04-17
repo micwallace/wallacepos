@@ -144,6 +144,7 @@ function WPOSItems() {
         } else {
             $("#itemtable").append(row);
         }
+        $('#items_contain').scrollTop(1E10);
         // reinitialize keypad & field listeners
         WPOS.initKeypad();
     }
@@ -1002,6 +1003,7 @@ function WPOSSales() {
             WPOS.sales.updateSalesTotal();
             WPOS.sales.updatePaymentSums();
             $("#transactiondiv").dialog('close');
+            $("#wrapper").tabs("option", "active", 0);
         } else {
             alert("Could not find the current record.");
         }

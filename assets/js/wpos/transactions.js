@@ -19,29 +19,23 @@
  * @author     Michael B Wallace <micwallace@gmx.com>
  * @since      Class created 15/1/13 12:01 PM
  */
-
+var datatable;
 function WPOSTransactions() {
 
     var transdialog = $("#transactiondiv");
 
-    this.showTransactionDialog = function () {
-        showTransactionView(1);
-        //clearTransTable();
-        loadLocalTransactions();
-        transdialog.dialog('open');
+    this.showTransactionView = function () {
+        $("#wrapper").tabs("option", "active", 1);
+        this.setupTransactionView();
     };
 
-    this.showTransactionTable = function(){
-        //clearTransTable();
-        //loadLocalTransactions();
-        showTransactionView(1);
-        transdialog.dialog('open');
-        repositionDialog();
+    this.setupTransactionView = function(){
+        loadLocalTransactions();
+        datatable.api().responsive.recalc();
     };
 
     this.showTransactionInfo = function(ref){
         populateTransactionInfo(ref);
-        showTransactionView(2);
         transdialog.dialog('open');
         repositionDialog();
     };
@@ -64,11 +58,11 @@ function WPOSTransactions() {
 
     var tableData = [];
 
-    var datatable = $('#transactiontable').dataTable(
-        { responsive: true,
+    datatable = $('#transactiontable').dataTable(
+        {
             "bProcessing": true,
             "aaData": tableData,
-            "aaSorting": [[ 1, "desc" ]],
+            "aaSorting": [[ 5, "desc" ]],
             "aoColumns": [
                 { "sType": "string", "mData":function(data, type, val){ return getOfflineStatusHtml(data.ref) + "<br/>" + data.id;} },
                 { "sType": "numeric", "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
@@ -79,15 +73,15 @@ function WPOSTransactions() {
                 { "sType": "html", "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data.ref));} },
                 { "sType": "html", mData:function(data,type,val){ return "<button class='btn btn-sm btn-primary' onclick='WPOS.trans.showTransactionInfo("+"\""+data.ref+"\""+")'>View</button>"; }, "bSortable": false }
             ],
-            "columnDefs": [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                { "width": "60px" }
+            "columns": [
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                { "width": "52px" }
             ]
         }
     );
@@ -154,25 +148,6 @@ function WPOSTransactions() {
                 break
         }
         return stathtml;
-    }
-
-    /** Shows the specified view in the transactions window.
-     *  @param {int} typeid
-     *  @return void
-     */
-    function showTransactionView(typeid){
-        var transtable = $("#transactiontablediv");
-        var transinfo = $("#transactioninfo");
-        switch (typeid){
-            case 1:
-                transtable.css("display", "block");
-                transinfo.css("display", "none");
-                break;
-            case 2:
-                transinfo.css("display", "block");
-                transtable.css("display", "none");
-                break;
-        }
     }
 
     this.getTransactionRecord = function(ref){

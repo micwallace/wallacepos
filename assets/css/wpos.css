@@ -20,6 +20,9 @@ body {
     min-height: calc(100vh - 45px);
     padding: 12px 10px 40px 10px !important;
 }
+#items {
+    min-height: 300px;
+}
 #totals {
     width:calc(100% - 13px);
     margin-top:10px;
@@ -127,6 +130,7 @@ body {
     bottom: 0;
     width: 0;
     max-width: 450px;
+    margin-bottom: 38px;
     overflow: visible !important;
     overflow-x: visible !important;
 }
@@ -221,16 +225,16 @@ body {
     overflow-x: hidden;
 }
 
-#transactiontable {
-    min-width: 800px;
-}
-
 #transactioninfo {
     max-width: 800px;
 }
 
 #transactiontable_processing {
     display: none;
+}
+
+#transactiontable_wrapper .col-sm-12 {
+    padding: 0;
 }
 
 #transactiontable .table-header {
@@ -245,16 +249,11 @@ body {
     #window_width_toggle {
         display: none;
     }
-    #transactiontable {
-        min-width: 800px;
-    }
 }
 
 /* Tablet Portrait size to standard 960 (devices and browsers) */
 @media only screen and (min-width: 768px) and (max-width: 959px) {
-    #transactiontable {
-        min-width: 768px;
-    }
+
 }
 
 /* All Mobile Sizes (devices and browser) */
@@ -315,8 +314,5 @@ body {
     }
     .ui-dialog {
         width: 100% !important;
-    }
-    #transactiontable {
-        min-width: 100%;
     }
 }

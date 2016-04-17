@@ -1505,14 +1505,16 @@ $(function () {
         $("#wrapper").css("max-width", WPOS.getLocalConfig()["window_size"]);
 
     // set padding for item list
-    function setItemListPadding(){
-        $("#items").css("margin-bottom", (80 + $("#totals").height()) +"px");
-    }
     setItemListPadding();
-    window.onresize = function(event) {
+    window.onresize = function(){
         setItemListPadding();
     };
 });
+
+function setItemListPadding(){
+    var height = $("#totals").height();
+    $("#items").css("margin-bottom", (80 + height) +"px");
+}
 
 function expandWindow(){
     var wrapper = $("#wrapper");
