@@ -310,6 +310,7 @@ CREATE TABLE IF NOT EXISTS `stored_items` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `data` varchar(2048) NOT NULL,
   `supplierid` int(11) NOT NULL,
+  `categoryid` int(11) NOT NULL,
   `code` varchar(256) NOT NULL,
   `name` varchar(66) NOT NULL,
   `price` varchar(66) NOT NULL,
@@ -324,6 +325,19 @@ CREATE TABLE IF NOT EXISTS `stored_items` (
 --
 
 CREATE TABLE IF NOT EXISTS `stored_suppliers` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(66) NOT NULL,
+  `dt` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stored_categories`
+--
+
+CREATE TABLE IF NOT EXISTS `stored_categories` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(66) NOT NULL,
   `dt` datetime NOT NULL,

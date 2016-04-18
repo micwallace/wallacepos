@@ -88,6 +88,14 @@ class WposPosSetup
             $result['error'] = "User info could not be retrieved!";
         }
 
+        $dataMdl = new WposPosData();
+        $categories = $dataMdl->getCategories([]);
+        if ($result['data']===false){
+            $result['error'] = "Categories could not be retrieved: ".$categories['error'];
+        } else {
+            $result['data']->item_categories = $categories['data'];
+        }
+
         // get tax
         $tax = WposPosData::getTaxes();
         if (is_null($tax['error'])){

@@ -175,14 +175,23 @@ class SaleItemsModel extends DbConfig
     /**
      * @param $stime
      * @param $etime
-     * @param bool $groupsupplier
+     * @param bool $group (1 to group by category, 2 to group by supplier)
      * @param bool $novoids
      * @param null $ttype
      * @return array|bool Returns an array of stored items and their totals for a corresponding period, items that are not stored are added into the Misc group (ie id=0). Returns false on failure
      */
-    public function getStoredItemTotals($stime, $etime, $groupsupplier = false, $novoids = true, $ttype=null){
-        $sql = "SELECT ".($groupsupplier?'si.supplierid AS id, p.name AS name':'i.storeditemid AS id, i.name AS name').", COALESCE(SUM(i.qty), 0) AS itemnum, COALESCE(SUM(i.price-(i.price*(s.discount/100))), 0) AS itemtotal, COALESCE(SUM(i.refundqty), 0) AS refnum, COALESCE(SUM(i.unit*i.refundqty), 0) AS reftotal, COALESCE(GROUP_CONCAT(s.ref SEPARATOR ','),'') as refs";
-        $sql.= ' FROM sale_items AS i LEFT JOIN sales AS s ON i.saleid=s.id'.($groupsupplier?' LEFT JOIN stored_items AS si ON i.storeditemid=si.id LEFT JOIN stored_suppliers AS p ON si.supplierid=p.id':'').' WHERE (s.processdt>= :stime AND s.processdt<= :etime) '.($novoids?'AND s.status!=3':'');
+    public function getStoredItemTotals($stime, $etime, $group = 0, $novoids = true, $ttype=null){
+
+        if ($group==2){
+            $groupcol = "supplierid";
+            $grouptable = "stored_suppliers";
+        } else {
+            $groupcol = "categoryid";
+            $grouptable = "stored_categories";
+        }
+
+        $sql = "SELECT ".($group>0?'si.'.$groupcol.' AS id, p.name AS name':'i.storeditemid AS id, i.name AS name').", COALESCE(SUM(i.qty), 0) AS itemnum, COALESCE(SUM(i.price-(i.price*(s.discount/100))), 0) AS itemtotal, COALESCE(SUM(i.refundqty), 0) AS refnum, COALESCE(SUM(i.unit*i.refundqty), 0) AS reftotal, COALESCE(GROUP_CONCAT(s.ref SEPARATOR ','),'') as refs";
+        $sql.= ' FROM sale_items AS i LEFT JOIN sales AS s ON i.saleid=s.id'.($group>0 ? ' LEFT JOIN stored_items AS si ON i.storeditemid=si.id LEFT JOIN '.$grouptable.' AS p ON si.'.$groupcol.'=p.id' : '').' WHERE (s.processdt>= :stime AND s.processdt<= :etime) '.($novoids?'AND s.status!=3':'');
         $placeholders = [":stime"=>$stime, ":etime"=>$etime];
 
         if ($ttype!=null){
@@ -190,7 +199,7 @@ class SaleItemsModel extends DbConfig
             $placeholders[':type'] = $ttype;
         }
 
-        $sql.= ' GROUP BY '.($groupsupplier?'si.supplierid':'i.storeditemid');
+        $sql.= ' GROUP BY '.($group>0 ? 'si.'.$groupcol : 'i.storeditemid');
 
         return $this->select($sql, $placeholders);
     }

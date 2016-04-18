@@ -103,11 +103,23 @@ function WPOSItems() {
         return results;
     };
 
-    this.generateItemGrid = function(){
+    this.generateItemGrid = function(categoryId){
         var iboxitems = $("#iboxitems");
-        var items = WPOS.getItemsTable();
-        iboxitems.html('');
+        iboxitems.html('<div style="padding: 5px;"><button class="btn btn-sm btn-primary" onclick="WPOS.items.generateItemGridCategories();"><i class="icon-backward">&nbsp;</i>Categories</button></div>');
         var price;
+        var items = [];
+        if (categoryId>-1){
+            if (WPOS.getCategoryIndex().hasOwnProperty(categoryId)) {
+                var index = WPOS.getCategoryIndex()[categoryId];
+                var tempitems = WPOS.getItemsTable();
+                for (var x = 0; x < index.length; x++) {
+                    items[index[x]] = tempitems[index[x]];
+                }
+            }
+        } else {
+            items = WPOS.getItemsTable();
+        }
+
         for (var i in items){
             price = (items[i].price==""?"??.??":parseFloat(items[i].price).toFixed(2));
             iboxitems.append('<div class="iboxitem" onclick="WPOS.items.addItemFromId('+items[i].id+'); toggleItemBox(false);">' +
@@ -115,6 +127,22 @@ function WPOSItems() {
                                 '<h5>'+WPOS.util.currencyFormat(price)+'</h5>'+
                             '</div>');
         }
+    };
+
+    this.generateItemGridCategories = function(){
+        var iboxitems = $("#iboxitems");
+        iboxitems.html('<div class="iboxitem" onclick="WPOS.items.generateItemGrid(-1);"><h5>All Categories</h5><h6>('+Object.keys(WPOS.getItemsTable()).length+' items)</h6></div>');
+        var catindex = WPOS.getCategoryIndex();
+        var categories = WPOS.getConfigTable().item_categories;
+        console.log(catindex);
+        for (var i in categories){
+            iboxitems.append('<div class="iboxitem" onclick="WPOS.items.generateItemGrid('+i+');">' +
+                '<h5>'+categories[i].name+'</h5>'+
+                '<h6>('+(catindex.hasOwnProperty(i)?catindex[i].length:0)+' items)</h6>'+
+                '</div>');
+        }
+        var misctotal = catindex.hasOwnProperty(0)?catindex[0].length:0;
+        iboxitems.append('<div class="iboxitem" onclick="WPOS.items.generateItemGrid(0);"><h5>Miscellaneous</h5><h6>('+misctotal+' items)</h6></div>');
     };
 
     /**

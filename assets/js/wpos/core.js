@@ -812,6 +812,9 @@ function WPOS() {
     function updateConfig(key, value){
         console.log("Processing config ("+key+") update");
         console.log(value);
+        if (key=='item_categories')
+            return updateCategory(value);
+
         if (key=="deviceconfig" && (value=="removed" || value=="disabled")){
             // device removed
             initialsetup = (value=="removed");
@@ -825,6 +828,16 @@ function WPOS() {
         configtable[key] = value; // write to current data
         localStorage.setItem("wpos_config", JSON.stringify(configtable));
         setAppCustomization();
+    }
+
+    function updateCategory(value){
+        if (typeof value === 'object'){
+            configtable.item_categories[value.id] = value;
+        } else {
+            delete configtable.item_categories[value];
+        }
+        WPOS.items.generateItemGridCategories();
+        localStorage.setItem("wpos_config", JSON.stringify(configtable));
     }
 
     function setAppCustomization(){
@@ -1007,6 +1020,7 @@ function WPOS() {
     // STORED ITEMS
     var itemtable;
     var stockindex;
+    var categoryindex;
 
     this.getItemsTable = function () {
         if (itemtable == null) {
@@ -1020,29 +1034,49 @@ function WPOS() {
             if (itemtable == null) {
                 loadItemsTable(); // also generate stock index
             } else {
-                generateStockIndex();
+                generateItemIndex();
             }
         }
         return stockindex;
     };
+
+    this.getCategoryIndex = function () {
+        if (categoryindex === undefined || categoryindex === null) {
+            if (itemtable == null) {
+                loadItemsTable(); // also generate stock index
+            } else {
+                generateItemIndex();
+            }
+        }
+        return categoryindex;
+    };
+
     // fetches from server
     function fetchItemsTable(callback) {
         return WPOS.getJsonDataAsync("items/get", function(data){
             if (data) {
                 itemtable = data;
                 localStorage.setItem("wpos_items", JSON.stringify(data));
-                generateStockIndex();
-                WPOS.items.generateItemGrid();
+                generateItemIndex();
+                WPOS.items.generateItemGridCategories();
             }
             if (callback)
                 callback(data);
         });
     }
 
-    function generateStockIndex() {
+    function generateItemIndex() {
         stockindex = {};
+        categoryindex = {};
         for (var key in itemtable) {
             stockindex[itemtable[key].code] = key;
+
+            var categoryid = itemtable[key].hasOwnProperty('categoryid')?itemtable[key].categoryid:0;
+            if (categoryindex.hasOwnProperty(categoryid)){
+                categoryindex[categoryid].push(key);
+            } else {
+                categoryindex[categoryid] = [key];
+            }
         }
     }
 
@@ -1052,8 +1086,8 @@ function WPOS() {
         if (data != null) {
             itemtable = JSON.parse(data);
             // generate the stock index as well.
-            generateStockIndex();
-            WPOS.items.generateItemGrid();
+            generateItemIndex();
+            WPOS.items.generateItemGridCategories();
             return true;
         }
         return false;
@@ -1068,8 +1102,8 @@ function WPOS() {
             delete itemtable[itemobject];
         }
         localStorage.setItem("wpos_items", JSON.stringify(itemtable));
-        generateStockIndex();
-        WPOS.items.generateItemGrid();
+        generateItemIndex();
+        WPOS.items.generateItemGridCategories();
     }
 
     // CUSTOMERS

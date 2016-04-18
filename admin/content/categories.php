@@ -1,9 +1,9 @@
 <!-- WallacePOS: Copyright (c) 2014 WallaceIT <micwallace@gmx.com> <https://www.gnu.org/licenses/lgpl.html> -->
 <div class="page-header">
     <h1 style="margin-right: 20px; display: inline-block;">
-        Suppliers
+        Categories
     </h1>
-    <button onclick="$('#addsupdialog').dialog('open');" id="addbtn" class="btn btn-primary btn-sm pull-right"><i class="icon-pencil align-top bigger-125"></i>Add</button>
+    <button onclick="$('#addcatdialog').dialog('open');" id="addbtn" class="btn btn-primary btn-sm pull-right"><i class="icon-pencil align-top bigger-125"></i>Add</button>
 </div><!-- /.page-header -->
 
 <div class="row">
@@ -14,10 +14,10 @@
 <div class="col-xs-12">
 
 <div class="table-header">
-    Manage your suppliers
+    Manage your item categories
 </div>
 
-<table id="supplierstable" class="table table-striped table-bordered table-hover">
+<table id="categoriestable" class="table table-striped table-bordered table-hover">
 <thead>
 <tr>
     <th class="center hidden-480 hidden-320 hidden-xs noexport">
@@ -43,20 +43,20 @@
 
 </div><!-- PAGE CONTENT ENDS -->
 </div><!-- /.col -->
-<div id="editsupdialog" class="hide">
+<div id="editcatdialog" class="hide">
     <table>
         <tr>
             <td style="text-align: right;"><label>Name:&nbsp;</label></td>
-            <td><input id="suppliername" type="text"/>
-                <input id="supplierid" type="hidden"/></td>
+            <td><input id="categoryname" type="text"/>
+                <input id="categoryid" type="hidden"/></td>
         </tr>
     </table>
 </div>
-<div id="addsupdialog" class="hide">
+<div id="addcatdialog" class="hide">
     <table>
        <tr>
            <td style="text-align: right;"><label>Name:&nbsp;</label></td>
-           <td><input id="newsuppliername" type="text"/><br/></td>
+           <td><input id="newcategoryname" type="text"/><br/></td>
        </tr>
     </table>
 </div>
@@ -65,17 +65,17 @@
 
 <!-- inline scripts related to this page -->
 <script type="text/javascript">
-    var suppliers = null;
+    var categories = null;
     var datatable;
     $(function() {
-        suppliers = WPOS.getJsonData("suppliers/get");
+        categories = WPOS.getJsonData("categories/get");
         var suparray = [];
         var supitem;
-        for (var key in suppliers){
-            supitem = suppliers[key];
+        for (var key in categories){
+            supitem = categories[key];
             suparray.push(supitem);
         }
-        datatable = $('#supplierstable').dataTable(
+        datatable = $('#categoriestable').dataTable(
             { "bProcessing": true,
             "aaData": suparray,
             "aaSorting": [[ 2, "asc" ]],
@@ -84,7 +84,7 @@
                 { "mData":"id" },
                 { "mData":"name" },
                 { "mData": "numitems"},
-                { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="openeditsupdialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="removeSupplier($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false, sClass: "noexport" }
+                { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="openeditcatdialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="removeSupplier($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false, sClass: "noexport" }
             ] } );
         // insert table wrapper
         $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
@@ -99,12 +99,12 @@
                 });
         });
         // dialogs
-        $( "#addsupdialog" ).removeClass('hide').dialog({
+        $( "#addcatdialog" ).removeClass('hide').dialog({
                 resizable: false,
                 width: 'auto',
                 modal: true,
                 autoOpen: false,
-                title: "Add Supplier",
+                title: "Add Category",
                 title_html: true,
                 buttons: [
                     {
@@ -128,12 +128,12 @@
                     $(this).css("maxWidth", "375px");
                 }
         });
-        $( "#editsupdialog" ).removeClass('hide').dialog({
+        $( "#editcatdialog" ).removeClass('hide').dialog({
             resizable: false,
             width: 'auto',
             modal: true,
             autoOpen: false,
-            title: "Edit Supplier",
+            title: "Edit Category",
             title_html: true,
             buttons: [
                 {
@@ -161,36 +161,36 @@
         WPOS.util.hideLoader();
     });
     // updating records
-    function openeditsupdialog(id){
-        var item = suppliers[id];
-        $("#supplierid").val(item.id);
-        $("#suppliername").val(item.name);
-        $("#editsupdialog").dialog("open");
+    function openeditcatdialog(id){
+        var item = categories[id];
+        $("#categoryid").val(item.id);
+        $("#categoryname").val(item.name);
+        $("#editcatdialog").dialog("open");
     }
     function saveSupplier(isnewitem){
         // show loader
         WPOS.util.showLoader();
         var item = {}, result;
         if (isnewitem){
-            // adding a new supplier
-            var name_field = $("#newsuppliername");
+            // adding a new category
+            var name_field = $("#newcategoryname");
             item.name = name_field.val();
-            result = WPOS.sendJsonData("suppliers/add", JSON.stringify(item));
+            result = WPOS.sendJsonData("categories/add", JSON.stringify(item));
             if (result!==false){
-                suppliers[result.id] = result;
+                categories[result.id] = result;
                 reloadTable();
                 name_field.val('');
-                $("#addsupdialog").dialog("close");
+                $("#addcatdialog").dialog("close");
             }
         } else {
             // updating an item
-            item.id = $("#supplierid").val();
-            item.name = $("#suppliername").val();
-            result = WPOS.sendJsonData("suppliers/edit", JSON.stringify(item));
+            item.id = $("#categoryid").val();
+            item.name = $("#categoryname").val();
+            result = WPOS.sendJsonData("categories/edit", JSON.stringify(item));
             if (result!==false){
-                suppliers[result.id] = result;
+                categories[result.id] = result;
                 reloadTable();
-                $("#editsupdialog").dialog("close");
+                $("#editcatdialog").dialog("close");
             }
         }
         // hide loader
@@ -198,12 +198,12 @@
     }
     function removeSupplier(id){
 
-        var answer = confirm("Are you sure you want to delete this supplier?");
+        var answer = confirm("Are you sure you want to delete this category?");
         if (answer){
             // show loader
             WPOS.util.hideLoader();
-            if (WPOS.sendJsonData("suppliers/delete", '{"id":'+id+'}')){
-                delete suppliers[id];
+            if (WPOS.sendJsonData("categories/delete", '{"id":'+id+'}')){
+                delete categories[id];
                 reloadTable();
             }
             // hide loader
@@ -211,14 +211,14 @@
         }
     }
     function reloadData(){
-        suppliers = WPOS.getJsonData("suppliers/get");
+        categories = WPOS.getJsonData("categories/get");
         reloadTable();
     }
     function reloadTable(){
         var suparray = [];
         var tempsup;
-        for (var key in suppliers){
-            tempsup = suppliers[key];
+        for (var key in categories){
+            tempsup = categories[key];
             suparray.push(tempsup);
         }
         datatable.fnClearTable();
@@ -226,7 +226,7 @@
     }
 </script>
 <style type="text/css">
-    #supplierstable_processing {
+    #categoriestable_processing {
         display: none;
     }
 </style>

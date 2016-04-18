@@ -123,6 +123,13 @@
             </td>
         </tr>
         <tr>
+            <td>Categories</td>
+            <td>
+                <label>View: <input id="permcat" type="checkbox" class="permcb"/></label>&nbsp;&nbsp;
+                <label>Edit: <input id="permcatedit" type="checkbox" class="permcb"/></label>
+            </td>
+        </tr>
+        <tr>
             <td>Suppliers</td>
             <td>
                 <label>View: <input id="permsupp" type="checkbox" class="permcb"/></label>&nbsp;&nbsp;
@@ -346,6 +353,8 @@
         $("#permitemedit").prop("checked", perm.items>1);
         $("#permstock").prop("checked", perm.stock>0);
         $("#permstockedit").prop("checked", perm.stock>1);
+        $("#permcat").prop("checked", perm.categories>0);
+        $("#permcatedit").prop("checked", perm.categories>1);
         $("#permsupp").prop("checked", perm.suppliers>0);
         $("#permsuppedit").prop("checked", perm.suppliers>1);
         $("#permcust").prop("checked", perm.customers>0);
@@ -364,6 +373,7 @@
         perm['invoices'] = $("#perminvoiceedit").is(':checked')?2:($("#perminvoice").is(':checked')?1:0);
         perm['items'] = $("#permitemedit").is(':checked')?2:($("#permitem").is(':checked')?1:0);
         perm['stock'] = $("#permstockedit").is(':checked')?2:($("#permstock").is(':checked')?1:0);
+        perm['categories'] = $("#permcatedit").is(':checked')?2:($("#permcat").is(':checked')?1:0);
         perm['suppliers'] = $("#permsuppedit").is(':checked')?2:($("#permsupp").is(':checked')?1:0);
         perm['customers'] = $("#permcustedit").is(':checked')?2:($("#permcust").is(':checked')?1:0);
         return perm;

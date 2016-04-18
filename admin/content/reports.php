@@ -5,8 +5,9 @@
     </h1>
     <select id="reptype" onchange="generateReport();" style="vertical-align: middle; margin-right: 20px; margin-bottom: 5px;">
         <option value="stats/takings">Takings Count</option>
-        <option value="stats/itemselling">What's Selling</option>
-        <option value="stats/supplyselling">Supplier's Selling</option>
+        <option value="stats/itemselling">Item Sales</option>
+        <option value="stats/categoryselling">Category Sales</option>
+        <option value="stats/supplyselling">Supplier Sales</option>
         <option value="stats/stock">Current Stock</option>
         <option value="stats/devices">Device Takings</option>
         <option value="stats/locations">Location Takings</option>
@@ -59,10 +60,13 @@
                 populateTakings("Takings Count", "Method");
                 break;
             case "stats/itemselling":
-                populateSelling(false);
+                populateSelling("Item Sales");
+                break;
+            case "stats/categoryselling":
+                populateSelling("Category Sales");
                 break;
             case "stats/supplyselling":
-                populateSelling(true);
+                populateSelling("Supplier Sales");
                 break;
             case "stats/stock":
                 populateStock();
@@ -108,8 +112,8 @@
         $("#reportcontain").html(html);
     }
 
-    function populateSelling(issupplier){
-        var html = getReportHeader(issupplier?"What Supplier's Selling":"What's Selling");
+    function populateSelling(title){
+        var html = getReportHeader(title);
         html += "<table class='table table-stripped' style='width: 100%'><thead><tr><td>Name</td><td># Sold</td><td>Total</td><td># Refunded</td><td>Total</td><td>Balance</td></tr></thead><tbody>";
         var rowdata;
         for (var i in repdata){

@@ -13,12 +13,12 @@ if (!isset($_SERVER['DOCUMENT_ROOT'])) {
 // TODO: cache this somehow
 $timezone = "Australia/Sydney";
 if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json")){
-    $config = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/config.json"));
-    if (isset($config->timezone))
-        $timezone = $config->timezone;
+    $GLOBALS['config'] = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json"));
+    if (isset($GLOBALS['config']->timezone))
+        $timezone = $GLOBALS['config']->timezone;
 }
 // Date & Time
-putenv("WPOS_TIMEZONE=".$timezone);
+//putenv("WPOS_TIMEZONE=".$timezone);
 ini_set('date.timezone', $timezone);
 
 // Error handling

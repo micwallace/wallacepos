@@ -279,6 +279,41 @@
         </div>
         <div class="widget-box transparent">
             <div class="widget-header widget-header-flat">
+                <h4 class="lighter">Email</h4>
+            </div>
+            <div class="widget-body" style="padding-top: 10px;">
+                <form class="form-horizontal">
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>SMTP Host:</label></div>
+                        <div class="col-sm-5"><input type="text" id="email_host" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>SMTP Port:</label></div>
+                        <div class="col-sm-5"><input type="text" id="email_port" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>SMTP TLS (recommended):</label></div>
+                        <div class="col-sm-5"><input type="checkbox" id="email_tls" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>SMTP Username:</label></div>
+                        <div class="col-sm-5"><input type="text" id="email_user" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
+                        <div class="col-sm-5"><label>SMTP Password:</label></div>
+                        <div class="col-sm-5"><input type="text" id="email_pass" /></div>
+                    </div>
+                    <small>The host and user specified must be allowed to send mail as the email address specified above.</small>
+                </form>
+            </div>
+        </div>
+        <div class="widget-box transparent">
+            <div class="widget-header widget-header-flat">
                 <h4 class="lighter">Google Contacts integration</h4>
             </div>
             <div class="widget-body" style="padding-top: 10px;">
@@ -351,6 +386,7 @@
         data['currencyformat'] = currencyformat.join("~");
         data['altlabels'] = altlabels;
         data['gcontact'] = $("#gcontact").is(":checked")?1:0;
+        data['email_tls'] = $("#email_tls").is(":checked");
         WPOS.sendJsonData("settings/general/set", JSON.stringify(data));
         // hide loader
         WPOS.util.hideLoader();
@@ -375,6 +411,7 @@
                 $("#" + i).val(options[i]);
             }
         }
+        $("#email_tls").prop('checked', options.email_tls);
         setGoogleUI();
         $("#bizlogoprev").attr("src", options.bizlogo);
     }

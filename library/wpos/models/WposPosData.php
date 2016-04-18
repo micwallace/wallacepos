@@ -312,6 +312,27 @@ class WposPosData
 
     /**
      * @param $result
+     * @return mixed Returns an array of categories
+     */
+    public function getCategories($result)
+    {
+        $catMdl = new CategoriesModel();
+        $categories = $catMdl->get();
+        if (is_array($categories)) {
+            $catdata = [];
+            foreach ($categories as $category) {
+                $catdata[$category['id']] = $category;
+            }
+            $result['data'] = $catdata;
+        } else {
+            $result['error'] = $catMdl->errorInfo;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param $result
      * @return mixed Returns an array of stock. Each row is a certain item & location ID.
      */
     public function getStock($result)

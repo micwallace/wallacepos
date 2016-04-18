@@ -271,6 +271,26 @@ function routeApiCall($action, $data, $result) {
             $adminMdl = new WposAdminItems($data);
             $result = $adminMdl->deleteSupplier($result);
             break;
+        // categories
+        case "categories/get":
+            $jsondata = new WposPosData();
+            $result = $jsondata->getCategories($result);
+            break;
+
+        case "categories/add":
+            $adminMdl = new WposAdminItems($data);
+            $result = $adminMdl->addCategory($result);
+            break;
+
+        case "categories/edit":
+            $adminMdl = new WposAdminItems($data);
+            $result = $adminMdl->updateCategory($result);
+            break;
+
+        case "categories/delete":
+            $adminMdl = new WposAdminItems($data);
+            $result = $adminMdl->deleteCategory($result);
+            break;
         // suppliers
         case "stock/get":
             $jsondata = new WposPosData();
@@ -505,9 +525,13 @@ function routeApiCall($action, $data, $result) {
             $statsMdl = new WposAdminStats($data);
             $result = $statsMdl->getWhatsSellingStats($result);
             break;
+        case "stats/categoryselling": // whats selling, grouped by categories
+            $statsMdl = new WposAdminStats($data);
+            $result = $statsMdl->getWhatsSellingStats($result, 1);
+            break;
         case "stats/supplyselling": // whats selling, grouped by suppliers
             $statsMdl = new WposAdminStats($data);
-            $result = $statsMdl->getWhatsSellingStats($result, true);
+            $result = $statsMdl->getWhatsSellingStats($result, 2);
             break;
         case "stats/stock": // current stock levels
             $statsMdl = new WposAdminStats($data);
@@ -774,7 +798,7 @@ function exceptionHandler(Exception $ex){
 
     if ($result['error'] == "OK") $result['error'] = "";
 
-    $result['error'] .= $ex->getMessage() . "\n";
+    $result['error'] .= $ex->getMessage() . "\nFile: " . $ex->getFile() . " line " . $ex->getLine();
 
     die(json_encode($result));
 }

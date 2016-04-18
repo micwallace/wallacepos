@@ -189,17 +189,17 @@ class WposAdminStats {
     /**
      * Get what's selling stats for the current range, optionally grouping by supplier
      * @param $result
-     * @param bool $groupsupplier
+     * @param int $group (0 for none, 1 for categories, 2 for suppliers)
      * @return mixed
      */
-    public function getWhatsSellingStats($result, $groupsupplier = false){
+    public function getWhatsSellingStats($result, $group = 0){
         $stats = [];
         $itemsMdl = new SaleItemsModel();
         // check if params set, if not set defaults
         $stime = isset($this->data->stime)?$this->data->stime:(strtotime('-1 week')*1000);
         $etime = isset($this->data->etime)?$this->data->etime:(time()*1000);
 
-        if (is_array($items = $itemsMdl->getStoredItemTotals($stime, $etime, $groupsupplier, true, $this->data->type))){
+        if (is_array($items = $itemsMdl->getStoredItemTotals($stime, $etime, $group, true, $this->data->type))){
             foreach ($items as $item){
                 $stats[$item['id']] = new stdClass();
                 if ($item['id']==0){

@@ -44,10 +44,22 @@ class WposMail {
      * @return PHPMailer
      */
     private function getMailer(){
+        global $config;
         $mail = new PHPMailer();
         $mail->isSMTP(); // Set mailer to use SMTP
-        $mail->Host = 'wallacepos.com';  // Specify main and backup SMTP servers
-        $mail->SMTPSecure = 'tls'; // Enable encryption, 'ssl' also accepted
+
+        $mail->Host = ($config->email_host==""?"127.0.0.1":$config->email_host);  // Specify main and backup SMTP servers
+        if (is_numeric($config->email_port))
+            $mail->Port = intval($config->email_port);
+
+        if ($config->email_tls==true)
+            $mail->SMTPSecure = 'tls'; // Enable encryption, 'ssl' also accepted
+
+        if ($config->email_user!="") {
+            $mail->Username = $config->email_user;
+            $mail->Password = $config->email_pass;
+        }
+
         $mail->From = $this->genconfig->bizemail;
         $mail->FromName = $this->genconfig->bizname;
         $mail->isHTML(true);

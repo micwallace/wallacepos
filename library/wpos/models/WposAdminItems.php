@@ -146,6 +146,98 @@ class WposAdminItems {
         }
         return $result;
     }
+    // ITEM CATEGORIES
+    /**
+     * Add a new category
+     * @param $result
+     * @return mixed
+     */
+    public function addCategory($result)
+    {
+        $jsonval = new JsonValidate($this->data, '{"name":""}');
+        if (($errors = $jsonval->validate()) !== true) {
+            $result['error'] = $errors;
+            return $result;
+        }
+        $supMdl = new CategoriesModel();
+        $qresult = $supMdl->create($this->data->name);
+        if ($qresult === false) {
+            $result['error'] = "Could not add the category";
+        } else {
+            $result['data'] = $this->getCategoryRecord($qresult);
+            // broadcast update
+            $socket = new WposSocketIO();
+            $socket->sendConfigUpdate('item_categories', $result['data']);
+            // log data
+            Logger::write("Category added with id:" . $this->data->id, "CATEGORY", json_encode($this->data));
+        }
+        return $result;
+    }
+
+    /**
+     * Update a category
+     * @param $result
+     * @return mixed
+     */
+    public function updateCategory($result)
+    {
+        $jsonval = new JsonValidate($this->data, '{"id":1, "name":""}');
+        if (($errors = $jsonval->validate()) !== true) {
+            $result['error'] = $errors;
+            return $result;
+        }
+        $supMdl = new CategoriesModel();
+        $qresult = $supMdl->edit($this->data->id, $this->data->name);
+        if ($qresult === false) {
+            $result['error'] = "Could not edit the category";
+        } else {
+            $result['data'] = $this->getCategoryRecord($this->data->id);
+            // broadcast update
+            $socket = new WposSocketIO();
+            $socket->sendConfigUpdate('item_categories', $result['data']);
+            // log data
+            Logger::write("Category updated with id:" . $this->data->id, "CATEGORY", json_encode($this->data));
+        }
+        return $result;
+    }
+
+    /**
+     * Returns category array by ID
+     * @param $id
+     * @return mixed
+     */
+    private function getCategoryRecord($id){
+        $supMdl = new CategoriesModel();
+        $result = $supMdl->get($id)[0];
+        return $result;
+    }
+
+    /**
+     * Delete category
+     * @param $result
+     * @return mixed
+     */
+    public function deleteCategory($result)
+    {
+        // validate input
+        if (!is_numeric($this->data->id)) {
+            $result['error'] = "A valid id must be supplied";
+            return $result;
+        }
+        $supMdl = new CategoriesModel();
+        $qresult = $supMdl->remove($this->data->id);
+        if ($qresult === false) {
+            $result['error'] = "Could not delete the category";
+        } else {
+            $result['data'] = true;
+            // broadcast update
+            $socket = new WposSocketIO();
+            $socket->sendConfigUpdate('item_categories', $this->data->id);
+            // log data
+            Logger::write("Category deleted with id:" . $this->data->id, "CATEGORY");
+        }
+        return $result;
+    }
     // SUPPLIERS
     /**
      * Add a new supplier
@@ -232,22 +324,8 @@ class WposAdminItems {
         return $result;
     }
     // USERS
-    /**
-     * @var array
-     */
-    private $defaultAdminPermissions = [
-        "sections" => ['access' => "admin", 'dashboard' => "both", 'reports' => 2, 'graph' => 2, 'sales' => 2, 'items' => 2, 'stock' => 2, 'suppliers' => 2, 'customers' => 2],
-        "apicalls" => [
-            'adminconfig/get', 'items/add', 'items/edit', 'items/delete', 'suppliers/get', 'suppliers/add', 'suppliers/edit', 'suppliers/delete',
-            'stock/get', 'stock/add', 'stock/set', 'stock/transfer', 'stock/history', 'customers/add', 'customers/edit', 'customers/delete', 'customers/contacts/add', 'customers/contacts/edit', 'customers/contacts/delete',
-            'sales/delete', 'sales/deletevoid', 'sales/adminvoid', 'stats/general', 'stats/takings', 'stats/itemselling', 'stats/supplyselling', 'stats/stock',
-            'stats/devices', 'stats/locations', 'stats/users', 'stats/tax', 'graph/general', 'graph/takings', 'graph/devices', 'graph/locations',
-            'invoices/get', 'invoices/add' ,'invoices/edit', 'invoices/delete', 'invoices/items/add', 'invoices/items/edit', 'invoices/items/delete',
-            'invoices/payments/add','invoices/payments/edit','invoices/payments/delete','invoices/generate','invoices/email', 'sales/deletevoid', 'sales/adminvoid'
-        ]
-    ];
     private $defaultPermissions = [
-        "sections" => ['access' => "no", 'dashboard' => "none", 'reports' => 0, 'graph' => 0, 'realtime' => 0, 'sales' => 0, 'items' => 0, 'stock' => 0, 'suppliers' => 0, 'customers' => 0],
+        "sections" => ['access' => "no", 'dashboard' => "none", 'reports' => 0, 'graph' => 0, 'realtime' => 0, 'sales' => 0, 'items' => 0, 'stock' => 0, 'categories' => 0, 'suppliers' => 0, 'customers' => 0],
         "apicalls" => []
     ];
     /**
@@ -257,13 +335,14 @@ class WposAdminItems {
     private $permissionMap = [
         "readapicalls" => [
             "dashboard" => ['stats/general', 'stats/takings', 'stats/itemselling', 'stats/locations', 'stats/devices', 'graph/general'],
-            "reports" => ['stats/general', 'stats/takings', 'stats/itemselling', 'stats/supplyselling', 'stats/stock', 'stats/devices', 'stats/locations', 'stats/users', 'stats/tax'],
+            "reports" => ['stats/general', 'stats/takings', 'stats/itemselling','stats/categoryselling', 'stats/supplyselling', 'stats/stock', 'stats/devices', 'stats/locations', 'stats/users', 'stats/tax'],
             "graph" => ['graph/general', 'graph/takings', 'graph/devices', 'graph/locations'],
             "realtime" => ['stats/general', 'graph/general'],
             "sales" => [],
-            "invoices"=>['invoices/get'],
-            "items" => ['suppliers/get'],
+            "invoices"=> ['invoices/get'],
+            "items" => ['suppliers/get', 'categories/get'],
             "stock" => ['stock/get', 'stock/history'],
+            "categories" => ['categories/get'],
             "suppliers" => ['suppliers/get'],
             "customers" => [],
         ],
@@ -277,6 +356,7 @@ class WposAdminItems {
                 'invoices/payments/add','invoices/payments/edit','invoices/payments/delete','invoices/generate','invoices/email'],
             "items" => ['items/add', 'items/edit', 'items/delete'],
             "stock" => ['stock/add', 'stock/set', 'stock/transfer'],
+            "categories" => ['categories/add', 'categories/edit', 'categories/delete'],
             "suppliers" => ['suppliers/add', 'suppliers/edit', 'suppliers/delete'],
             "customers" => ['customers/add', 'customers/edit', 'customers/delete', 'customers/contacts/add', 'customers/contacts/edit', 'customers/contacts/delete', 'customers/setaccess', 'customers/setpassword', 'customers/sendreset'],
         ]
@@ -301,7 +381,7 @@ class WposAdminItems {
             return $result;
         }
         // insert entry if the user is admin, preset all permissions
-        $qresult = $authMdl->create($this->data->username, $this->data->pass, $this->data->admin, ($this->data->admin == 1 ? json_encode($this->defaultAdminPermissions) : json_encode($this->defaultPermissions)));
+        $qresult = $authMdl->create($this->data->username, $this->data->pass, $this->data->admin, json_encode($this->defaultPermissions));
         if ($qresult === false) {
             $result['error'] = "Could not add the user";
         } else {

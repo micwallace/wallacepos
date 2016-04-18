@@ -34,6 +34,7 @@
     <th>Default Qty</th>
     <th>Price</th>
     <th>Stockcode</th>
+    <th>Category</th>
     <th>Supplier</th>
     <th class="noexport"></th>
 </tr>
@@ -96,6 +97,11 @@
                     <tr>
                         <td style="text-align: right;"><label>Stockcode:&nbsp;</label></td>
                         <td><input id="itemcode" type="text"/></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;"><label>Category:&nbsp;</label></td>
+                        <td><select id="itemcategory" class="catselect">
+                            </select></td>
                     </tr>
                     <tr>
                         <td style="text-align: right;"><label>Supplier:&nbsp;</label></td>
@@ -183,6 +189,11 @@
             <td><input id="newitemcode" type="text"/></td>
         </tr>
         <tr>
+            <td style="text-align: right;"><label>Category:&nbsp;</label></td>
+            <td><select id="newitemcategory" class="catselect">
+                </select></td>
+        </tr>
+        <tr>
             <td style="text-align: right;"><label>Supplier:&nbsp;</label></td>
             <td><select id="newitemsupplier" class="supselect">
             </select></td>
@@ -196,11 +207,13 @@
 <script type="text/javascript">
     var stock = null;
     var suppliers = null;
+    var categories = null;
     var datatable;
     $(function() {
-        var data = WPOS.sendJsonData("multi", JSON.stringify({"items/get":"", "suppliers/get":""}));
+        var data = WPOS.sendJsonData("multi", JSON.stringify({"items/get":"", "suppliers/get":"", "categories/get":""}));
         stock = data['items/get'];
         suppliers = data['suppliers/get'];
+        categories = data['categories/get'];
         var itemarray = [];
         var tempitem;
         var taxrules = WPOS.getTaxTable().rules;
@@ -226,6 +239,7 @@
                 { "sType": "numeric", "mData":"qty" },
                 { "sType": "currency", "mData":function(data,type,val){return (data['price']==""?"":WPOS.util.currencyFormat(data["price"]));} },
                 { "sType": "string", "mData":"code" },
+                { "sType": "string", "mData":function(data,type,val){return (categories.hasOwnProperty(data.categoryid)?categories[data.categoryid].name:'Misc'); } },
                 { "sType": "string", "mData":function(data,type,val){return (suppliers.hasOwnProperty(data.supplierid)?suppliers[data.supplierid].name:'Misc'); } },
                 { "sType": "html", mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="openEditDialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="removeItem($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false, sClass: "noexport" }
             ] } );
@@ -322,12 +336,19 @@
         for (key in WPOS.getTaxTable().rules){
             taxsel.append('<option class="taxid-'+WPOS.getTaxTable().rules[key].id+'" value="'+WPOS.getTaxTable().rules[key].id+'">'+WPOS.getTaxTable().rules[key].name+'</option>');
         }
-        // populate supplier records in select boxes
+        // populate category & supplier records in select boxes
         var supsel = $(".supselect");
         supsel.html('');
         supsel.append('<option class="supid-0" value="0">None</option>');
         for (key in suppliers){
             supsel.append('<option class="supid-'+suppliers[key].id+'" value="'+suppliers[key].id+'">'+suppliers[key].name+'</option>');
+        }
+
+        var catsel = $(".catselect");
+        catsel.html('');
+        catsel.append('<option class="catid-0" value="0">None</option>');
+        for (key in categories){
+            catsel.append('<option class="catid-'+categories[key].id+'" value="'+categories[key].id+'">'+categories[key].name+'</option>');
         }
 
         // hide loader
@@ -345,6 +366,7 @@
         $("#itemcode").val(item.code);
         $("#itemprice").val(item.price);
         $("#itemsupplier").val(item.supplierid);
+        $("#itemcategory").val(item.categoryid);
         $("#itemtype").val(item.type);
         var modtable = $("#itemmodtable");
         var modselecttable = $("#itemselmodtable");
@@ -402,6 +424,7 @@
             item.taxid = $("#newitemtax").val();
             item.price = $("#newitemprice").val();
             item.supplierid = $("#newitemsupplier").val();
+            item.categoryid = $("#newitemcategory").val();
             item.type = "general";
             item.modifiers = [];
             result = WPOS.sendJsonData("items/add", JSON.stringify(item));
@@ -421,6 +444,7 @@
             item.taxid = $("#itemtax").val();
             item.price = $("#itemprice").val();
             item.supplierid = $("#itemsupplier").val();
+            item.categoryid = $("#itemcategory").val();
             item.type = $("#itemtype").val();
             item.modifiers = [];
             $("#itemselmodtable .selmoditem").each(function(){

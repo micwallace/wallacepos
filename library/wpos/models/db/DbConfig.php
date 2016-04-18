@@ -105,17 +105,17 @@ class DbConfig
             self::$_database = substr($url["path"],1);
             self::$_hostname = $url['host'];
             self::$_port = $url["port"];
-        } else if (file_exists($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/.dbconfig.json')){
-            // json config
-            $dbConfig = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'library/wpos/.dbconfig.json'), true);
+        } else if (file_exists($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/dbconfig.php')){
+            // legacy config (still used for alpha/demo versions)
+            require($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/dbconfig.php');
             self::$_username = $dbConfig['user'];
             self::$_password = $dbConfig['pass'];
             self::$_database = $dbConfig["database"];
             self::$_hostname = $dbConfig['host'];
             self::$_port = $dbConfig["port"];
-        } else if (file_exists($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/dbconfig.php')){
-            // legacy config (still used for alpha/demo versions)
-            require($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/dbconfig.php');
+        } else if (file_exists($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/.dbconfig.json')){
+            // json config
+            $dbConfig = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'library/wpos/.dbconfig.json'), true);
             self::$_username = $dbConfig['user'];
             self::$_password = $dbConfig['pass'];
             self::$_database = $dbConfig["database"];

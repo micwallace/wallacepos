@@ -23,13 +23,19 @@
  */
 class WposSocketControl {
 
+    private $isWindows = false;
+
+    function WposSocketControl(){
+        $this->isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+    }
+
     /**
      * Start the socket server
      * @param $result array Current result array
      * @return mixed API result array
      */
     public function startSocketServer($result){
-		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+		if ($this->isWindows) {
 			pclose(popen('START "WPOS" node '.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'api/server.js','r'));
 		} else {
 			exec("nodejs ".$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."api/server.js > /dev/null & echo $!", $output);
@@ -46,7 +52,7 @@ class WposSocketControl {
      * @return mixed API result array
      */
     public function stopSocketServer($result){
-		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+		if ($this->isWindows) {
 			exec('TASKKILL /F /FI "WindowTitle eq WPOS"', $output);
 		} else {
 			exec("kill `pidof nodejs`", $output);
@@ -93,7 +99,7 @@ class WposSocketControl {
      * @return bool
      */
     private function getServerStat(){
-		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+		if ($this->isWindows) {
 			exec('TASKLIST /NH /V /FI "WindowTitle eq WPOS"', $output );
 			if (strpos($output[0], 'INFO')!==false){
 				$output[0] = 'Offline';
