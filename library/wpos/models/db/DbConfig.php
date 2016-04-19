@@ -57,6 +57,10 @@ class DbConfig
      */
     private static $_unixSocket;
     /**
+     * @var boolean used by installer for testing config values
+     */
+    private static $_loadConfig = true;
+    /**
      * @var PDO
      */
     public $_db;
@@ -125,6 +129,23 @@ class DbConfig
 
         $conf = ["host"=>self::$_hostname, "port"=>self::$_port, "user"=>self::$_username, "pass"=>self::$_password, "db"=>self::$_database,];
         return $conf;
+    }
+
+    public static function testConf($host, $port, $database, $user, $pass){
+        self::$_username = $user;
+        self::$_password = $pass;
+        self::$_database = $database;
+        self::$_hostname = $host;
+        self::$_port = $port;
+        self::$_loadConfig = false; // prevent config from being loaded, used for testing database connection
+        try {
+            $db = new DbConfig();
+        } catch (Exception $ex){
+            self::$_loadConfig = true;
+            return $ex->getMessage();
+        }
+        self::$_loadConfig = true;
+        return true;
     }
 
     /**
