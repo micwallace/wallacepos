@@ -75,7 +75,8 @@ class DbConfig
      */
     public function __construct()
     {
-        $this->getConf();
+        if (self::$_loadConfig)
+            $this->getConf();
 
         $dsn = self::$_dsnPrefix . ':host=' . self::$_hostname . ';port=' . self::$_port . ';dbname=' . self::$_database;
 
