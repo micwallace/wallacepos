@@ -57,17 +57,18 @@ function checkDependencies(){
     }
 
     // check node installation
-    if (!`which nodejs` && !`which node`) {
-        $result['node'] = false;
-        $result['node_socketio'] = false;
-        $result['all'] = false;
-    } else {
-        chdir($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'api/'); // node extension gets installed along with server.js
-        $nodeextensions = json_decode(shell_exec("npm ls --json"));
+	chdir($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'api/'); // node extension gets installed along with server.js
+	$nodeextensions = json_decode(shell_exec("npm ls --json")); // detect node.js existence using npm
+	if ($nodeextensions == NULL) {
+		$result['node'] = false;
+		$result['node_socketio'] = false;
+		$result['all'] = false;
+	}
+	else {
         //die(shell_exec("npm ls --json"));
         if (!$result['node_socketio']=isset($nodeextensions->dependencies->{"socket.io"}))
             $result['all'] = false;
-    }
+	}
 
     // required apache modules
     $apache_mods = apache_get_modules();
