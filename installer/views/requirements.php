@@ -86,7 +86,7 @@
             </li>
             <li>
                 <i class="icon icon-large icon-check <?php echo($deps['permissions_config']?"green":"red"); ?>"></i>
-                File Permissions: Config files <?php echo($deps['permissions_docs']?" are writable":" .config.json && .dbconfig.json (/library/wpos/) must be writable") ?>
+                File Permissions: Config files <?php echo($deps['permissions_config']?" are writable":" .config.json && .dbconfig.json (/library/wpos/) must be writable") ?>
             </li>
             <li>
                 <i class="icon icon-large icon-check <?php echo($deps['all']?"green":"red"); ?>"></i>
