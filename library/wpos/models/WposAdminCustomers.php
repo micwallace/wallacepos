@@ -143,14 +143,14 @@ class WposAdminCustomers {
             return "Could not edit the customer: ".$custMdl->errorInfo;
         } else {
             // get full customer record
-            $data = self::getCustomerData($qresult);
+            $_data = self::getCustomerData($data->id);
             // broadcast to devices
             $WposSocketIO = new WposSocketIO();
-            $WposSocketIO->sendCustomerUpdate($data);
+            $WposSocketIO->sendCustomerUpdate($_data);
             // log data
-            Logger::write("Customer updated with id:" . $data->id, "CUSTOMER", json_encode($data));
+            Logger::write("Customer updated with id:" . $_data->id, "CUSTOMER", json_encode($_data));
 
-            return $data;
+            return $_data;
         }
     }
 
