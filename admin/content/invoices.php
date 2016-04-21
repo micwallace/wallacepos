@@ -198,8 +198,9 @@
         WPOS.customers.setCustomers(data['customers/get']);
         WPOS.transactions.setTransactions(data['invoices/get']);
         var customers = WPOS.customers.getCustomers();
+        $('select#ninvcustid.select2-offscreen').find('option').remove().end();
         for (var c in customers){
-            $("#ninvcustid").append('<option data-value="'+c+'" value="'+c+'">'+customers[c].name+'</option>');
+            $("select#ninvcustid.select2-offscreen").append('<option data-value="'+c+'" value="'+c+'">'+customers[c].name+'</option>');
         }
         var invoices = WPOS.transactions.getTransactions();
         var itemarray = [];
