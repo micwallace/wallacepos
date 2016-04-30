@@ -199,8 +199,12 @@
         WPOS.transactions.setTransactions(data['invoices/get']);
         var customers = WPOS.customers.getCustomers();
         $('select#ninvcustid.select2-offscreen').find('option').remove().end();
+        // below not needed
+        //$('select#ninvcustid').find('option').remove().end();
         for (var c in customers){
-            $("select#ninvcustid.select2-offscreen").append('<option data-value="'+c+'" value="'+c+'">'+customers[c].name+'</option>');
+            // do not use the class select2-offscreen to fix issue - https://github.com/micwallace/wallacepos/issues/41
+            //$("select#ninvcustid.select2-offscreen").append('<option data-value="'+c+'" value="'+c+'">'+customers[c].name+'</option>');
+            $("select#ninvcustid").append('<option data-value="'+c+'" value="'+c+'">'+customers[c].name+'</option>');
         }
         var invoices = WPOS.transactions.getTransactions();
         var itemarray = [];
