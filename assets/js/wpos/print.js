@@ -1393,6 +1393,18 @@ function WPOSPrint(kitchenMode) {
                 temp_data.sale_payments.push({label: "Change", altlabel: altlabels.change, amount: item.change});
             }
         }
+        // customer
+        if (record.custid>0) {
+            var customer = WPOS.getCustTable()[record.custid];
+            if (customer) {
+                temp_data.customer_name = customer.name;
+                temp_data.customer_address = customer.address;
+                temp_data.customer_suburb = customer.suburb;
+                temp_data.customer_state = customer.state;
+                temp_data.customer_postcode = customer.postcode;
+                temp_data.customer_country = customer.country;
+            }
+        }
         // invoice specific data
         if (invoice){
             // business
@@ -1405,18 +1417,6 @@ function WPOSPrint(kitchenMode) {
             temp_data.business_postcode = config.general.bizpostcode;
             temp_data.business_country = config.general.bizcountry;
             temp_data.business_number = config.general.biznumber;
-            // customer
-            if (record.custid>0) {
-                var customer = WPOS.getCustTable()[record.custid];
-                if (customer) {
-                    temp_data.customer_name = customer.name;
-                    temp_data.customer_address = customer.address;
-                    temp_data.customer_suburb = customer.suburb;
-                    temp_data.customer_state = customer.state;
-                    temp_data.customer_postcode = customer.postcode;
-                    temp_data.customer_country = customer.country;
-                }
-            }
             for (var a in temp_data.sale_items){
                 var saleitem = temp_data.sale_items[a];
                 saleitem.tax.items =  [];
