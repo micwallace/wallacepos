@@ -771,7 +771,10 @@ function WPOS() {
     };
 
     this.isOrderTerminal = function () {
-        return configtable.deviceconfig.type == "order_register";
+        if (configtable == null) {
+            loadConfigTable();
+        }
+        return configtable.hasOwnProperty('deviceconfig') && configtable.deviceconfig.type == "order_register";
     };
     /**
      * Fetch device settings from the server using UUID
@@ -806,6 +809,7 @@ function WPOS() {
             configtable = JSON.parse(data);
             return true;
         }
+        configtable = {};
         return false;
     }
 

@@ -266,6 +266,8 @@ function WPOSUtil() {
     var printcursymbol = "";
     function loadCurrencyValues(){
         if (curformat==null){
+            if (!WPOS.getConfigTable().hasOwnProperty('general'))
+                return;
 
             curformat = WPOS.getConfigTable().general.currencyformat.split('~');
             //if (WPOS.getConfigTable().pos.hasOwnProperty('reccurrency') && WPOS.getConfigTable().pos.reccurrency!="")
@@ -278,7 +280,7 @@ function WPOSUtil() {
                 }
             }
 
-            setTimeout(function(){ curformat = null; }, 60000);
+            setTimeout(function(){ curformat = null; }, 30000);
         }
     }
 
