@@ -308,7 +308,7 @@ function WPOSUtil() {
 
     this.reloadPrintCurrencySymbol = function(){
         printcursymbol = getPrintCurrencySymbol();
-        if (printcursymbol=="" && (curformat[0]=="£" || containsNonLatinCodepoints(curformat[0]))){
+        if ((printcursymbol=="" && curformat!=null) && (curformat[0]=="£" || containsNonLatinCodepoints(curformat[0]))){
             // check for unicode characters and set default alt character if so
             printcursymbol = curformat[0]=="£"?String.fromCharCode(156):"$";
         }
