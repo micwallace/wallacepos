@@ -1405,6 +1405,13 @@ function WPOSPrint(kitchenMode) {
                 temp_data.customer_country = customer.country;
             }
         }
+		// tablenum
+		if (typeof record.orderdata !== 'undefined') {			
+			for (var i in record.orderdata) {
+				temp_data.tablenum_txt = (record.orderdata[i].tablenum>0?"Table #: " + record.orderdata[i].tablenum:"Take Away");
+				break;
+			}
+		}
         // invoice specific data
         if (invoice){
             // business
