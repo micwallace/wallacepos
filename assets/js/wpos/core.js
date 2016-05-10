@@ -846,7 +846,7 @@ function WPOS() {
 
     function setAppCustomization(){
         // initialize terminal mode (kitchen order views)
-        if (configtable.deviceconfig.type == "order_register") {
+        if (configtable.hasOwnProperty('deviceconfig') && configtable.deviceconfig.type == "order_register") {
             $(".order_terminal_options").show();
             WPOS.sales.resetSalesForm();
         } else {
