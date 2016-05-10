@@ -968,7 +968,7 @@ function WPOSSales() {
                 alert("Could not delete the order!");
             }
             WPOS.util.hideLoader();
-            WPOS.trans.showTransactionTable();
+            WPOS.trans.showTransactionView();
         }
     };
 
