@@ -93,7 +93,7 @@
             <div class="panel-collapse collapse" id="faq-1-3">
                 <div class="panel-body">
                     <p>
-                    By storing data offline to be readily available, and by receiving real time updates of that data, WallacePOS is able keep a its most used operations lightning fast.<br/>
+                    By storing data offline to be readily available, and by receiving real time updates of that data, WallacePOS is able keep its most used operations lightning fast.<br/>
                     On the terminal side, this means that staff can look up & add items very quickly. In fact, the terminal doesn't use the internet connection at all until the sale is processed.<br/>
                     The transfer of sale data is asynchronous, meaning that you can continue with another sale while the last one is transfering.</p>
                 </div>
@@ -280,14 +280,93 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
-                <a href="#faq-2-1" data-parent="#faq-list-2" data-toggle="collapse" class="accordion-toggle collapsed">
+                <a href="#faq-2-2" data-parent="#faq-list-2" data-toggle="collapse" class="accordion-toggle collapsed">
                     <i class="icon-chevron-right smaller-80" data-icon-hide="icon-chevron-down align-top" data-icon-show="icon-chevron-right"></i>
                     &nbsp;
                     Printer setup guide
                 </a>
             </div>
 
-            <div class="panel-collapse collapse" id="faq-2-1">
+            <div class="panel-collapse collapse" id="faq-2-2">
+                <div class="panel-body">
+                    <h3>Browser Printing</h3>
+                    <p>Browser printing prints a HTML receipt to one of the operating systems installed printers and is selected by default.
+                        <br/>It relies on the browser & printer software to convert the document into a format the printer understands.
+                    </p>
+                    <p>Whilst this method is fine for normal ink-jet & laser printers, using it with thermal printers may produce unexpected results.
+                        <br/>To get the best result out of thermal printers, use Direct Printing as outlined below.
+                    </p>
+
+                    <h3>Direct Printing</h3>
+                    <p>WallacePOS is able to directly communicate with thermal receipt printers that support the standard ESC/POS printer language (most have support).
+                        <br/>Communicating directly with the printer allows the control of a standard cash draw that is connected through the printer,
+                        as well as advanced printing features such as image printing, feed and cutter control.
+                    </p>
+
+                    <h4>Installing the print Applet</h4>
+                        <p>To start using direct printing, you must first install WebPrint on your computer or HttpSocketAdapter on Android.</p>
+                        <p>These applications act as a messenger and provide an interface for WallacePOS to communicate directly with your printer.</p>
+                        <ol>
+                            <li>Log into your WallacePOS <a target="_blank" href="/">terminal</a></li>
+                            <li>Click on the settings tab in the top of the terminal, and then click Printing</li>
+                            <li>Click on connection to display connection setting and change the Method to "Web Print ESCP" or "Android HTTP ESCP" if using Android</li>
+                            <li>After a few seconds, you will be prompted to install the Applet, click OK</li>
+                            <li>On Computer, download & run the WebPrint installer when prompted. Once complete WebPrint should open in the system tray.<br/>
+                                <br/>On Android, you will be redirected to the Android Play store to install HttpSocketAdapter.<br/>
+                                Click the green install button. Once installed, open HttpSocketAdapter, enter the IP address and port for your printer and click the start relay button.
+                            </li>
+                            <li>Once the Applet is installed and running, go back to the WallacePOS terminal, refresh the page and log back in.</li>
+                            <li>You may be prompted by the print applet to allow access to your printers, click Yes/OK.</li>
+                            <li>Once completed you should see "Print-App Connected" status in the bottom left corner of the terminal</li>
+                        </ol>
+                        <p>NOTE: Only Network connection is available on Android devices</p>
+
+                    <h5>USB Connection</h5>
+                        <p>To use a USB thermal printer, you must first add the printer as a RAW device on your computer. <br/>Follow the below guide to setup a RAW printer:</p>
+                        <ul>
+                            <li><strong>Windows</strong><br/><a target="_blank" rel="noopener noreferrer" href="https://qz.io/wiki/Setting-Up-A-Raw-Printer-in-Windows">https://qz.io/wiki/Setting-Up-A-Raw-Printer-in-Windows</a></li>
+                            <li><strong>Mac OSX</strong><br/><a target="_blank" rel="noopener noreferrer" href="https://qz.io/wiki/setting-up-a-raw-printer-in-osx">https://qz.io/wiki/setting-up-a-raw-printer-in-osx</a></li>
+                            <li><strong>Ubuntu</strong><br/><a target="_blank" rel="noopener noreferrer" href="https://qz.io/wiki/setting-up-a-raw-printer-in-ubuntu-linux">https://qz.io/wiki/setting-up-a-raw-printer-in-ubuntu-linux</a></li>
+                        </ul>
+
+
+                    <h5>IP/Network Connection</h5>
+                        <p>Printer that have a network connection can be used on both Computers and Android devices.</p>
+                        <ol>
+                            <li>Firstly, connect the printer to your network with an ethernet cable. If using Wifi consult your printer manual on how to connect.</li>
+                            <li>We must then determine the IP address and port number that the printer is using.
+                                Turn off the printer and print a configuration page by tuning it back on WHILE holding down the feed button.<br/>
+                                The configuration page should list IP address and port. If not, consult the printer manual on how to obtain these details for your specific printer.
+                            </li>
+                            <li>If using Android, these details are set in the HttpSocketAdapter application. Restart the relay to apply settings.<br/>
+                                <br/>If using a computer, go to the WallacePOS terminal, Click on the settings tab in the top of the terminal, and then click Printing.
+                                <br/>Click connection and change Type to "Raw TCP" (Method should already be set to Web Print). Enter the IP address and port number for your printer.
+                            </li>
+                            <li>Test the connection by using the Test or PrintQR button next to the Printer connection settings.</li>
+                        </ol>
+
+                    <h5>Serial Connection</h5>
+
+                    <h4>Printing Formats</h4>
+
+                    <h5>Text-Mode</h5>
+
+                    <h5>Bitmap-Mode</h5>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <a href="#faq-2-3" data-parent="#faq-list-2" data-toggle="collapse" class="accordion-toggle collapsed">
+                    <i class="icon-chevron-right smaller-80" data-icon-hide="icon-chevron-down align-top" data-icon-show="icon-chevron-right"></i>
+                    &nbsp;
+                    Receipt customization guide
+                </a>
+            </div>
+
+            <div class="panel-collapse collapse" id="faq-2-3">
                 <div class="panel-body">
                     Coming soon
                 </div>
@@ -299,27 +378,11 @@
                 <a href="#faq-2-4" data-parent="#faq-list-2" data-toggle="collapse" class="accordion-toggle collapsed">
                     <i class="icon-chevron-right smaller-80" data-icon-hide="icon-chevron-down align-top" data-icon-show="icon-chevron-right"></i>
                     &nbsp;
-                    Receipt customization guide
-                </a>
-            </div>
-
-            <div class="panel-collapse collapse" id="faq-2-4">
-                <div class="panel-body">
-                    Coming soon
-                </div>
-            </div>
-        </div>
-
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <a href="#faq-2-2" data-parent="#faq-list-2" data-toggle="collapse" class="accordion-toggle collapsed">
-                    <i class="icon-chevron-right smaller-80" data-icon-hide="icon-chevron-down align-top" data-icon-show="icon-chevron-right"></i>
-                    &nbsp;
                     My printer isn't working, what can I try?
                 </a>
             </div>
 
-            <div class="panel-collapse collapse" id="faq-2-2">
+            <div class="panel-collapse collapse" id="faq-2-4">
                 <div class="panel-body">
                     Firstly make sure all connections are secure between the printer and the computer/network. If using a network printer double check that the device is connected to the network.<br/>
                     Secondly, close your web browser (along with WallacePOS), re-open it and log back in. Make sure the "Print-App Connected" status is showing in the bottom right hand corner of WallaecPOS.<br/>
@@ -332,14 +395,14 @@
 
         <div class="panel panel-default">
             <div class="panel-heading">
-                <a href="#faq-2-3" data-parent="#faq-list-2" data-toggle="collapse" class="accordion-toggle collapsed">
+                <a href="#faq-2-5" data-parent="#faq-list-2" data-toggle="collapse" class="accordion-toggle collapsed">
                     <i class="icon-chevron-right middle smaller-80" data-icon-hide="icon-chevron-down align-top" data-icon-show="icon-chevron-right"></i>
                     &nbsp;
                     What's required for product barcode scanning & receipt printing?
                 </a>
             </div>
 
-            <div class="panel-collapse collapse" id="faq-2-3">
+            <div class="panel-collapse collapse" id="faq-2-5">
                 <div class="panel-body">
                     <p>
                     WallacePOS supports standard POS hardware.<br/>
@@ -377,7 +440,7 @@
             <div class="panel-collapse collapse" id="faq-3-1">
                 <div class="panel-body">
                     <p>Cash rounding occurs automatically when all payments in the sale are cash and reverted if all cash payments are removed.
-                    <br/>The rounding is set to the closest 5 cents (Aus standard) but we are planning to make this a setting in the future to cater for more countries.
+                    <br/>Rounding defaults to the closest 5 cents (Aus standard) but you can change it to none or 10cents in <a href="/admin/#!possettings">POS settings</a>.
                     <br/>If you need this set differently, let us know and we'll modify it to your needs.</p>
                     <p>Since taxes are calculated on a per item level, cash rounding occurs after tax is calculated and the total tax is not altered by the rounding.
                     <br/>The total rounding for a period is displayed in the tax report, allowing you to alter the tax according to your countries regulations.</p>
@@ -396,9 +459,9 @@
 
             <div class="panel-collapse collapse" id="faq-3-2">
                 <div class="panel-body">
-                    <p>Tax is applied on a per item level. This allows items to have different tax applied to them and support for more complex tax schemes.
-                    <br/>Tax rates are not modifyable in the admin dashboard, if yours is missing you can contact us to get your countries tax rates included.
-                    <br/>At the present time only Australian GST tax rates are included as default.</p>
+                    <p>Tax is applied on a per item level. This allows items to have different tax applied to each item and support for more complex tax schemes.</p>
+                    <p>Taxes are applied to sale items using Tax rules which can be modified in <a href="/admin/#!accountsettings">Accounting Settings</a>.</p>
+
                 </div>
             </div>
         </div>
@@ -479,7 +542,7 @@
 
                     CSV format is by far the easiest to work with. It's a human-readable text file that most spreadsheet applications open it.
                     You'll mostly find that you can open CSV with you current software but if not you can download a spreadsheet application by
-                    heading to <a target="_blank" href="http://www.libreoffice.org/">LibreOffice.com</a> (Windows,Mac,Linux) or <a target="_blank" href="https://play.google.com/store/apps/details?id=com.google.android.apps.docs.editors.sheets&hl=en">Google Sheets</a> (Android).
+                    heading to <a target="_blank" rel="noopener noreferrer" href="http://www.libreoffice.org/">LibreOffice.com</a> (Windows,Mac,Linux) or <a target="_blank" rel="noopener noreferrer" href="https://play.google.com/store/apps/details?id=com.google.android.apps.docs.editors.sheets&hl=en">Google Sheets</a> (Android).
                     Spreadsheet applications are very powerful and easy to use with a little experience. They allow fine-control your data and most have some nice graphing functionality.
 
                     WallacePOS also allows you to export your data in SQL database format, using the database backup function in the utilities section.

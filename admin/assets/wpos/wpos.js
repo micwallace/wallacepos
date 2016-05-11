@@ -103,7 +103,13 @@ function WPOSAdmin(){
         clearInterval(timerId);
     };
     this.loadPageContent = function(query){
-        $.get("content/"+sec+".php", query, function(data){
+        var contenturl;
+        if (sec=="faq"){
+            contenturl = "https://wallacepos.com/content/faq.php"
+        } else {
+            contenturl = "content/"+sec+".php";
+        }
+        $.get(contenturl, query, function(data){
             if (data=="AUTH"){
                 WPOS.triggerLogin();
             } else {
