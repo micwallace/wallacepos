@@ -201,19 +201,19 @@ class WposAdminStats {
 
         if (is_array($items = $itemsMdl->getStoredItemTotals($stime, $etime, $group, true, $this->data->type))){
             foreach ($items as $item){
-                $stats[$item['id']] = new stdClass();
-                if ($item['id']==0){
-                    $stats[$item['id']]->name = "Miscellaneous";
+                $stats[$item['groupid']] = new stdClass();
+                if ($item['groupid']==0){
+                    $stats[$item['groupid']]->name = "Miscellaneous";
                 } else {
-                    $stats[$item['id']]->name = $item['name'];
+                    $stats[$item['groupid']]->name = $item['name'];
                 }
-                $stats[$item['id']]->refs = $item['refs'];
-                $stats[$item['id']]->soldqty = $item['itemnum'];
-                $stats[$item['id']]->soldtotal = number_format($item['itemtotal'], 2, ".", "");
-                $stats[$item['id']]->refundqty = $item['refnum'];
-                $stats[$item['id']]->refundtotal = number_format($item['reftotal'], 2, ".", "");
-                $stats[$item['id']]->netqty = $item['itemnum']-$item['refnum'];
-                $stats[$item['id']]->balance = number_format($item['itemtotal']-$item['reftotal'], 2, ".", "");
+                $stats[$item['groupid']]->refs = $item['refs'];
+                $stats[$item['groupid']]->soldqty = $item['itemnum'];
+                $stats[$item['groupid']]->soldtotal = number_format($item['itemtotal'], 2, ".", "");
+                $stats[$item['groupid']]->refundqty = $item['refnum'];
+                $stats[$item['groupid']]->refundtotal = number_format($item['reftotal'], 2, ".", "");
+                $stats[$item['groupid']]->netqty = $item['itemnum']-$item['refnum'];
+                $stats[$item['groupid']]->balance = number_format($item['itemtotal']-$item['reftotal'], 2, ".", "");
             }
         } else {
             $result['error'] = $itemsMdl->errorInfo;

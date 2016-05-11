@@ -190,7 +190,7 @@ class SaleItemsModel extends DbConfig
             $grouptable = "stored_categories";
         }
 
-        $sql = "SELECT ".($group>0?'si.'.$groupcol.' AS id, p.name AS name':'i.storeditemid AS id, i.name AS name').", COALESCE(SUM(i.qty), 0) AS itemnum, COALESCE(SUM(i.price-(i.price*(s.discount/100))), 0) AS itemtotal, COALESCE(SUM(i.refundqty), 0) AS refnum, COALESCE(SUM(i.unit*i.refundqty), 0) AS reftotal, COALESCE(GROUP_CONCAT(s.ref SEPARATOR ','),'') as refs";
+        $sql = "SELECT ".($group>0?'si.'.$groupcol.' AS groupid, p.name AS name':'i.storeditemid AS groupid, i.name AS name').", COALESCE(SUM(i.qty), 0) AS itemnum, COALESCE(SUM(i.price-(i.price*(s.discount/100))), 0) AS itemtotal, COALESCE(SUM(i.refundqty), 0) AS refnum, COALESCE(SUM(i.unit*i.refundqty), 0) AS reftotal, COALESCE(GROUP_CONCAT(s.ref SEPARATOR ','),'') as refs";
         $sql.= ' FROM sale_items AS i LEFT JOIN sales AS s ON i.saleid=s.id'.($group>0 ? ' LEFT JOIN stored_items AS si ON i.storeditemid=si.id LEFT JOIN '.$grouptable.' AS p ON si.'.$groupcol.'=p.id' : '').' WHERE (s.processdt>= :stime AND s.processdt<= :etime) '.($novoids?'AND s.status!=3':'');
         $placeholders = [":stime"=>$stime, ":etime"=>$etime];
 
@@ -199,7 +199,7 @@ class SaleItemsModel extends DbConfig
             $placeholders[':type'] = $ttype;
         }
 
-        $sql.= ' GROUP BY '.($group>0 ? 'si.'.$groupcol : 'i.storeditemid');
+        $sql.= ' GROUP BY groupid, name';
 
         return $this->select($sql, $placeholders);
     }
