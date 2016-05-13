@@ -1477,8 +1477,18 @@ function WPOSPrint(kitchenMode) {
         //if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1)
         //printw.addEventListener('afterprint', function(e){ printw.close(); });
 
-        printw.focus();
-        printw.print();
+        // some browsers including chrome fire the print function before the page is rendered.
+        // Print page in the onload event so we know the content is rendered.
+        var printed = false;
+        function windowReady(){
+            if (!printed){
+                printed = true;
+                printw.focus();
+                printw.print();
+            }
+        }
+        printw.onload = windowReady;
+        //setTimeout(windowReady, 1200); // possible fallback for browsers that don't support the onload event in child window
     }
 
     // character conversion
