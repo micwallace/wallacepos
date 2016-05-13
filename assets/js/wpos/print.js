@@ -478,7 +478,7 @@ function WPOSPrint(kitchenMode) {
 
     function printESCPReceipt(data){
         if (WPOS.getConfigTable().pos.recprintlogo == true) {
-            getESCPImageString("https://" + document.location.hostname + WPOS.getConfigTable().pos.reclogo, function (imgdata) {
+            getESCPImageString(window.location.protocol + "//" + document.location.hostname + WPOS.getConfigTable().pos.reclogo, function (imgdata) {
                 appendQrcode("receipts", imgdata + data);
             });
         } else {
@@ -517,7 +517,7 @@ function WPOSPrint(kitchenMode) {
 
     function testReceipt(printer) {
         var data = getEscReceiptHeader() + getFeedAndCutCommands(printer);
-        getESCPImageString("https://" + document.location.hostname + WPOS.getConfigTable().pos.reclogo, function (imgdata) {
+        getESCPImageString(window.location.protocol + "//" + document.location.hostname + WPOS.getConfigTable().pos.reclogo, function (imgdata) {
             sendESCPPrintData(printer, imgdata + data);
         });
     }
@@ -528,7 +528,7 @@ function WPOSPrint(kitchenMode) {
 
     function appendQrcode(printer, data) {
         if (WPOS.getConfigTable().pos.recqrcode != "") {
-            getESCPImageString("https://" + document.location.hostname + "/docs/qrcode.png", function (imgdata) {
+            getESCPImageString(window.location.protocol + "//" + document.location.hostname + "/docs/qrcode.png", function (imgdata) {
                 sendESCPPrintData(printer, data + imgdata + getFeedAndCutCommands(printer));
             });
         } else {
