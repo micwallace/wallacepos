@@ -921,7 +921,7 @@ function WPOSSales() {
     function processOrder(){
         var salesobj = getSaleObject();
         var sales_json = JSON.stringify(salesobj);
-        if (sales_json.length > 4096) return alert('Too Many Items'); // depends on database field size for sales.data
+        if (sales_json.length > 16384) return alert('Too Many Items'); // depends on database field size for sales.data
         if (curref!=null){
             salesobj.ref = curref;
             var cursale = WPOS.trans.getTransactionRecord(curref);
@@ -1078,7 +1078,7 @@ function WPOSSales() {
     function ProcessSaleTransaction(){
         var salesobj = getSaleObject();
         var sales_json = JSON.stringify(salesobj);
-        if (sales_json.length > 4096) return alert('Too Many Items'); // depends on database field size for sales.data
+        if (sales_json.length > 16384) return alert('Too Many Items'); // depends on database field size for sales.data
 
         // check for sale reference, indicating an exiting order and set it's reference onto the new data
         var cursale = null;
