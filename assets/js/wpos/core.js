@@ -29,6 +29,9 @@ function WPOS() {
         $.ajaxSetup({
             cache: true
         });
+        // check browser features, returns false if the browser does not support required features
+        if (!checkAppCompatibility())
+            return false;
         // check online status to determine start & load procedure.
         if (checkOnlineStatus()) {
             WPOS.checkCacheUpdate(); // check if application cache is updating or already updated
@@ -39,8 +42,27 @@ function WPOS() {
             }
         }
     };
+
+    function checkAppCompatibility(){
+        // Check local storage: required
+        if (!('localStorage' in window && window.localStorage !== null)) {
+            alert("Your browser does not support localStorage required to run the POS terminal.");
+            return false;
+        }
+        // Check application cache: not required to run
+        if (window.applicationCache == null){
+            alert("Your browser does not support applicationCache and will not be able to function offline.");
+        }
+        return true;
+    }
+
     var cacheloaded = 1;
     this.checkCacheUpdate = function(){
+            if (window.applicationCache == null){
+                console.log("Application cache not supported.");
+                WPOS.initLogin();
+                return;
+            }
             var appCache = window.applicationCache;
             // check if cache exists, if the app is loaded for the first time, we don't need to wait for an update
             if (appCache.status == appCache.UNCACHED){
