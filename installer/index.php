@@ -169,7 +169,7 @@ function addAnalytics($type){
     // Set some options - we are passing in a useragent too here
     curl_setopt_array($curl, array(
         CURLOPT_RETURNTRANSFER => 1,
-        CURLOPT_URL => 'https://admin.wallaceit.com.au/customerapi/stats/add/'.$type.'?hostname='.$_SERVER['SERVER_NAME'].'&version=1.2',
+        CURLOPT_URL => 'https://admin.wallaceit.com.au/customerapi/stats/add/'.$type.'?hostname='.$_SERVER['SERVER_NAME'].'&version=1.3',
         CURLOPT_USERAGENT => 'WallacePOS_Installer'
     ));
     // Send the request & save response to $resp
