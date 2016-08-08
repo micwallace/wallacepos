@@ -51,6 +51,9 @@ if ($_REQUEST['a'] == "auth" || $_REQUEST['a'] == "authrenew") {
                 $result['warning'] = "Warning: Feedserver authentication attempt failed.";*/
             case true:
                 $result['data'] = $auth->getUser();
+                if ($result['data']==null){
+                    $result['error'] = "Could not retrieve user data from php session.";
+                }
                 break;
 
             case -1:
