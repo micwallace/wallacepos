@@ -46,7 +46,7 @@ function WPOSUtil() {
         if (format == "d/m/y" || format == "m/d/y") {
             datestr = (format == "d/m/y" ? day + "/" + month : month + "/" + day   ) + "/" + year.toString().substring(2, 4) + " " + hour + ":" + min + ":" + sec;
         } else {
-            datestr = date + "/" + month + "/" + day + " " + hour + ":" + min + ":" + sec;
+            datestr = year + "/" + month + "/" + day + " " + hour + ":" + min + ":" + sec;
         }
         return datestr;
     };
@@ -79,7 +79,7 @@ function WPOSUtil() {
         if (format == "d/m/y" || format == "m/d/y") {
             datestr = (format == "d/m/y" ? day + "/" + month : month + "/" + day   ) + "/" + year.toString().substring(2, 4);
         } else {
-            datestr = date + "-" + month + "-" + day;
+            datestr = year + "-" + month + "-" + day;
         }
 
         return datestr;
