@@ -794,7 +794,7 @@ function errorHandler($errorno, $errstr, $errfile, $errline){
  * Php exception handler, sets & returns json result object
  * @param Exception $ex
  */
-function exceptionHandler(Exception $ex){
+function exceptionHandler(Throwable $ex){
     global $result;
 
     $result['errorCode'] = "phpexc";

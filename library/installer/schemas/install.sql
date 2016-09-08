@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS `customers` (
   `postcode` int(5) NOT NULL,
   `state` varchar(66) NOT NULL,
   `country` varchar(66) NOT NULL,
-  `notes` varchar(2048) NOT NULL,
+  `notes` varchar(2048) NOT NULL DEFAULT '',
   `googleid` varchar(1024) NOT NULL,
   `pass` varchar(512) NOT NULL,
   `token` varchar(256) NOT NULL,
@@ -128,8 +128,8 @@ CREATE TABLE IF NOT EXISTS `devices` (
   `name` varchar(66) NOT NULL,
   `locationid` int(11) NOT NULL,
   `data` varchar(2048) NOT NULL,
-  `dt` datetime NOT NULL,
-  `disabled` int(1) NOT NULL,
+  `dt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `disabled` int(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
@@ -159,8 +159,8 @@ CREATE TABLE IF NOT EXISTS `device_map` (
 CREATE TABLE IF NOT EXISTS `locations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(66) NOT NULL,
-  `dt` datetime NOT NULL,
-  `disabled` int(1) NOT NULL,
+  `dt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `disabled` int(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
 
@@ -181,12 +181,12 @@ CREATE TABLE IF NOT EXISTS `sales` (
   `locationid` int(11) NOT NULL,
   `custid` int(11) NOT NULL,
   `discount` decimal(4,0) NOT NULL,
-  `rounding` decimal(10,2) NOT NULL,
+  `rounding` decimal(10,2) NOT NULL DEFAULT 0,
   `total` decimal(10,2) NOT NULL,
-  `balance` decimal(10,2) NOT NULL,
+  `balance` decimal(10,2) NOT NULL DEFAULT 0,
   `status` int(1) NOT NULL,
   `processdt` bigint(20) NOT NULL,
-  `duedt` bigint(20) NOT NULL,
+  `duedt` bigint(20) NOT NULL DEFAULT 0,
   `dt` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 DEFAULT COLLATE utf8_unicode_ci;
@@ -216,7 +216,7 @@ CREATE TABLE IF NOT EXISTS `sale_items` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `saleid` int(11) NOT NULL,
   `storeditemid` int(11) NOT NULL,
-  `saleitemid` int(11) NOT NULL,
+  `saleitemid` varchar(12) NOT NULL,
   `qty` int(11) NOT NULL,
   `name` varchar(66) NOT NULL,
   `description` varchar(128) NOT NULL,

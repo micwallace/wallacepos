@@ -56,7 +56,7 @@ class CustomerModel extends DbConfig
     {
 
         $sql = "INSERT INTO customers (email, name, phone, mobile, address, suburb, postcode, state, country, googleid, dt) VALUES (:email, :name, :phone, :mobile, :address, :suburb, :postcode, :state, :country, :googleid, '".date("Y-m-d H:i:s")."')";
-        $placeholders = [":email"=>$email, ":name"=>$name, ":phone"=>$phone, ":mobile"=>$mobile, ":address"=>$address, ":suburb"=>$suburb, ":postcode"=>$postcode, ":state"=>$state, ":country"=>$country, ":googleid"=>$gid];
+        $placeholders = [":email"=>$email, ":name"=>$name, ":phone"=>$phone, ":mobile"=>$mobile, ":address"=>$address, ":suburb"=>$suburb, ":postcode"=>intval($postcode), ":state"=>$state, ":country"=>$country, ":googleid"=>$gid];
 
         return $this->insert($sql, $placeholders);
     }

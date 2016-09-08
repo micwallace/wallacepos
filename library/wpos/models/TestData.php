@@ -206,8 +206,10 @@ class TestData {
             if ($type=='sale'){
                 $this->wposSales = new WposPosSale($saleobj);
                 $this->wposSales->setNoBroadcast();
+                $saleobj->custid = 0;
                 $result = $this->wposSales->insertTransaction(["errorCode" => "OK", "error" => "OK", "data" => ""]);
-                //echo("Sale created: ".json_encode($result)."<br/>");
+                if ($result['error']!="OK")
+                    die("Failed to add devices: ".$result['error']);
             } else {
                 // add invoice only fields
                 $saleobj->duedt = $curprocessdt + 1209600000;
@@ -216,7 +218,8 @@ class TestData {
 
                 $this->wposSales = new WposInvoices($saleobj, null, true);
                 $result = $this->wposSales->createInvoice(["errorCode" => "OK", "error" => "OK", "data" => ""]);
-                //echo("Invoice created: ".json_encode($result));
+                if ($result['error']!="OK")
+                    die("Failed to add devices: ".$result['error']);
             }
             // decrement by a random time between 2-40 minutes
             if ($type=='sale'){
@@ -251,23 +254,25 @@ class TestData {
         $dbMdl = new DbConfig();
         $sql = file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/installer/schemas/install.sql");
         if ($sql!=false){
-            $dbMdl->_db->exec("ALTER TABLE sales AUTO_INCREMENT = 1; TRUNCATE TABLE sales;");
-            $dbMdl->_db->exec("ALTER TABLE sale_items AUTO_INCREMENT = 1; TRUNCATE TABLE sale_items;");
-            $dbMdl->_db->exec("ALTER TABLE sale_payments AUTO_INCREMENT = 1; TRUNCATE TABLE sale_payments;");
-            $dbMdl->_db->exec("ALTER TABLE sale_voids AUTO_INCREMENT = 1; TRUNCATE TABLE sale_voids;");
-            $dbMdl->_db->exec("ALTER TABLE sale_history AUTO_INCREMENT = 1; TRUNCATE TABLE sale_history;");
-            $dbMdl->_db->exec("ALTER TABLE stored_items AUTO_INCREMENT = 1; TRUNCATE TABLE stored_items;");
-            $dbMdl->_db->exec("ALTER TABLE stored_suppliers AUTO_INCREMENT = 1; TRUNCATE TABLE stored_suppliers;");
-            $dbMdl->_db->exec("ALTER TABLE stored_categories AUTO_INCREMENT = 1; TRUNCATE TABLE stored_categories;");
-            $dbMdl->_db->exec("ALTER TABLE devices AUTO_INCREMENT = 1; TRUNCATE TABLE devices;");
-            $dbMdl->_db->exec("ALTER TABLE device_map AUTO_INCREMENT = 1; TRUNCATE TABLE device_map;");
-            $dbMdl->_db->exec("ALTER TABLE locations AUTO_INCREMENT = 1; TRUNCATE TABLE locations;");
-            $dbMdl->_db->exec("ALTER TABLE customers AUTO_INCREMENT = 1; TRUNCATE TABLE customers;");
-            $dbMdl->_db->exec("ALTER TABLE customer_contacts AUTO_INCREMENT = 1; TRUNCATE TABLE customer_contacts;");
-            $dbMdl->_db->exec("ALTER TABLE auth AUTO_INCREMENT = 1; TRUNCATE TABLE auth;");
-            $dbMdl->_db->exec("ALTER TABLE config AUTO_INCREMENT = 1; TRUNCATE TABLE config;");
-            $dbMdl->_db->exec("ALTER TABLE tax_rules AUTO_INCREMENT = 1; TRUNCATE TABLE tax_rules;");
-            $dbMdl->_db->exec("ALTER TABLE tax_items AUTO_INCREMENT = 1; TRUNCATE TABLE tax_items;");
+            $dbMdl->_db->exec("TRUNCATE TABLE sales; ALTER TABLE sales AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE sale_items; ALTER TABLE sale_items AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE sale_payments; ALTER TABLE sale_payments AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE sale_voids; ALTER TABLE sale_voids AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE sale_history; ALTER TABLE sale_history AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE stored_items; ALTER TABLE stored_items AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE stored_suppliers; ALTER TABLE stored_suppliers AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE stored_categories; ALTER TABLE stored_categories AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE devices; ALTER TABLE devices AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE device_map; ALTER TABLE device_map AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE locations; ALTER TABLE locations AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE customers; ALTER TABLE customers AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE customer_contacts; ALTER TABLE customer_contacts AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE auth; ALTER TABLE auth AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE config; ALTER TABLE config AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE tax_rules; ALTER TABLE tax_rules AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE tax_items; ALTER TABLE tax_items AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE stock_levels; ALTER TABLE stock_levels AUTO_INCREMENT = 1;");
+            $dbMdl->_db->exec("TRUNCATE TABLE stock_history; ALTER TABLE stock_history AUTO_INCREMENT = 1;");
             $dbMdl->_db->exec($sql);
         } else {
             die("Could not import sql.");
@@ -275,18 +280,20 @@ class TestData {
     }
 
     private function insertDemoRecords(){
-        $suppliers = json_decode('[{"id": 1, "name":"Joe\'s Fruit&Veg Supplies", "dt":"0000-00-00 00:00:00"},
-                        {"id": 2, "name":"Elecsys Electronic Distibution", "dt":"0000-00-00 00:00:00"},
-                        {"id": 3, "name":"Fitwear Clothing Wholesale", "dt":"0000-00-00 00:00:00"},
-                        {"id": 4, "name":"Yumbox Packaged Goods", "dt":"0000-00-00 00:00:00"},
-                        {"id": 5, "name":"No Place Like Home-warehouse", "dt":"0000-00-00 00:00:00"}]');
+        $suppliers = json_decode('[{"id": 1, "name":"Joe\'s Fruit&Veg Supplies", "dt":"0"},
+                        {"id": 2, "name":"Elecsys Electronic Distibution", "dt":"0"},
+                        {"id": 3, "name":"Fitwear Clothing Wholesale", "dt":"0"},
+                        {"id": 4, "name":"Yumbox Packaged Goods", "dt":"0"},
+                        {"id": 5, "name":"No Place Like Home-warehouse", "dt":"0"}]');
 
         if ($suppliers==false){
             die("Failed to add suppliers");
         } else {
             $supMdl = new SuppliersModel();
             foreach($suppliers as $supplier){
-                $supMdl->create($supplier->name);
+                $result = $supMdl->create($supplier->name);
+                if ($result===false)
+                    die("Failed to add suppliers: ".$supMdl->errorInfo);
             }
             echo("Inserted Suppliers.<br/>");
         }
@@ -327,7 +334,9 @@ class TestData {
         } else {
             $itemMdl = new StoredItemsModel();
             foreach($items as $item){
-                $itemMdl->create($item);
+                $result = $itemMdl->create($item);
+                if ($result===false)
+                    die("Failed to add items: ".$itemMdl->errorInfo);
             }
             echo("Inserted Items.<br/>");
         }
@@ -339,7 +348,9 @@ class TestData {
         } else {
             $catMdl = new CategoriesModel();
             foreach($categories as $category){
-                $catMdl->create($category->name);
+                $result = $catMdl->create($category->name);
+                if ($result===false)
+                    die("Failed to add categories: ".$catMdl->errorInfo);
             }
             echo("Inserted Categories.<br/>");
         }
@@ -354,7 +365,9 @@ class TestData {
         } else {
             $locMdl = new LocationsModel();
             foreach($locations as $location){
-                $locMdl->create($location->name);
+                $result = $locMdl->create($location->name);
+                if ($result===false)
+                    die("Failed to add locations: ".$locMdl->errorInfo);
             }
             echo("Inserted Locations.<br/>");
         }
@@ -366,12 +379,14 @@ class TestData {
                         {"id": 5, "name":"Register 1", "locationid":3, "type":"general_register", "dt":"0000-00-00 00:00:00"},
                         {"id": 6, "name":"Register 1", "locationid":4, "type":"general_register", "dt":"0000-00-00 00:00:00"}]');
 
-        if ($devices==false){
+        if ($devices===false){
             die("Failed to add devices");
         } else {
             $devMdl = new DevicesModel();
             foreach($devices as $device){
-                $devMdl->create($device);
+                $result = $devMdl->create($device);
+                if ($result===false)
+                    die("Failed to add devices: ".$devMdl->errorInfo);
             }
             echo("Inserted Devices.<br/>");
         }
@@ -379,12 +394,14 @@ class TestData {
         $customers = json_decode('[{"id":1,"name":"Jo Doe", "email":"jdoe@domainname.com", "address":"10 Fake St", "phone":"99999999", "mobile":"111111111", "suburb":"Faketown", "state":"NSW", "postcode":"2000", "country":"Australia", "notes":"", "dt":"0000-00-00 00:00:00"},
                         {"id": 2, "name":"Jane Doe", "email":"jdoe@domainname.com", "address":"10 Fake St", "phone":"99999999", "mobile":"111111111", "suburb":"Faketown", "state":"NSW", "postcode":"2000", "country":"Australia", "notes":"", "dt":"0000-00-00 00:00:00"}]');
 
-        if ($customers==false){
+        if ($customers===false){
             die("Failed to add customers");
         } else {
             $devMdl = new CustomerModel();
             foreach($customers as $cust){
-                $devMdl->create($cust->email, $cust->name, $cust->phone, $cust->mobile, $cust->address, $cust->suburb, $cust->postcode, $cust->state, $cust->country);
+                $result = $devMdl->create($cust->email, $cust->name, $cust->phone, $cust->mobile, $cust->address, $cust->suburb, $cust->postcode, $cust->state, $cust->country);
+                if ($result===false)
+                    die("Failed to add customers: ".$devMdl->errorInfo);
             }
             echo("Inserted Customers.<br/>");
         }

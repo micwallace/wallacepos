@@ -150,8 +150,6 @@ class TransactionsModel extends DbConfig
      * @param bool $statparity
      * @param bool $includeorders
      * @param null $ttype
-     * @internal param null $deviceid
-     * @internal param bool $gettotal
      * @return array|bool Returns false on failure or an array with sales or totals on success
      */
     public function getTotals($stime, $etime, $status=null, $statparity=true, $includeorders=false, $ttype=null){
