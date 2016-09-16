@@ -16,3 +16,8 @@ ALTER TABLE `devices`
 ALTER TABLE `locations`
   CHANGE COLUMN `dt` `dt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CHANGE COLUMN `disabled` `disabled` int(1) NOT NULL DEFAULT 0;
+
+ALTER TABLE `auth`
+  CHANGE COLUMN `name` `name` varchar(66) NOT NULL DEFAULT '',
+  CHANGE COLUMN `token` `token` varchar(64) NOT NULL DEFAULT '',
+  CHANGE COLUMN `disabled` `disabled` int(1) NOT NULL DEFAULT 0;

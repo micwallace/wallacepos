@@ -42,7 +42,7 @@ class WposPosData
     /**
      * Decodes any provided JSON string
      */
-    public function WposPosData($jsondata=null)
+    public function __construct($jsondata=null)
     {
         if ($jsondata!==null){
             if (is_string($jsondata)){

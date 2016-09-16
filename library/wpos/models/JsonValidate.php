@@ -34,9 +34,8 @@ class JsonValidate {
     /**
      * @param $data
      * @param $schema
-     * @return $this|bool Returns false on failure to decode the schema, or the initialized object on success.
      */
-    function JsonValidate($data, $schema){
+    function __construct($data, $schema){
         if ($data===null || $schema===null){
             // return false if schema or data == null
             return false;

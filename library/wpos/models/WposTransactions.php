@@ -33,9 +33,8 @@ class WposTransactions {
      * @param $data
      * @param $id
      * @param $loadTransaction
-     * @return $this|bool
      */
-    function WposTransactions($data=null, $id=null, $loadTransaction=false){
+    function __construct($data=null, $id=null, $loadTransaction=false){
         // parse the data and put it into an object
         if ($data!==null){
             $this->data = $data;
@@ -47,7 +46,6 @@ class WposTransactions {
         }
         if ((isset($this->data->id) || isset($this->data->ref)) && $loadTransaction)
             $this->loadTransaction();
-        return $this;
     }
 
     /**

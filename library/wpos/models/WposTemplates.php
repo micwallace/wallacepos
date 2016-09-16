@@ -38,7 +38,7 @@ class WposTemplates
      * Decode provided JSON and extract commonly used variables
      * @param $data
      */
-    public function WposTemplates($data = null)
+    public function __construct($data = null)
     {
         $this->data = $data;
     }

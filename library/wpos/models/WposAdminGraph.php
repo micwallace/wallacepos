@@ -31,17 +31,14 @@ class WposAdminGraph {
 
     /**
      * @param $data
-     * @return $this|bool False on decode failure, initialize $this on success.
      */
-    function WposAdminGraph($data=null){
+    function __construct($data=null){
         // parse the data if needed and put it into an object
         if ($data!==null){
             $this->data = $data;
         } else {
             $this->data = new stdClass();
         }
-
-        return $this;
     }
 
     /**

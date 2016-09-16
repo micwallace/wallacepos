@@ -25,7 +25,7 @@ class WposSocketControl {
 
     private $isWindows = false;
 
-    function WposSocketControl(){
+    function __construct(){
         $this->isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
     }
 

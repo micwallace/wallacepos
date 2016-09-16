@@ -26,17 +26,16 @@ class WposAdminUtilities {
     /**
      * Init, setting provided data
      * @param null $data
-     * @return $this|bool
      */
-    function WposAdminUtilities($data = null){
+    function __construct($data = null){
         // parse the data and put it into an object
         if ($data!==null){
             $this->data = $data;
         } else {
             $this->data = new stdClass();
         }
-        return $this;
     }
+
     // UTIL FUNCTIONS
     /**
      * Format the provided JS timestamp into the config specified format

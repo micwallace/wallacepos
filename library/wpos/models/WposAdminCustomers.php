@@ -29,9 +29,8 @@ class WposAdminCustomers {
     /**
      * Set any provided data
      * @param $data
-     * @return $this|bool
      */
-    function WposAdminCustomers($data=null)
+    function __construct($data=null)
     {
         // parse the data and put it into an object
         if ($data!==null){
@@ -39,7 +38,6 @@ class WposAdminCustomers {
         } else {
             $this->data = new stdClass();
         }
-        return $this;
     }
 
     // CUSTOMERS

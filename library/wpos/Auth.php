@@ -45,13 +45,11 @@ class Auth{
 
     /**
      * Start session if not already started
-     * @return $this
      */
-    public function Auth(){
+    public function __construct(){
         if (session_id() == '') {
             session_start();
         }
-        return $this;
     }
 
     private function initAuthModel(){

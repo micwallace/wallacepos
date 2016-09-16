@@ -35,7 +35,7 @@ class WposPosSetup
      * Decode provided JSON and extract commonly used variables
      * @param $data
      */
-    public function WposPosSetup($data = null){
+    public function __construct($data = null){
         $this->devMdl = new DevicesModel();
         $this->data = $data;
     }

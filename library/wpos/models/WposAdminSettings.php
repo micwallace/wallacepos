@@ -46,9 +46,8 @@ class WposAdminSettings {
     /**
      * Init object with any provided data
      * @param null $data
-     * @return $this|bool
      */
-    function WposAdminSettings($data = null){
+    function __construct($data = null){
         if ($data !== null){
             // parse the data and put it into an object
             $this->data = $data;
@@ -58,7 +57,6 @@ class WposAdminSettings {
             $this->data = new stdClass();
         }
 
-        return $this;
     }
 
     /**

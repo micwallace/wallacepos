@@ -28,9 +28,8 @@ class WposCustomerAccess {
     /**
      * Set any provided data
      * @param $data
-     * @return $this|bool
      */
-    function WposCustomerAccess($data=null)
+    function __construct($data=null)
     {
         // parse the data and put it into an object
         if ($data!==null){
@@ -38,8 +37,8 @@ class WposCustomerAccess {
         } else {
             $this->data = new stdClass();
         }
-        return $this;
     }
+
     public function register($result){
         // validate input + additional validation
         $jsonval = new JsonValidate($this->data, '{"name":"", "email":"@", "address":"", "suburb":"", "postcode":"", "state":"", "country":"", "pass":"", "captcha":""}');

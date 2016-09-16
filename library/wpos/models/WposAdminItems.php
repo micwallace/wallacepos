@@ -28,9 +28,8 @@ class WposAdminItems {
     /**
      * Set any provided data
      * @param $data
-     * @return $this|bool
      */
-    function WposAdminItems($data)
+    function __construct($data)
     {
         // parse the data and put it into an object
         if ($data!==false){
@@ -38,7 +37,6 @@ class WposAdminItems {
         } else {
             $this->data = new stdClass();
         }
-        return $this;
     }
     // STORED ITEMS
     /**

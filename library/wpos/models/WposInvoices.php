@@ -50,9 +50,8 @@ class WposInvoices {
      * @param $data
      * @param null $id
      * @param bool $import
-     * @return $this|bool
      */
-    function WposInvoices($data=null, $id=null, $import=false){
+    function __construct($data=null, $id=null, $import=false){
         // parse the data and put it into an object
         $this->invMdl = new InvoicesModel();
         $this->import = $import;

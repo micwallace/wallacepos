@@ -28,9 +28,8 @@ class WposAdminStats {
     /**
      * Decode any provided JSON
      * @param null $data
-     * @return $this|bool
      */
-    function WposAdminStats($data = null){
+    function __construct($data = null){
         // parse the data and put it into an object
         if ($data!==null){
             $this->data = $data;
@@ -40,7 +39,6 @@ class WposAdminStats {
         if (!isset($this->data->type) || $this->data->type=="all"){
             $this->data->type = null;
         }
-        return $this;
     }
 
     /**

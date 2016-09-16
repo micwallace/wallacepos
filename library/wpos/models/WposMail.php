@@ -26,7 +26,7 @@ class WposMail {
     private $configMdl;
     private $genconfig;
 
-    function WposMail($generalconfig = null){
+    function __construct($generalconfig = null){
         // Get config if it does not exist
         if ($generalconfig!==null){
            $this->genconfig = $generalconfig;

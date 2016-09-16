@@ -38,9 +38,8 @@ class WposAdminStock {
     /**
      * Decode provided input
      * @param $data
-     * @return $this|bool
      */
-    function WposAdminStock($data=null){
+    function __construct($data=null){
         // parse the data and put it into an object
         if ($data!==null){
             $this->data = $data;
@@ -50,8 +49,8 @@ class WposAdminStock {
         // setup objects
         $this->histMdl = new StockHistoryModel();
         $this->stockMdl = new StockModel();
-        return $this;
     }
+
     /**
      * This function is used by WposPosSale and WposInvoices to decrement/increment sold/voided transaction stock; it does not create a history record
      * @param $storeditemid

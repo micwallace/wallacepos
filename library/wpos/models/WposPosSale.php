@@ -77,7 +77,7 @@ class WposPosSale {
      * @param $jsondata
      * @param bool $newtransaction
      */
-    public function WposPosSale($jsondata, $newtransaction = true)
+    public function __construct($jsondata, $newtransaction = true)
     {
         if ($jsondata) {
             if ($newtransaction == true) {

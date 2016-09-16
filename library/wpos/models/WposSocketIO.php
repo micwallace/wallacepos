@@ -38,7 +38,7 @@ class WposSocketIO {
     /**
      * Initialise the elephantIO object and set the hashkey
      */
-    function WposSocketIO(){
+    function __construct(){
 
         $this->elephant = new Elephant('http://127.0.0.1:8080', 'socket.io', 1, false, true, true);
         $this->elephant->setHandshakeQuery([

@@ -24,7 +24,7 @@
 class DbUpdater {
     private $db;
 
-    function DbUpdater(){
+    function __construct(){
         $this->db = new DbConfig();
     }
 
