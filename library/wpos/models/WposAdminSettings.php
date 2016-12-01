@@ -38,10 +38,6 @@ class WposAdminSettings {
      * @var stdClass the current configuration
      */
     private $curconfig;
-    /**
-     * @var stdClass keys of config values stored in .config.json
-     */
-    private static $fileConfigValues = ['timezone', 'email_host', 'email_port', 'email_tls', 'email_user', 'email_pass'];
 
     /**
      * Init object with any provided data
@@ -128,14 +124,9 @@ class WposAdminSettings {
             if ($setting['name']=="general") {
                 $settings["general"]->gcontactaval = $settings["general"]->gcontacttoken != '';
                 unset($settings["general"]->gcontacttoken);
-                // remove email config, this is only needed server side
-                if (!$getServersideValues){
-                    unset($settings["general"]->email_host);
-                    unset($settings["general"]->email_port);
-                    unset($settings["general"]->email_tls);
-                    unset($settings["general"]->email_user);
-                    unset($settings["general"]->email_pass);
-                }
+                // get file-stored config values
+                $filesettings = $this->getConfigFileValues($getServersideValues);
+                $settings["general"] = (object) array_merge((array) $settings["general"], (array) $filesettings);
             } elseif ($setting['name']=="accounting"){
                 $settings[$setting['name']]->xeroaval = $settings[$setting['name']]->xerotoken!='';
                 unset($settings[$setting['name']]->xerotoken);
@@ -160,7 +151,8 @@ class WposAdminSettings {
         if ($data!==false){
             $data = json_decode($data[0]['data']);
             if ($this->name=="general"){
-                $data = (object) array_merge((array) $data, (array) $GLOBALS['config']);
+                $fileconfig = $this->getConfigFileValues(true);
+                $data = (object) array_merge((array) $data, (array) $fileconfig);
                 $data->gcontactaval = $data->gcontacttoken!='';
                 unset($data->gcontacttoken);
             } else if ($this->name=="accounting"){
@@ -229,15 +221,12 @@ class WposAdminSettings {
                     if ($this->name=="general"){
                         unset($conf->gcontacttoken);
                         // update file config values
-                        $fileconfig = new stdClass();
-                        foreach (self::$fileConfigValues as $key) {
-                            if (isset($this->data->{$key})) {
-                                $fileconfig->{$key} = $this->data->{$key};
-                            }
-                        }
-                        // only set timezone for broadcast, email config only needed server side
-                        $conf->timezone = $this->data->timezone;
-                        $this->updateConfigFileValues($fileconfig);
+                        $fileconfig = $this->updateConfigFileValues($this->data);
+                        // only set specific file values for broadcast, email config only needed server side
+                        $conf->timezone = $fileconfig->timezone;
+                        $conf->feedserver_port = $fileconfig->feedserver_port;
+                        $conf->feedserver_proxy = $fileconfig->feedserver_proxy;
+
                     } else if ($this->name=="accounting"){
                         unset($conf->xerotoken);
                     }
@@ -262,14 +251,45 @@ class WposAdminSettings {
         return $result;
     }
 
+    // Get general config values that are stored in .config.json
+    public static function getConfigFileValues($includeServerside = false){
+        $config = new stdClass();
+        if (is_object($GLOBALS['config'])){
+            $config = $GLOBALS['config'];
+        } else if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json")){
+            $config = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json"));
+        }
+
+        if (!$includeServerside){
+            unset($config->email_host);
+            unset($config->email_port);
+            unset($config->email_tls);
+            unset($config->email_user);
+            unset($config->email_pass);
+        }
+
+        return $config;
+    }
+
     /**
      * Updates config.json values
      * @param $config
+     * @return mixed|stdClass updated config values
      */
     private function updateConfigFileValues($config){
+        $curconfig = new stdClass();
         if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json")){
-            file_put_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json", json_encode($config));
+            $curconfig = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json"));
+            if ($curconfig) {
+                foreach ($curconfig as $key=>$value){
+                    if (isset($config->{$key}))
+                        $curconfig->{$key} = $config->{$key};
+                }
+
+                file_put_contents($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . "library/wpos/.config.json", json_encode($curconfig));
+            }
         }
+        return $curconfig;
     }
 
     /**

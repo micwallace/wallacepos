@@ -51,8 +51,9 @@
     <script type="text/javascript" src="/assets/js/wpos/print.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/orders.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/utilities.js"></script>
+    <script type="text/javascript" src="/assets/libs/webprint.js"></script>
     <!-- Websocket library -->
-    <script type="text/javascript" src="/assets/libs/socketio/socket.io.min.js"></script>
+    <script type="text/javascript" src="/assets/libs/socketio/socket.io-1.4.5.js"></script>
     <!-- POS Keypad -->
     <link type="text/css" href="/assets/libs/jquery-keypad/jquery.keypad.css" rel="stylesheet">
     <script type="text/javascript" src="/assets/libs/jquery-keypad/jquery.plugin.min.js"></script>
@@ -415,6 +416,41 @@
                     <div class="widget-body" style="padding-top: 10px; text-align: left;">
                         <label>Use On-screen keypad: <input id="keypadset" type="checkbox" style="vertical-align: top;" onclick="WPOS.setLocalConfigValue('keypad', $('#keypadset').is(':checked'))"></label>
                     </div>
+                    <div class="widget-header widget-header-flat">
+                        <h4 class="lighter">
+                            <i class="icon-link"></i>
+                            Registration
+                        </h4>
+                    </div>
+                    <div class="widget-body" style="padding-top: 10px; text-align: left;">
+                        <table class="table tab-pane">
+                            <tr>
+                                <td>Device ID: </td>
+                                <td class="device_id"></td>
+                            </tr>
+                            <tr>
+                                <td>Device Name: </td>
+                                <td class="device_name"></td>
+                            </tr>
+                            <tr>
+                                <td>Location Name: </td>
+                                <td class="location_name"></td>
+                            </tr>
+                            <tr>
+                                <td>Registration ID: </td>
+                                <td class="devicereg_id"></td>
+                            </tr>
+                            <tr>
+                                <td>Registration UUID: </td>
+                                <td class="devicereg_uuid"></td>
+                            </tr>
+                            <tr>
+                                <td>Registration DT: </td>
+                                <td class="devicereg_dt"></td>
+                            </tr>
+                        </table>
+                        <button class="btn-xs btn-warning" onclick="WPOS.removeDeviceRegistration();">Remove Device Registration</button>
+                    </div>
                 </div>
             </div>
             <div id="settings-tab-2" class="tab-pane fade">
@@ -466,9 +502,6 @@
                                                         </option>
                                                         <option value="wp" class="wp-option">
                                                             Web Print ESCP
-                                                        </option>
-                                                        <option value="ht" class="ht-option">
-                                                            Android HTTP ESCP
                                                         </option>
                                                     </select>
                                                 </label>
@@ -663,9 +696,6 @@
                                         <option value="wp" class="wp-option">
                                             Web Print ESCP
                                         </option>
-                                        <option value="ht" class="ht-option">
-                                            Android HTTP ESCP
-                                        </option>
                                     </select>
                                 </label>
                             </div>
@@ -824,11 +854,14 @@
         </div>
     </div>
 </div>
-<div id="statusbar" style="width:100%; position:absolute; bottom:0; height:40px; background-color:#666666; padding-top: 10px;">
-    <div id="printstat" style="float:left; height: 30px; vertical-align: middle; margin-left: 5px; margin-right: 5px;">
+<div id="statusbar" style="width:100%; position:absolute; bottom:0; min-height:40px; background-color:#666666; padding-top: 10px;">
+    <div id="printstat" class="col-sm-3 col-xs-6" style="vertical-align: middle;">
         <i class="icon-print icon-large white"></i>&nbsp;<span id="printstattxt" class="white">Initializing...</span>
     </div>
-    <div id="wposstat" style="float:right; height: 30px; vertical-align: middle;">
+    <div class="col-sm-6 text-center white">
+        <span class="biz_name"></span> - <span class="device_name"></span> - <span class="location_name"></span>
+    </div>
+    <div id="wposstat" class="col-sm-3 col-xs-6 text-right">
         <span id="wposstattxt" class="white">WPOS is Online</span>
         <span id="wposstaticon" class="badge badge-success" style="margin-left: 5px; margin-right: 5px;"><i class="icon-ok"></i></span>
     </div>

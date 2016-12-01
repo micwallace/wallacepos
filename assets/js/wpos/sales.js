@@ -1141,12 +1141,13 @@ function WPOSSales() {
                 WPOS.updateCustTable(jsonresponse.custdata);
             }
             // reset status Icon
-            WPOS.setStatusBar(1, "WPOS is Online");
+            WPOS.setStatusBar(1, "WPOS is Online", "The POS is running in online mode.\nThe feed server is connected and receiving realtime updates.", 0);
         } else {
             // ERROR
             if (WPOS.switchToOffline()) { // do not store record if offline mode is not supported.
                 // update status
-                WPOS.setStatusBar(3, "WPOS is offline ("+WPOS.sales.getOfflineSalesNum()+" offline records)");
+                var statusmsg = "The POS is offine and will store sale data locally until a connection becomes available.";
+                WPOS.setStatusBar(3, "WPOS is offline ("+WPOS.sales.getOfflineSalesNum()+" offline records)", statusmsg, 0);
             } else {
                 // remove from offline temp
                 removeOfflineSale(callbackref);

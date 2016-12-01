@@ -18,12 +18,49 @@ if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.co
         $timezone = $GLOBALS['config']->timezone;
 }
 // Date & Time
-//putenv("WPOS_TIMEZONE=".$timezone);
 ini_set('date.timezone', $timezone);
 
 // Error handling
 ini_set('display_errors', 'On');
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
+register_shutdown_function('shutdownHandler');
+
+function shutdownHandler() {
+    global $result;
+    $error = error_get_last();
+    if ($error['type'] === E_ERROR)
+        die(json_encode($result));
+}
+
+/**
+ * Php error handler, sets & returns json result object
+ * @param $errorno
+ * @param $errstr
+ * @param $errfile
+ * @param $errline
+ */
+function errorHandler($errorno, $errstr, $errfile, $errline){
+    global $result;
+
+    $result['errorCode'] = "phperr";
+
+    $result[ $errorno==E_WARNING ? 'warning' : 'error'] .=  $errstr . " " . $errfile . " on line " . $errline . "\n";
+}
+/**
+ * Php exception handler, sets & returns json result object
+ * @param Exception $ex
+ */
+function exceptionHandler(Throwable $ex){
+    global $result;
+
+    $result['errorCode'] = "phpexc";
+
+    if ($result['error'] == "OK") $result['error'] = "";
+
+    $result['error'] .= $ex->getMessage() . "\nFile: " . $ex->getFile() . " line " . $ex->getLine();
+
+    die(json_encode($result));
+}
 
 
 

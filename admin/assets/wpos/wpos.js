@@ -430,8 +430,21 @@ function WPOSAdmin(){
     var socketon = false;
     this.startSocket = function() {
         if (socket === null){
-            socket = io.connect(window.location.protocol+'//'+window.location.hostname+'/');
+            var proxy = this.getConfigTable().general.feedserver_proxy;
+            var port = this.getConfigTable().general.feedserver_port;
+            var socketPath = window.location.protocol+'//'+window.location.hostname+(proxy==false ? ':'+port : '');
+            socket = io.connect(socketPath);
             socketon = true;
+
+            socket.on('connect_error', function(){
+                socketError();
+            });
+            socket.on('reconnect_error', function(){
+                socketError();
+            });
+            socket.on('error', function(){
+                socketError();
+            });
             socket.on('updates', function (data) {
                 switch (data.a) {
                     case "devices":
@@ -459,14 +472,23 @@ function WPOSAdmin(){
                     alert("Update feed could not be connected, \nyou will not receive realtime updates!");
             });
         } else {
+            // This should never happen, kept for historic purposes
             socket.socket.reconnect();
         }
     };
+
+    function socketError(){
+        if (socketon) // A fix for mod_proxy_wstunnel causing error on disconnect
+            alert("Update feed could not be connected, \nyou will not receive realtime updates!");
+        socketon = false;
+        socket = null;
+    }
 
     this.stopSocket = function(){
         if (socket !== null){
             socketon = false;
             socket.disconnect();
+            socket = null;
         }
     };
 
@@ -572,6 +594,6 @@ function WPOSAdmin(){
 
     // Load globally accessable objects
     this.util = new WPOSUtil();
-    this.transactions = WPOSTransactions();
-    this.customers = WPOSCustomers();
+    this.transactions = new WPOSTransactions();
+    this.customers = new WPOSCustomers();
 }

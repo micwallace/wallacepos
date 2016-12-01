@@ -1,6 +1,23 @@
 <?php
-require $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Client.php";
-use ElephantIO\Client as Elephant;
+/*require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Client.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/EngineInterface.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/AbstractPayload.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Exception/SocketException.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Exception/MalformedUrlException.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Exception/ServerConnectionFailureException.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Exception/UnsupportedActionException.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Exception/UnsupportedTransportException.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Engine/AbstractSocketIO.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Engine/SocketIO/Session.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Engine/SocketIO/Version0X.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Engine/SocketIO/Version1X.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Payload/Decoder.php");
+require_once($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/elephantio/Payload/Encoder.php");*/
+
+require $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/autoload.php";
+
+use ElephantIO\Client as Client;
+use ElephantIO\Engine\SocketIO\Version1X as Version1X;
 /**
  * WposSocketIO is part of Wallace Point of Sale system (WPOS) API
  *
@@ -39,12 +56,12 @@ class WposSocketIO {
      * Initialise the elephantIO object and set the hashkey
      */
     function __construct(){
-
-        $this->elephant = new Elephant('http://127.0.0.1:8080', 'socket.io', 1, false, true, true);
+        $port = WposAdminSettings::getConfigFileValues()->feedserver_port;
+        /*$this->elephant = new ElephantIO\Client('http://127.0.0.1:'.$port, 'socket.io', 1, false, true, true);
         $this->elephant->setHandshakeQuery([
             'hashkey' => $this->hashkey
-        ]);
-
+        ]);*/
+        $this->elephant = new Client(new Version1X('http://127.0.0.1:'.$port.'/?hashkey='.$this->hashkey));
     }
 
     /**
@@ -55,12 +72,10 @@ class WposSocketIO {
      */
     public function sendSessionData($data, $remove = false){
         try {
-            $this->elephant->init();
-            $this->elephant->send(
-                ElephantIO\Client::TYPE_EVENT,
-                null,
-                null,
-                json_encode(['name' => 'session', 'args' => ['hashkey'=>$this->hashkey, 'data'=>$data, 'remove'=>$remove]])
+            $this->elephant->initialize();
+            $this->elephant->emit(
+                'session',
+                ['hashkey'=>$this->hashkey, 'data'=>$data, 'remove'=>$remove]
             );
             $this->elephant->close();
         } catch(Exception $e){
@@ -79,13 +94,8 @@ class WposSocketIO {
         // sends message to all connected devices, even if not authenticate
         // this is redundant because of new session sharing
         try {
-            $this->elephant->init();
-            $this->elephant->send(
-                ElephantIO\Client::TYPE_EVENT,
-                null,
-                null,
-                json_encode(['name' => 'broadcast', 'args' => $data])
-            );
+            $this->elephant->initialize();
+            $this->elephant->emit('broadcast', $data);
             $this->elephant->close();
         } catch(Exception $e){
             return false;
@@ -124,12 +134,10 @@ class WposSocketIO {
     private function sendDataToDevices($data, $devices=null){
         // sends message to all authenticated devices
         try {
-            $this->elephant->init();
-            $this->elephant->send(
-                ElephantIO\Client::TYPE_EVENT,
-                null,
-                null,
-                json_encode(['name' => 'send', 'args' => ['hashkey'=>$this->hashkey, 'include'=>$devices, 'data'=>$data]])
+            $this->elephant->initialize();
+            $this->elephant->emit(
+                'send',
+                ['hashkey'=>$this->hashkey, 'include'=>$devices, 'data'=>$data]
             );
             $this->elephant->close();
         } catch(Exception $e){

@@ -1033,5 +1033,4 @@ function WPOSTransactions() {
         }
     }
 
-    return this;
 }

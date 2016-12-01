@@ -199,38 +199,5 @@ function returnResult($result){
     }
     die();
 }
-/**
- * Php error handler, sets & returns json result object
- * @param $errorno
- * @param $errstr
- * @param $errfile
- * @param $errline
- */
-function errorHandler($errorno, $errstr, $errfile, $errline){
-    global $result;
-
-    $result['errorCode'] = "phperr";
-
-    if ($result['error'] == "OK") $result['error'] = "";
-
-    $result['error'] .= $errorno . ": " . $errstr . " " . $errfile . " on line " . $errline . "\n";
-
-    die(json_encode($result));
-}
-/**
- * Php exception handler, sets & returns json result object
- * @param Exception $ex
- */
-function exceptionHandler(Exception $ex){
-    global $result;
-
-    $result['errorCode'] = "phpexc";
-
-    if ($result['error'] == "OK") $result['error'] = "";
-
-    $result['error'] .= $ex->getMessage() . "\n";
-
-    die(json_encode($result));
-}
 
 ?>

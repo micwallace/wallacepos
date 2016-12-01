@@ -161,7 +161,7 @@ class DevicesModel extends DbConfig
      * @return array|bool Returns false on an unexpected failure, returns an array of uuid records on success
      */
     public function getUuidInfo($uuid){
-        $sql = 'SELECT m.uuid as uuid, d.id as deviceid, d.name as devicename, d.data as data, l.id as locationid, l.name as locationname, d.disabled as disabled FROM device_map as m LEFT JOIN devices as d ON m.deviceid=d.id LEFT JOIN locations as l ON d.locationid=l.id WHERE m.uuid= :uuid';
+        $sql = 'SELECT m.uuid as uuid, m.id as regid, m.dt as regdt, d.id as deviceid, d.name as devicename, d.data as data, l.id as locationid, l.name as locationname, d.disabled as disabled FROM device_map as m LEFT JOIN devices as d ON m.deviceid=d.id LEFT JOIN locations as l ON d.locationid=l.id WHERE m.uuid= :uuid';
         $placeholders = [];
         $placeholders[':uuid']=$uuid;
 

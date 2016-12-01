@@ -367,7 +367,7 @@
         }, null);
     }
     function deleteDeviceRegistration(id){
-        var answer = confirm("Are you sure you want to delete this registration?\nThe device affected will need to use the terminal.");
+        var answer = confirm("Are you sure you want to delete this registration?\nThe device affected will need to be re-registered.");
         if (answer){
             // show loader
             WPOS.util.showLoader();

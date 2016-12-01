@@ -353,5 +353,4 @@ function WPOSCustomers() {
         });
     }
 
-    return this;
 }

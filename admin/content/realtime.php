@@ -227,7 +227,7 @@
 <div class="hr hr32 hr-dotted"></div>
 
 <!-- Websocket library -->
-<script type="text/javascript" src="/assets/libs/socketio/socket.io.min.js"></script>
+<script type="text/javascript" src="/assets/libs/socketio/socket.io-1.4.5.js"></script>
 
 <script type="text/javascript">
 var onlinedev = {};

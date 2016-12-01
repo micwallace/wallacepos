@@ -55,7 +55,7 @@ class WposSocketControl {
 		if ($this->isWindows) {
 			exec('TASKKILL /F /FI "WindowTitle eq WPOS"', $output);
 		} else {
-			exec("kill `pidof nodejs`", $output);
+			exec('kill `ps aux | grep "[n]odejs '.$_SERVER['DOCUMENT_ROOT'].'" | awk \'{print $2}\'`', $output);
 		}
         if ($this->getServerStat()===true){
             $result['error'] = "Failed to stop the feed server!";
@@ -69,11 +69,7 @@ class WposSocketControl {
      * @return mixed API result array
      */
     public function isServerRunning($result){
-        if ($this->getServerStat()===true){
-            $result['data'] = true;
-        } else {
-            $result['data'] = false;
-        }
+        $result['data'] = array("status"=>$this->getServerStat());
         return $result;
     }
 
@@ -109,7 +105,7 @@ class WposSocketControl {
 				return true;
 			}
 		} else {
-			exec('ps cax | grep nodejs > /dev/null
+			exec('ps aux | grep "[n]odejs '.$_SERVER['DOCUMENT_ROOT'].'" > /dev/null
 					if [ $? -eq 0 ]; then
 						echo "Online"
 							else

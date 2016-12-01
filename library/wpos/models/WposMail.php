@@ -44,7 +44,7 @@ class WposMail {
      * @return PHPMailer
      */
     private function getMailer(){
-        global $config;
+        $config = WposAdminSettings::getConfigFileValues(true);
         $mail = new PHPMailer();
         $mail->isSMTP(); // Set mailer to use SMTP
 

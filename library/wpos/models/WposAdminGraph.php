@@ -60,7 +60,7 @@ class WposAdminGraph {
         $serieslist = [];
         $interval = isset($this->data->interval)?$this->data->interval:(86400000); // default interval is one day
         $curstime = isset($this->data->stime)?$this->data->stime:(strtotime('-1 week')*1000);
-        $curetime = intval($curstime) + intval($interval);
+        $curetime = $curstime + $interval;
         $stopetime = isset($this->data->etime)?$this->data->etime:(time()*1000);
         $tempstats = null;
         while ($curstime<=$stopetime){

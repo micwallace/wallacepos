@@ -7,7 +7,8 @@ ALTER TABLE `sale_items`
   CHANGE COLUMN `saleitemid` `saleitemid` varchar(12) NOT NULL;
 
 ALTER TABLE `customers`
-  CHANGE COLUMN `notes` `notes` varchar(2048) NOT NULL DEFAULT '';
+  CHANGE COLUMN `notes` `notes` varchar(2048) NOT NULL DEFAULT '',
+  CHANGE COLUMN `dt` `dt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 ALTER TABLE `devices`
   CHANGE COLUMN `dt` `dt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
