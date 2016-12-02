@@ -73,6 +73,10 @@ body {
     width: 120px;
     display: inline-block;
 }
+.logout_btn {
+    height: 45px;
+    overflow: hidden;
+}
 .toolbarbtn {
     width:45px;
     height:45px;

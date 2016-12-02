@@ -998,22 +998,19 @@ function WPOSKitchen() {
     // Websocket updates & commands
     var socket = null;
     var socketon = false;
+    var authretry = false;
     function startSocket(){
         if (socket==null){
             var proxy = WPOS.getConfigTable().general.feedserver_proxy;
             var port = WPOS.getConfigTable().general.feedserver_port;
             var socketPath = window.location.protocol+'//'+window.location.hostname+(proxy==false ? ':'+port : '');
             socket = io.connect(socketPath);
-            socketon = true;
-            socket.on('connect_error', function(){
-                socketError();
-            });
-            socket.on('reconnect_error', function(){
-                socketError();
-            });
-            socket.on('error', function(){
-                socketError();
-            });
+            socket.on('connection', onSocketConnect);
+            socket.on('reconnect', onSocketConnect);
+            socket.on('connect_error', socketError);
+            socket.on('reconnect_error', socketError);
+            socket.on('error', socketError);
+
             socket.on('updates', function (data) {
                 switch (data.a){
                     case "item":
@@ -1043,6 +1040,16 @@ function WPOSKitchen() {
                         break;
 
                     case "error":
+                        if (!authretry && data.data.hasOwnProperty('code') && data.data.code=="auth"){
+                            authretry = true;
+                            stopSocket();
+                            var result = WPOS.getJsonData('auth/websocket');
+                            if (result===true){
+                                startSocket();
+                                return;
+                            }
+                        }
+
                         alert(data.data);
                         break;
                 }
@@ -1055,17 +1062,22 @@ function WPOSKitchen() {
                 //alert(data.a);
             });
         } else {
-            // This should never happen, kept for historic purposes
-            socket.socket.reconnect();
+            socket.connect();
+        }
+    }
+
+    function onSocketConnect(){
+        socketon = true;
+        if (WPOS.isOnline() && defaultStatus.type != 1){
+            setStatusBar(1, "WPOS is Online", "The POS is running in online mode.\nThe feed server is connected and receiving realtime updates.", 0);
         }
     }
 
     function socketError(){
-        if (socketon) { // A fix for mod_proxy_wstunnel causing error on disconnect
+        if (WPOS.isOnline())
             setStatusBar(5, "Update Feed Offline", "The POS is running in online mode.\nThe feed server is disconnected and this terminal will not receive realtime updates.", 0);
-            socketon = false;
-            socket = null;
-        }
+        socketon = false;
+        authretry = false;
     }
 
     this.sendAcknowledgement = function(deviceid, ref){
@@ -1083,6 +1095,7 @@ function WPOSKitchen() {
     function stopSocket(){
         if (socket!=null){
             socketon = false;
+            authretry = false;
             socket.disconnect();
             socket = null;
         }

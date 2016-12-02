@@ -1,4 +1,6 @@
 <?php
+require $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/autoload.php";
+use Ifsnop\Mysqldump as IMysqldump;
 /**
  * WposAdminUtilities is part of Wallace Point of Sale system (WPOS) API
  *
@@ -233,11 +235,10 @@ class WposAdminUtilities {
      *  Backup database and init download.
      */
     function backUpDatabase(){
-        include $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/mysql.export.class.php";
         $conf = DbConfig::getConf();
-        $e = new export_mysql($conf['host'], $conf['user'], $conf['pass'], $conf['db']);
+        $dump = new IMysqldump\Mysqldump('mysql:host='.$conf['host'].';dbname='.$conf['db'], $conf['user'], $conf['pass']);
         $fname = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/backup/dbbackup-'.date("Y-m-d_H-i-s").'.sql';
-        $e->exportValue($fname,false);
+        $dump->start($fname);
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="'.basename($fname).'"'); //<<< Note the " " surrounding the file name
@@ -247,7 +248,7 @@ class WposAdminUtilities {
         header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
         header('Pragma: public');
         header('Content-Length: ' . filesize($fname));
-        echo(file_get_contents($fname));
+        readfile($fname);
         // unlink($fname); TODO: Option to keep on server
         // log data
         Logger::write("Database backed up", "UTIL");

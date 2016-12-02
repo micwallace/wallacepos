@@ -211,6 +211,12 @@ function WPOS() {
     this.logout = function () {
         var answer = confirm("Are you sure you want to logout?");
         if (answer) {
+            var sales = WPOS.sales.getOfflineSalesNum();
+            if (sales>0) {
+                answer = confirm("You have offline sales that have not been uploaded to the server.\nWould you like to back them up?");
+                if (answer)
+                    this.backupOfflineSales();
+            }
             WPOS.util.showLoader();
             logout();
             WPOS.util.hideLoader();
@@ -450,6 +456,59 @@ function WPOS() {
             return;
         }
         alert("Please login as an administrator to use this feature");
+    };
+
+    this.resetLocalConfig = function(){
+        if (isUserAdmin()){
+            var answer = confirm("Are you sure you want to restore local settings to their defaults?\n");
+            if (answer){
+                localStorage.removeItem("wpos_lconfig");
+                WPOS.print.loadPrintSettings();
+                setKeypad(true);
+            }
+            return;
+        }
+        alert("Please login as an administrator to use this feature");
+    };
+
+    this.clearLocalData = function(){
+        if (isUserAdmin()){
+            var answer = confirm("Are you sure you want to clear all local data?\nThis removes all locally stored data except device registration key.\nOffline Sales will be deleted.");
+            if (answer){
+                localStorage.removeItem("wpos_auth");
+                localStorage.removeItem("wpos_config");
+                localStorage.removeItem("wpos_csales");
+                localStorage.removeItem("wpos_osales");
+                localStorage.removeItem("wpos_items");
+                localStorage.removeItem("wpos_customers");
+                localStorage.removeItem("wpos_lconfig");
+            }
+            return;
+        }
+        alert("Please login as an administrator to use this feature");
+    };
+
+    this.refreshRemoteData = function(){
+        var answer = confirm("Are you sure you want to reload data from the server?");
+        if (answer){
+            loadOnlineData(1, false);
+        }
+    };
+
+    this.backupOfflineSales = function(){
+        var offline_sales = localStorage.getItem('wpos_osales');
+
+        var a = document.createElement('a');
+        var blob = new Blob([offline_sales], {'type':"application/octet-stream"});
+        window.URL = window.URL || window.webkitURL;
+        a.href = window.URL.createObjectURL(blob);
+        var date = new Date();
+        var day = date.getDate();
+        if (day.length==1) day = '0' + day;
+        a.download = "wpos_offline_sales_"+date.getFullYear()+"-"+(date.getMonth()+1)+"-"+day+"_"+date.getHours()+"-"+date.getMinutes()+".json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
     };
 
     function populateDeviceInfo(){
@@ -1249,27 +1308,19 @@ function WPOS() {
     // Websocket updates & commands
     var socket = null;
     var socketon = false;
+    var authretry = false;
     function startSocket(){
         if (socket==null){
             var proxy = WPOS.getConfigTable().general.feedserver_proxy;
             var port = WPOS.getConfigTable().general.feedserver_port;
             var socketPath = window.location.protocol+'//'+window.location.hostname+(proxy==false ? ':'+port : '');
             socket = io.connect(socketPath);
-            socketon = true;
-            socket.on('connection', function(){
-                if (defaultStatus.type == 3){
-                    setStatusBar(1, "WPOS is Online", "The POS is running in online mode.\nThe feed server is connected and receiving realtime updates.", 0);
-                }
-            });
-            socket.on('connect_error', function(){
-                socketError();
-            });
-            socket.on('reconnect_error', function(){
-                socketError();
-            });
-            socket.on('error', function(){
-                socketError();
-            });
+            socket.on('connection', onSocketConnect);
+            socket.on('reconnect', onSocketConnect);
+            socket.on('connect_error', socketError);
+            socket.on('reconnect_error', socketError);
+            socket.on('error', socketError);
+
             socket.on('updates', function (data) {
                 switch (data.a){
                     case "item":
@@ -1286,6 +1337,7 @@ function WPOS() {
 
                     case "config":
                         updateConfig(data.type, data.data);
+                        populateDeviceInfo();
                         break;
 
                     case "regreq":
@@ -1305,6 +1357,16 @@ function WPOS() {
                         break;
 
                     case "error":
+                        if (!authretry && data.data.hasOwnProperty('code') && data.data.code=="auth"){
+                            authretry = true;
+                            stopSocket();
+                            var result = WPOS.getJsonData('auth/websocket');
+                            if (result===true){
+                                startSocket();
+                                return;
+                            }
+                        }
+
                         alert(data.data);
                         break;
                 }
@@ -1317,22 +1379,28 @@ function WPOS() {
                 //alert(data.a);
             });
         } else {
-            // This should never happen, kept for historic purposes
-            socket.socket.reconnect();
+            socket.connect();
+        }
+    }
+
+    function onSocketConnect(){
+        socketon = true;
+        if (WPOS.isOnline() && defaultStatus.type != 1){
+            setStatusBar(1, "WPOS is Online", "The POS is running in online mode.\nThe feed server is connected and receiving realtime updates.", 0);
         }
     }
 
     function socketError(){
-        if (socketon) { // A fix for mod_proxy_wstunnel causing error on disconnect
+        if (WPOS.isOnline())
             setStatusBar(5, "Update Feed Offline", "The POS is running in online mode.\nThe feed server is disconnected and this terminal will not receive realtime updates.", 0);
-            socketon = false;
-            socket = null;
-        }
+        socketon = false;
+        authretry = false;
     }
 
     function stopSocket(){
         if (socket!=null){
             socketon = false;
+            authretry = false;
             socket.disconnect();
             socket = null;
         }
@@ -1343,8 +1411,6 @@ function WPOS() {
     };
 
     // Reset terminal
-    var reset_timer;
-    var reset_interval;
     function resetTerminalRequest(){
         // Set timer
         var reset_timer = setTimeout("window.location.reload(true);", 10000);
@@ -1380,8 +1446,6 @@ function WPOS() {
             ]
         });
     }
-
-    // TODO: On socket error, start a timer to reconnect
 
     // Contructor code
     // load WPOS Objects
@@ -1584,7 +1648,7 @@ $(function () {
         var keypad = $(".keypad-popup");
         var paymentsopen = $("#paymentsdiv").is(":visible");
         switch (event.which){
-            case 37: // left arrow
+            /*case 37: // left arrow
                 keypad.hide();
                 x = $('input:not(:disabled), textarea:not(:disabled)');
                 x.eq(x.index(document.activeElement) - 1).trigger('click').focus();
@@ -1593,7 +1657,7 @@ $(function () {
                 keypad.hide();
                 x = $('input:not(:disabled), textarea:not(:disabled)');
                 x.eq(x.index(document.activeElement) + 1).trigger('click').focus();
-                break;
+                break;*/
             case 45: // insert
                 if ($(":focus").attr('id')=="codeinput"){
                     WPOS.items.addManualItemRow();

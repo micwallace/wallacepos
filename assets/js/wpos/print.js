@@ -49,7 +49,7 @@ function WPOSPrint(kitchenMode) {
             feed:4
         },
         global: {
-            recask:"print",
+            recask:"email",
             cashdraw: false,
             serviceip: "127.0.0.1",
             serviceport: 8080,

@@ -62,7 +62,7 @@ io.sockets.on('connection', function (socket) {
     }
     // Disconnect if not authenticated
     if (!authed) {
-        socket.emit('updates', {a: "error", data: "Socket authentication failed!"});
+        socket.emit('updates', {a: "error", data: {code: "auth", message: "Socket authentication failed!"}});
         socket.disconnect();
     }
 

@@ -226,9 +226,6 @@
 </div>
 <div class="hr hr32 hr-dotted"></div>
 
-<!-- Websocket library -->
-<script type="text/javascript" src="/assets/libs/socketio/socket.io-1.4.5.js"></script>
-
 <script type="text/javascript">
 var onlinedev = {};
 
@@ -436,7 +433,7 @@ var sales;
 var graph;
 
 function loadTodaysSales() {
-    if (sales===false)
+    if (!sales)
         return false;
     if (Object.keys(sales).length > 0) {
         // sort by time
@@ -458,6 +455,8 @@ function loadTodaysSales() {
 }
 
 function populateTodayStats() {
+    if (!totals)
+        return false;
     // populate the fields
     $("#rtsalenum").text(totals.salenum);
     $("#rtsaletotal").text(WPOS.util.currencyFormat(totals.saletotal));
@@ -581,11 +580,13 @@ $(function () {
     // load data
     WPOS.startSocket();
     var data = WPOS.sendJsonData("multi", JSON.stringify({"sales/get":{stime: stoday, etime: etime}, "stats/general":{"stime":stoday, "etime":etime}, "graph/general":{"stime": stime, "etime": etime, "interval": 1800000}}));
-    sales = data['sales/get'];
-    totals = data['stats/general'];
-    loadTodaysSales();
-    populateTodayStats();
-    loadGraph(data['graph/general']);
+    if (data!==false) {
+        sales = data['sales/get'];
+        totals = data['stats/general'];
+        loadTodaysSales();
+        populateTodayStats();
+        loadGraph(data['graph/general']);
+    }
     // hide loader
     WPOS.util.hideLoader();
 })

@@ -227,7 +227,7 @@
     }
 
     function saveFeedSettings(){
-        var answer = confirm("Are you sure you want to save the feed server settings?\nYou will need to refresh all terminals for the settings to take effect.");
+        var answer = confirm("Are you sure you want to save the feed server settings?\nYou may need to restart devices for the settings to take effect.");
         if (answer) {
             WPOS.util.showLoader();
 

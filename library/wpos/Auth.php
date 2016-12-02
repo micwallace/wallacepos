@@ -194,11 +194,8 @@ class Auth{
             Logger::write("Authentication successful for user:".$username, "AUTH");
 
             // Send to node JS
-            $socket = new WposSocketIO();
-            $socket->sendSessionData(session_id());
-            /*if (!$socket->sendSessionData(session_id())){
-                return -2;
-            }*/
+            $this->authoriseWebsocket();
+
             return true;
         } else{
             // log data
@@ -206,6 +203,14 @@ class Auth{
 
             return false;
         }
+    }
+
+    /**
+     * Sends the users session_id to the node.js websocket server for client websocket authorisation.
+     */
+    public function authoriseWebsocket(){
+        $socket = new WposSocketIO();
+        return $socket->sendSessionData(session_id());
     }
 
     /**

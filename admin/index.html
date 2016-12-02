@@ -70,7 +70,7 @@
 					</a><!-- /.brand -->
 				</div><!-- /.navbar-header -->
                 <div style="position: absolute; right: 0;">
-                    <button class="btn" style="height: 45px;" onclick="WPOS.logout();">Logout</button>
+                    <button class="btn logout_btn" onclick="WPOS.logout();">Logout</button>
                 </div>
 			</div><!-- /.container -->
 		</div>
@@ -288,6 +288,7 @@
 								<a onclick="WPOS.goToHome();">Home</a>
 							</li>
 						</ul><!-- .breadcrumb -->
+                        <button class="btn btn-xs btn-primary pull-right" style="margin-top: 10px;" onclick="WPOS.stopSocket(); WPOS.loadPageContent(sec);"><i class="icon-refresh"></i> Refresh</button>
 					</div>
 
 					<div id="maincontent" class="page-content">
@@ -869,10 +870,13 @@
         <script src="assets/js/jquery.hotkeys.min.js"></script>
         <script src="assets/js/bootstrap-wysiwyg.min.js"></script>
         <script src="assets/js/bootbox.min.js"></script>
-        <!-- inline scripts related to this page -->
+
         <script src="assets/wpos/wpos.js"></script>
         <script src="assets/wpos/customers.js"></script>
         <script src="assets/wpos/transactions.js"></script>
+
+        <!-- Websocket library -->
+        <script type="text/javascript" src="/assets/libs/socketio/socket.io-1.4.5.js"></script>
 	</body>
 </html>
 

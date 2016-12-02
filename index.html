@@ -70,7 +70,7 @@
     <li onclick="WPOS.trans.setupTransactionView();"><a href="#tabs-2">Sales</a></li>
     <li onclick="WPOS.reports.populateOverview();"><a href="#tabs-3">Reports</a></li>
     <li><a href="#tabs-4">Settings</a></li>
-    <button onClick="WPOS.logout();" style="float:right; height: 45px;" class="btn">Logout</button>
+    <button onClick="WPOS.logout();" style="float:right; height: 45px;" class="btn logout_btn">Logout</button>
     <button title="Expand window" id="window_width_toggle" onClick="expandWindow();" style="float:right; vertical-align: middle; margin-top: 10px; margin-right: 5px; margin-left: 5px;" class="btn btn-xs btn-primary"><i class="icon icon-expand"></i></button>
     <button title="Open Administration Dashboard" onClick="window.open('/admin');" style="float:right; vertical-align: middle; margin-top: 10px; margin-right: 5px; margin-left: 5px;" class="btn btn-xs btn-primary"><i class="icon icon-cog">&nbsp;Admin</i></button>
 </ul>
@@ -449,7 +449,11 @@
                                 <td class="devicereg_dt"></td>
                             </tr>
                         </table>
-                        <button class="btn-xs btn-warning" onclick="WPOS.removeDeviceRegistration();">Remove Device Registration</button>
+                        <button id="backup_btn" class="btn-xs btn-success" onclick="WPOS.backupOfflineSales();">Backup Offline Sales</button>
+                        <button class="btn-xs btn-warning" onclick="WPOS.resetLocalConfig();">Reset Local Config</button>
+                        <button class="btn-xs btn-danger" onclick="WPOS.clearLocalData();">Clear Local Data</button>
+                        <button class="btn-xs btn-primary" onclick="WPOS.refreshRemoteData();">Refresh Remote Data</button>
+                        <button class="btn-xs btn-danger" onclick="WPOS.removeDeviceRegistration();">Remove Device Registration</button>
                     </div>
                 </div>
             </div>
@@ -855,8 +859,10 @@
     </div>
 </div>
 <div id="statusbar" style="width:100%; position:absolute; bottom:0; min-height:40px; background-color:#666666; padding-top: 10px;">
-    <div id="printstat" class="col-sm-3 col-xs-6" style="vertical-align: middle;">
-        <i class="icon-print icon-large white"></i>&nbsp;<span id="printstattxt" class="white">Initializing...</span>
+    <div class="col-sm-3 col-xs-6" style="vertical-align: middle;">
+        <div id="printstat">
+            <i class="icon-print icon-large white"></i>&nbsp;<span id="printstattxt" class="white">Initializing...</span>
+        </div>
     </div>
     <div class="col-sm-6 text-center white">
         <span class="biz_name"></span> - <span class="device_name"></span> - <span class="location_name"></span>

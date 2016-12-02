@@ -139,6 +139,9 @@ function routeApiCall($action, $data, $result) {
     $notinprev = false;
     // Check for action in unprotected area (does not require permission)
     switch ($action) {
+        case "auth/websocket":
+            $result['data'] = $auth->authoriseWebsocket();
+            break;
         // POS Specific
         case "config/get":
             $setup = new WposPosSetup($data);
