@@ -105,13 +105,8 @@ class WposSocketControl {
 				return true;
 			}
 		} else {
-			exec('ps aux | grep "[n]odejs '.$_SERVER['DOCUMENT_ROOT'].'" > /dev/null
-					if [ $? -eq 0 ]; then
-						echo "Online"
-							else
-						echo "Offline"
-					fi', $output);
-			if (strpos($output[0], 'Online')!==false){
+			exec('ps aux | grep "[n]odejs '.$_SERVER['DOCUMENT_ROOT'].'"', $output);
+			if (strpos($output[0], $_SERVER['DOCUMENT_ROOT'])!==false){
 				return true;
 			} else {
 				return false;

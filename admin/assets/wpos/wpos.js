@@ -342,10 +342,10 @@ function WPOSAdmin(){
         return false;
     };
 
-    this.sendJsonDataAsync = function (action, data, callback) {
+    this.sendJsonDataAsync = function (action, data, callback, errorCallback) {
         // send request to server
         try {
-            var response = $.ajax({
+            $.ajax({
                 url     : "/api/"+action,
                 type    : "POST",
                 data    : {data: data},
@@ -364,19 +364,29 @@ function WPOSAdmin(){
                     } else {
                         if (errCode == "auth") {
                             WPOS.triggerLogin();
-                            //callback(false);
                         } else {
+                            if (typeof errorCallback == "function")
+                                return errorCallback(json.error);
                             alert(err);
                         }
+                        callback(false);
                     }
                 },
                 error   : function(jqXHR, status, error){
+                    if (typeof errorCallback == "function")
+                        return errorCallback(error);
+
                     alert(error);
-                    //callback(false);
+                    callback(false);
                 }
             });
             return true;
         } catch (ex) {
+            if (typeof errorCallback == "function")
+                return errorCallback(error.message);
+
+            alert(ex.message);
+            callback(false);
             return false;
         }
     };
@@ -424,6 +434,31 @@ function WPOSAdmin(){
             }
         });
     };
+
+    // function for event source processes
+    this.startEventSourceProcess = function(url, dataCallback, errorCallback){
+        if (typeof(EventSource) === "undefined"){
+            alert("Your browser does not support EventSource, please update your browser to continue.");
+            return;
+        }
+        showModalLoader();
+        var jsonStream = new EventSource(url);
+        jsonStream.onmessage = function (e) {
+            var message = JSON.parse(e.data);
+            if (message.hasOwnProperty('error') || message.hasOwnProperty('result'))
+                jsonStream.close();
+
+            if (typeof dataCallback == "function")
+                dataCallback(message);
+        };
+        jsonStream.onerror = function(e){
+            jsonStream.close();
+            console.log("Stream closed on error");
+            if (typeof errorCallback == "function")
+                errorCallback(e);
+        }
+    };
+
     // socket control
     // Websocket updates & commands
     var socket = null;

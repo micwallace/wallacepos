@@ -63,9 +63,7 @@ function checkDependencies(){
 		$result['node'] = false;
 		$result['node_socketio'] = false;
 		$result['all'] = false;
-	}
-	else {
-        //die(shell_exec("npm ls --json"));
+	} else {
         if (!$result['node_socketio']=isset($nodeextensions->dependencies->{"socket.io"}))
             $result['all'] = false;
 	}
@@ -124,7 +122,7 @@ function checkDependencies(){
         curl_setopt($handle,  CURLOPT_RETURNTRANSFER, TRUE);
         curl_exec($handle);
         $httpCode = curl_getinfo($handle, CURLINFO_HTTP_CODE);
-        if($httpCode == 404) {
+        if($httpCode == 404 || $httpCode == 500) {
             $result['node_redirect'] = false;
             $result['all'] = false;
         } else {
@@ -169,7 +167,7 @@ function addAnalytics($type){
     // Set some options - we are passing in a useragent too here
     curl_setopt_array($curl, array(
         CURLOPT_RETURNTRANSFER => 1,
-        CURLOPT_URL => 'https://admin.wallaceit.com.au/customerapi/stats/add/'.$type.'?hostname='.$_SERVER['SERVER_NAME'].'&version=1.3',
+        CURLOPT_URL => 'https://admin.wallaceit.com.au/customerapi/stats/add/'.$type.'?hostname='.$_SERVER['SERVER_NAME'].'&version='.(isset($_REQUEST['version']) ? $_REQUEST['version'] : DbUpdater::getLatestVersionName()),
         CURLOPT_USERAGENT => 'WallacePOS_Installer'
     ));
     // Send the request & save response to $resp
@@ -181,9 +179,9 @@ function addAnalytics($type){
 session_start();
 // installer scripts
 // update
-if (isset($_REQUEST['upgrade']) && isset($_REQUEST['version'])){
+if (isset($_REQUEST['upgrade'])){
     $dbUpdater = new DbUpdater();
-    $result = $dbUpdater->upgrade($_REQUEST['version']);
+    $result = $dbUpdater->upgrade((isset($_REQUEST['version']) ? $_REQUEST['version'] : null));
     // register analytics
     addAnalytics("upgrade");
     echo($result);

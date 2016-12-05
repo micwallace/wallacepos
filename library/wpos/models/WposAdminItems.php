@@ -144,6 +144,173 @@ class WposAdminItems {
         }
         return $result;
     }
+
+    /**
+     * Import items
+     * @param $result
+     * @return mixed
+     */
+    public function importItemsSet($result)
+    {
+        $_SESSION['import_data'] = $this->data->import_data;
+        $_SESSION['import_options'] = $this->data->options;
+        return $result;
+    }
+
+    private function getIdForName($arr, $value){
+        foreach($arr as $key => $item) {
+            if ($item['name'] === $value)
+                return $item['id'];
+        }
+        return false;
+    }
+
+    /**
+     * Import items
+     * @param $result
+     * @return mixed
+     */
+    public function importItemsStart($result)
+    {
+        if (!isset($_SESSION['import_data']) || !is_array($_SESSION['import_data'])){
+            $result['error'] = "Import data was not received.";
+            EventStream::sendStreamData($result);
+            return $result;
+        }
+        $options = $_SESSION['import_options'];
+        $items = $_SESSION['import_data'];
+
+        EventStream::iniStream();
+        $itemMdl = new StoredItemsModel();
+        $catMdl = new CategoriesModel();
+        $supMdl = new SuppliersModel();
+        $taxMdl = new TaxRulesModel();
+
+        $categories = $catMdl->get();
+        $suppliers = $supMdl->get();
+        $taxRules = $taxMdl->get();
+
+        if ($categories===false || $suppliers===false || $taxRules===false){
+            $result['error'] = "Could not load categories, suppliers or tax rules: ".$catMdl->errorInfo." ".$supMdl->errorInfo." ".$taxMdl->errorInfo;
+            EventStream::sendStreamData($result);
+            return $result;
+        }
+
+        EventStream::sendStreamData(['status'=>"Validating Items..."]);
+        $validator = new JsonValidate(null, '{"code":"", "qty":1, "name":"", "price":-1, "tax_name":"", "category_name":"", "supplier_name":""}');
+        $count = 1;
+        foreach ($items as $key=>$item){
+            EventStream::sendStreamData(['status'=>"Validating Items...", 'progress'=>$count]);
+
+            $validator->validate($item);
+
+            $item->code = strtoupper($item->code); // make sure stockcode is upper case
+            $dupitems = $itemMdl->get(null, $item->code);
+            if (sizeof($dupitems) > 0) {
+                $dupitem = $dupitems[0];
+                if ($dupitem['id'] != $item->id) {
+                    $result['error'] = "An item with the stockcode ".$item->code." already exists on line ".$count;
+                    EventStream::sendStreamData($result);
+                    return $result;
+                }
+            }
+
+            // remove currentcy symbol from
+
+            // Match tax id with name
+            if (!$item->tax_name){
+                $id = 1;
+            } else {
+                $id = $this->getIdForName($taxRules, $item->tax_name);
+            }
+            if ($id===false){
+                $result['error'] = "Could not find tax rule id for name ".$item->tax_name." on line ".$count." of the CSV";
+                EventStream::sendStreamData($result);
+                return $result;
+            }
+            $item->taxid = $id;
+            unset($item->tax_name);
+
+            // Match category
+            if (!$item->category_name){
+                $id = 0;
+            } else {
+                $id = $this->getIdForName($categories, $item->category_name);
+            }
+            if ($id===false){
+                if ((isset($options->add_categories) && $options->add_categories===true)){
+                    EventStream::sendStreamData(['status'=>"Adding category..."]);
+                    $id = $catMdl->create($item->category_name);
+                    if (!is_numeric($id)){
+                        $result['error'] = "Could not add new category " . $item->category_name . " on line ".$count." of the CSV: ".$catMdl->errorInfo;
+                        EventStream::sendStreamData($result);
+                        return $result;
+                    }
+                } else {
+                    $result['error'] = "Could not find category id for name " . $item->category_name . " on line ".$count." of the CSV";
+                    EventStream::sendStreamData($result);
+                    return $result;
+                }
+            }
+            $item->categoryid = $id;
+            unset($item->category_name);
+
+            // Match supplier
+            if (!$item->supplier_name){
+                $id = 0;
+            } else {
+                $id = $this->getIdForName($suppliers, $item->supplier_name);
+            }
+            if ($id===false){
+                if ((isset($options->add_suppliers) && $options->add_suppliers===true)){
+                    EventStream::sendStreamData(['status'=>"Adding supplier..."]);
+                    $id = $supMdl->create($item->supplier_name);
+                    if (!is_numeric($id)){
+                        $result['error'] = "Could not add new supplier " . $item->supplier_name . " on line ".$count." of the CSV: ".$catMdl->errorInfo;
+                        EventStream::sendStreamData($result);
+                        return $result;
+                    }
+                } else {
+                    $result['error'] = "Could not find supplier id for name " . $item->supplier_name . " on line ".$count." of the CSV";
+                    EventStream::sendStreamData($result);
+                    return $result;
+                }
+            }
+            $item->supplierid = $id;
+            unset($item->supplier_name);
+
+            $items[$key] = $item;
+
+            $count++;
+        }
+
+        EventStream::sendStreamData(['status'=>"Importing Items..."]);
+        $result['data'] = [];
+        $count = 1;
+        foreach ($items as $item){
+            EventStream::sendStreamData(['progress'=>$count]);
+
+            $itemObj = new WposStoredItem($item);
+            $id = $itemMdl->create($itemObj);
+
+            if ($id===false){
+                $result['error'] = "Failed to add the item on line ".$count." of the CSV: ".$itemMdl->errorInfo;
+                EventStream::sendStreamData($result);
+                return $result;
+            }
+            $itemObj->id = $id;
+            $result['data'][$id] = $itemObj;
+
+            $count++;
+        }
+
+        unset($_SESSION['import_data']);
+        unset($_SESSION['import_options']);
+
+        EventStream::sendStreamData($result);
+        return $result;
+    }
+
     // ITEM CATEGORIES
     /**
      * Add a new category

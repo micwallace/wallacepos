@@ -257,6 +257,17 @@ function routeApiCall($action, $data, $result) {
             $adminMdl = new WposAdminItems($data);
             $result = $adminMdl->deleteStoredItem($result);
             break;
+
+        case "items/import/set":
+            $adminMdl = new WposAdminItems($data);
+            $result = $adminMdl->importItemsSet($result);
+            break;
+
+        case "items/import/start":
+            $adminMdl = new WposAdminItems($data);
+            $result = $adminMdl->importItemsStart($result);
+            break;
+
         // suppliers
         case "suppliers/get":
             $jsondata = new WposPosData();

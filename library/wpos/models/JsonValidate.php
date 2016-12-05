@@ -35,8 +35,8 @@ class JsonValidate {
      * @param $data
      * @param $schema
      */
-    function __construct($data, $schema){
-        if ($data===null || $schema===null){
+    function __construct($data=null, $schema){
+        if ($schema===null){
             // return false if schema or data == null
             return false;
         }
@@ -52,7 +52,9 @@ class JsonValidate {
     /**
      * @return bool|string Returns true on success or a string of errors on failure.
      */
-    public function validate(){
+    public function validate($data = null){
+        if ($data!=null)
+            $this->data = $data;
         // loop through each schema value and check if data exists
         $errors = "";
         foreach ($this->schema as $key => $value){
@@ -123,9 +125,10 @@ class JsonValidate {
                     break;
                 case true: // must be numeric but can be null
                     if ($schemaval===true && !is_bool($dataval)){
-                        return "must be a boolean\n";
+                        return "must be a numeric or blank\n";
                         break;
                     }
+                    break;
                 default:
                     $rule = substr($schemaval, 0, 2);
                     $val = substr($schemaval, 2, strlen($schemaval));

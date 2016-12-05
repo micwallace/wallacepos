@@ -63,11 +63,13 @@ class DbUpdater {
                     // Setup general info
                     echo("Setup variables processed.\n");
                 }
+
+                WposAdminSettings::putValue('general', 'version', $this->getLatestVersionName());
             }
         } catch (Exception $e){
             return $e->getMessage();
         }
-        return "Setup Completed Successfully!";
+        return "Installation Completed!";
     }
 
     public function checkStorageTemplate(){
@@ -86,197 +88,275 @@ class DbUpdater {
 	    }
     }
 
-    public function upgrade($version, $authneeded=true){
+    private static $versions = [
+        '1.0'=>['name'=>'1.0', 'db'=>true, 'script'=>true],
+        '1.1'=>['name'=>'1.1', 'db'=>true, 'script'=>false],
+        '1.2'=>['name'=>'1.2', 'db'=>true, 'script'=>true],
+        '1.3'=>['name'=>'1.3', 'db'=>true, 'script'=>true],
+        '1.4.0'=>['name'=>'1.4.0', 'db'=>true, 'script'=>false],
+    ];
+
+    public static function getLatestVersionName(){
+        $keys = array_keys(self::$versions);
+        return self::$versions[$keys[count($keys) - 1]]['name'];
+    }
+
+    public static function getVersionInfo($index){
+        if (is_numeric($index))
+            $index = array_keys(self::$versions)[$index];
+        return self::$versions[$index];
+    }
+
+    public function upgrade($version=null, $authneeded=true){
         if ($authneeded){
             $auth = new Auth();
             if (!$auth->isLoggedIn() || !$auth->isAdmin()){
                 return "Must be logged in as admin";
             }
         }
-        $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/installer/schemas/update".$version.".sql";
-        if (!file_exists($path)){
-            return "Schema does not exist";
-        }
-        $settings = WposAdminSettings::getSettingsObject('general');
-        if (floatval($settings->version)>=floatval($version)){
-            return "Db already at the latest version";
+
+        if (!$version) {
+            $version = self::getLatestVersionName();
+        } else {
+            if (!isset(self::$versions[$version])){
+                return "Target version not found";
+            }
         }
 
-        $sql = file_get_contents($path);
+        $settings = WposAdminSettings::getSettingsObject('general');
+        $cur_version = $settings->version;
+        if (!isset($cur_version) || $cur_version==""){
+            return "The database has not been installed, use the installer instead";
+        }
+
+        if (version_compare($version, $cur_version, '>')){
+            return "Already upgraded to version ".$version;
+        }
+
+        echo("Backing up database...<br/>");
+        WposAdminUtilities::backUpDatabase(false);
+
+        $keys = array_keys(self::$versions);
+        $cur_index = array_search($cur_version, $keys);
+        $last_index = array_search($version, $keys);
+
+        echo("Current version is " . $cur_version . "<br/>");
+        echo("Upgrading to version " . $version . "...<br/>");
+
+        for ($i=$cur_index; $i<$last_index; $i++) {
+            $versionInfo = self::getVersionInfo($i);
+            echo("Running version " . $versionInfo['name'] . " updates...<br/>");
+
+            $result = $this->performUpgradeIncrement($versionInfo);
+            if ($result !== true) {
+                return $result;
+            }
+        }
+
+        return "Update completed";
+    }
+
+    private function performUpgradeIncrement($versionInfo){
+
         try {
-            $result = $this->db->_db->exec($sql);
-            /*if ($result===false){
-                echo $this->db->_db->errorInfo()[0];
-            }*/
-            switch ($version){
-                case "1.0":
-                    // set sales type & channel
-                    $sql="UPDATE `sales` SET `type`='sale', `channel`='pos';";
-                    if ($this->db->_db->exec($sql)===false){
+            if ($versionInfo['db']) {
+                echo("Updating database...");
+                $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/installer/schemas/update".$versionInfo['name'].".sql";
+                if (!file_exists($path)){
+                    return "Schema does not exist";
+                }
+                $sql = file_get_contents($path);
+                if ($sql) {
+                    $result = $this->db->_db->exec($sql);
+                    if ($result === false) {
                         return $this->db->_db->errorInfo()[0];
                     }
-                    // set payment dt to process dt and update sales json with extra params
-                    $sql="SELECT * FROM `sales`;";
-                    $sales = $this->db->select($sql, []);
-                    foreach ($sales as $sale){
-                        $data = json_decode($sale['data']);
-                        $data->id = $sale['id'];
-                        $data->balance = 0.00;
-                        $data->dt = $sale['dt'];
-                        $data->status = $sale['status'];
-                        if ($data==false){
-                            die("Prevented null data entry");
-                        }
-                        $sql = "UPDATE `sales` SET `data`=:data WHERE `id`=:saleid";
-                        $this->db->update($sql, [":data"=>json_encode($data), ":saleid"=>$sale['id']]);
-
-                        $sql = "UPDATE `sale_payments` SET `processdt=:processdt WHERE `saleid`=:saleid";
-                        $this->db->update($sql, [":processdt"=>$sale['processdt'], ":saleid"=>$sale['id']]);
-                    }
-                    // update config, add google keys
-                    WposAdminSettings::putValue('general', 'version', '1.0');
-                    WposAdminSettings::putValue('general', 'gcontact', 0);
-                    WposAdminSettings::putValue('general', 'gcontacttoken', '');
-                    WposAdminSettings::putValue('pos', 'priceedit', 'blank');
-                    // copy new templates
-                    copy($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/templates', $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/');
-                    break;
-
-                case "1.1":
-                    WposAdminSettings::putValue('general', 'version', '1.1');
-                    break;
-
-                case "1.2":
-                    // update item tax values
-                    $sql="SELECT * FROM `sale_items`;";
-                    $items = $this->db->select($sql, []);
-                    foreach ($items as $item){
-                        if (is_numeric($item['tax'])){
-                            $taxdata = new stdClass();
-                            $taxdata->values = new stdClass();
-                            $taxdata->inclusive = true;
-                            if ($item['tax']>0){
-                                $taxdata->values->{"1"} = floatval($item['tax']);
-                                $taxdata->total = floatval($item['tax']);
-                            } else {
-                                $taxdata->total = 0;
-                            }
-                            $sql = "UPDATE `sale_items` SET `tax`=:tax WHERE `id`=:id";
-                            $this->db->update($sql, [":tax"=>json_encode($taxdata), ":id"=>$item['id']]);
-                        } else {
-                            echo("Item record ".$item['id']." already updated, skipping item table update...<br/>");
-                        }
-                    }
-                    // remove the "notax taxdata field, update gst to id=1"
-                    $sql="SELECT * FROM `sales`;";
-                    $sales = $this->db->select($sql, []);
-                    foreach ($sales as $sale){
-                        $needsupdate=false;
-                        $data = json_decode($sale['data']);
-                        if ($data==false){
-                            die("Prevented null data entry");
-                        }
-                        if (isset($data->taxdata->{"1"}) && $data->taxdata->{"1"}==0){
-                            if (isset($data->taxdata->{"2"})){
-                                $data->taxdata->{"1"} = $data->taxdata->{"2"};
-                                unset($data->taxdata->{"2"});
-                            } else {
-                                unset($data->taxdata->{"1"});
-                            }
-                            $needsupdate=true;
-                        } else {
-                            echo("Record ".$sale['id']." already updated, skipping sale taxdata update...<br/>");
-                        }
-                        foreach($data->items as $skey=>$sitem){
-                            if (is_numeric($sitem->tax)){
-                                $taxdata = new stdClass();
-                                $taxdata->values = new stdClass();
-                                $taxdata->inclusive = true;
-                                if ($sitem->tax>0){
-                                    $taxdata->values->{"1"} = $sitem->tax;
-                                    $taxdata->total = $sitem->tax;
-                                } else {
-                                    $taxdata->total = 0;
-                                }
-                                $data->items[$skey]->tax = $taxdata;
-                                $needsupdate=true;
-                            } else {
-                                echo("Item record ".$sale['id']." already updated, skipping sale itemdata update...<br/>");
-                            }
-                        }
-                        if ($needsupdate){
-                            $sql = "UPDATE `sales` SET `data`=:data WHERE `id`=:saleid";
-                            $this->db->update($sql, [":data"=>json_encode($data), ":saleid"=>$sale['id']]);
-                        }
-                    }
-                    // update stored item schema
-                    $sql="SELECT * FROM `stored_items`;";
-                    $items = $this->db->select($sql, []);
-                    $error = false;
-                    foreach ($items as $item){
-                        if ($item['data']==""){
-                            $id = $item['id'];
-                            unset($item['id']);
-                            $item['type'] = "general";
-                            $item['modifiers'] = new stdClass();
-                            $data = json_encode($item);
-                            if ($data!=false){
-                                $sql = "UPDATE `stored_items` SET `data`=:data WHERE `id`=:id";
-                                if (!$this->db->update($sql, [":data"=>$data, ":id"=>$id])) $error = true;
-                            }
-                        }
-                    }
-                    if (!$error){
-                        $sql="ALTER TABLE `stored_items` DROP `qty`, DROP `description`, DROP `taxid`;";
-                        $this->db->update($sql, []);
-                    }
-                    // update devices schema
-                    $sql="SELECT * FROM `devices`;";
-                    $devices = $this->db->select($sql, []);
-                    foreach ($devices as $device){
-                        if ($device['data']==""){
-                            $data = new stdClass();
-                            $data->name = $device['name'];
-                            $data->locationid = $device['locationid'];
-                            $data->type = "general_register";
-                            $data->ordertype = "terminal";
-                            $data->orderdisplay = 1;
-                            $data->kitchenid = 0;
-                            $data = json_encode($data);
-                            if ($data!=false){
-                                $sql = "UPDATE `devices` SET `data`=:data WHERE `id`=:id";
-                                $this->db->update($sql, [":data"=>$data, ":id"=>$device['id']]);
-                            }
-                        } else {
-                            echo("Device record ".$device['id']." already updated, skipping sale itemdata update...<br/>");
-                        }
-                    }
-
-                    WposAdminSettings::putValue('general', 'currencyformat', '$~2~.~,~0');
-                    WposAdminSettings::putValue('general', 'version', '1.2');
-
-                    break;
-                case "1.3":
-                    // set default template values & copy templates
-                    WposAdminSettings::putValue('pos', 'rectemplate', 'receipt');
-                    WposAdminSettings::putValue('invoice', 'defaulttemplate', 'invoice');
-                    mkdir($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/templates/");
-                    WposTemplates::restoreDefaults();
-                    // put alternate language values
-                    $labels = json_decode('{"cash":"Cash","credit":"Credit","eftpos":"Eftpos","cheque":"Cheque","deposit":"Deposit","tendered":"Tendered","change":"Change","transaction-ref":"Transaction Ref","sale-time":"Sale Time","subtotal":"Subtotal","total":"Total","item":"Item","items":"Items","refund":"Refund","void-transaction":"Void Transaction"}}');
-                    WposAdminSettings::putValue('general', 'altlabels', $labels);
-                    // set updated receipt currency symbol support values
-                    WposAdminSettings::putValue('pos', 'reccurrency', '');
-                    WposAdminSettings::putValue('pos', 'reccurrency_codepage', 0);
-
-                    WposAdminSettings::putValue('general', 'version', '1.3');
-                    break;
+                }
             }
-            return "Update Completed Successfully!";
+            if ($versionInfo['script']) {
+                echo("Running update script...");
+                switch ($versionInfo['name']) {
+                    case "1.0":
+                        $this->upgradeVersion1_0();
+                        break;
+                    case "1.2":
+                        $this->upgradeVersion1_2();
+                        break;
+                    case "1.3":
+                        $this->upgradeVersion1_3();
+                        break;
+                    default:
+                        return "Update script refered to in schema but not found.";
+                }
+            }
+
+            WposAdminSettings::putValue('general', 'version', $versionInfo['name']);
+
+            return true;
         } catch (Exception $e){
-            echo $this->db->_db->errorInfo()[0];
             return $e->getMessage();
         }
+    }
+
+    private function upgradeVersion1_3(){
+        // set default template values & copy templates
+        WposAdminSettings::putValue('pos', 'rectemplate', 'receipt');
+        WposAdminSettings::putValue('invoice', 'defaulttemplate', 'invoice');
+        mkdir($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/templates/");
+        WposTemplates::restoreDefaults();
+        // put alternate language values
+        $labels = json_decode('{"cash":"Cash","credit":"Credit","eftpos":"Eftpos","cheque":"Cheque","deposit":"Deposit","tendered":"Tendered","change":"Change","transaction-ref":"Transaction Ref","sale-time":"Sale Time","subtotal":"Subtotal","total":"Total","item":"Item","items":"Items","refund":"Refund","void-transaction":"Void Transaction"}}');
+        WposAdminSettings::putValue('general', 'altlabels', $labels);
+        // set updated receipt currency symbol support values
+        WposAdminSettings::putValue('pos', 'reccurrency', '');
+        WposAdminSettings::putValue('pos', 'reccurrency_codepage', 0);
+
+        return true;
+    }
+
+    private function upgradeVersion1_2(){
+        // update item tax values
+        $sql="SELECT * FROM `sale_items`;";
+        $items = $this->db->select($sql, []);
+        foreach ($items as $item){
+            if (is_numeric($item['tax'])){
+                $taxdata = new stdClass();
+                $taxdata->values = new stdClass();
+                $taxdata->inclusive = true;
+                if ($item['tax']>0){
+                    $taxdata->values->{"1"} = floatval($item['tax']);
+                    $taxdata->total = floatval($item['tax']);
+                } else {
+                    $taxdata->total = 0;
+                }
+                $sql = "UPDATE `sale_items` SET `tax`=:tax WHERE `id`=:id";
+                $this->db->update($sql, [":tax"=>json_encode($taxdata), ":id"=>$item['id']]);
+            } else {
+                echo("Item record ".$item['id']." already updated, skipping item table update...<br/>");
+            }
+        }
+        // remove the "notax taxdata field, update gst to id=1"
+        $sql="SELECT * FROM `sales`;";
+        $sales = $this->db->select($sql, []);
+        foreach ($sales as $sale){
+            $needsupdate=false;
+            $data = json_decode($sale['data']);
+            if ($data==false){
+                die("Prevented null data entry");
+            }
+            if (isset($data->taxdata->{"1"}) && $data->taxdata->{"1"}==0){
+                if (isset($data->taxdata->{"2"})){
+                    $data->taxdata->{"1"} = $data->taxdata->{"2"};
+                    unset($data->taxdata->{"2"});
+                } else {
+                    unset($data->taxdata->{"1"});
+                }
+                $needsupdate=true;
+            } else {
+                echo("Record ".$sale['id']." already updated, skipping sale taxdata update...<br/>");
+            }
+            foreach($data->items as $skey=>$sitem){
+                if (is_numeric($sitem->tax)){
+                    $taxdata = new stdClass();
+                    $taxdata->values = new stdClass();
+                    $taxdata->inclusive = true;
+                    if ($sitem->tax>0){
+                        $taxdata->values->{"1"} = $sitem->tax;
+                        $taxdata->total = $sitem->tax;
+                    } else {
+                        $taxdata->total = 0;
+                    }
+                    $data->items[$skey]->tax = $taxdata;
+                    $needsupdate=true;
+                } else {
+                    echo("Item record ".$sale['id']." already updated, skipping sale itemdata update...<br/>");
+                }
+            }
+            if ($needsupdate){
+                $sql = "UPDATE `sales` SET `data`=:data WHERE `id`=:saleid";
+                $this->db->update($sql, [":data"=>json_encode($data), ":saleid"=>$sale['id']]);
+            }
+        }
+        // update stored item schema
+        $sql="SELECT * FROM `stored_items`;";
+        $items = $this->db->select($sql, []);
+        $error = false;
+        foreach ($items as $item){
+            if ($item['data']==""){
+                $id = $item['id'];
+                unset($item['id']);
+                $item['type'] = "general";
+                $item['modifiers'] = new stdClass();
+                $data = json_encode($item);
+                if ($data!=false){
+                    $sql = "UPDATE `stored_items` SET `data`=:data WHERE `id`=:id";
+                    if (!$this->db->update($sql, [":data"=>$data, ":id"=>$id])) $error = true;
+                }
+            }
+        }
+        if (!$error){
+            $sql="ALTER TABLE `stored_items` DROP `qty`, DROP `description`, DROP `taxid`;";
+            $this->db->update($sql, []);
+        }
+        // update devices schema
+        $sql="SELECT * FROM `devices`;";
+        $devices = $this->db->select($sql, []);
+        foreach ($devices as $device){
+            if ($device['data']==""){
+                $data = new stdClass();
+                $data->name = $device['name'];
+                $data->locationid = $device['locationid'];
+                $data->type = "general_register";
+                $data->ordertype = "terminal";
+                $data->orderdisplay = 1;
+                $data->kitchenid = 0;
+                $data = json_encode($data);
+                if ($data!=false){
+                    $sql = "UPDATE `devices` SET `data`=:data WHERE `id`=:id";
+                    $this->db->update($sql, [":data"=>$data, ":id"=>$device['id']]);
+                }
+            } else {
+                echo("Device record ".$device['id']." already updated, skipping sale itemdata update...<br/>");
+            }
+        }
+
+        WposAdminSettings::putValue('general', 'currencyformat', '$~2~.~,~0');
+
+        return true;
+    }
+
+    private function upgradeVersion1_0(){
+        // set sales type & channel
+        $sql="UPDATE `sales` SET `type`='sale', `channel`='pos';";
+        if ($this->db->_db->exec($sql)===false){
+            return $this->db->_db->errorInfo()[0];
+        }
+        // set payment dt to process dt and update sales json with extra params
+        $sql="SELECT * FROM `sales`;";
+        $sales = $this->db->select($sql, []);
+        foreach ($sales as $sale){
+            $data = json_decode($sale['data']);
+            $data->id = $sale['id'];
+            $data->balance = 0.00;
+            $data->dt = $sale['dt'];
+            $data->status = $sale['status'];
+            if ($data==false){
+                die("Prevented null data entry");
+            }
+            $sql = "UPDATE `sales` SET `data`=:data WHERE `id`=:saleid";
+            $this->db->update($sql, [":data"=>json_encode($data), ":saleid"=>$sale['id']]);
+
+            $sql = "UPDATE `sale_payments` SET `processdt=:processdt WHERE `saleid`=:saleid";
+            $this->db->update($sql, [":processdt"=>$sale['processdt'], ":saleid"=>$sale['id']]);
+        }
+        // update config, add google keys
+        WposAdminSettings::putValue('general', 'gcontact', 0);
+        WposAdminSettings::putValue('general', 'gcontacttoken', '');
+        WposAdminSettings::putValue('pos', 'priceedit', 'blank');
+        // copy new templates
+        copy($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/templates', $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/');
+
+        return true;
     }
 
 }

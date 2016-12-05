@@ -37,6 +37,6 @@
             $("#install_view").addClass('hide');
             $("#complete_view").removeClass('hide');
         });
-        frame.attr('src', "<?php echo(isset($_REQUEST['doupgrade'])?"/installer?upgrade&version=1.3":"/installer?install"); ?>");
+        frame.attr('src', "<?php echo("/installer?".(isset($_REQUEST['doupgrade'])?"upgrade":"install")); ?>");
     });
 </script>

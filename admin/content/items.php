@@ -5,6 +5,7 @@
     </h1>
     <button onclick="$('#adddialog').dialog('open');" id="addbtn" class="btn btn-primary btn-sm pull-right"><i class="icon-pencil align-top bigger-125"></i>Add</button>
     <button class="btn btn-success btn-sm pull-right" style="margin-right: 10px;" onclick="exportItems();"><i class="icon-cloud-download align-top bigger-125"></i>Export CSV</button>
+    <button class="btn btn-success btn-sm pull-right" style="margin-right: 10px;" onclick="openImportDialog();"><i class="icon-cloud-upload align-top bigger-125"></i>Import CSV</button>
 </div><!-- /.page-header -->
 
 <div class="row">
@@ -201,7 +202,12 @@
     </table>
 </div>
 
-<!-- page specific plugin scripts; migrated to index.php due to heavy use -->
+<!-- page specific plugin scripts -->
+<link rel="stylesheet" href="/admin/assets/js/csv-import/lib/jquery.ezdz.min.css"/>
+<script type="text/javascript" src="/admin/assets/js/csv-import/lib/jquery.ezdz.min.js"></script>
+<script type="text/javascript" src="/admin/assets/js/csv-import/lib/jquery-sortable-min.js"></script>
+<script type="text/javascript" src="/admin/assets/js/csv-import/lib/jquery.csv-0.71.min.js"></script>
+<script type="text/javascript" src="/admin/assets/js/csv-import/csv.import.tool.js"></script>
 
 <!-- inline scripts related to this page -->
 <script type="text/javascript">
@@ -226,8 +232,8 @@
             }
             itemarray.push(tempitem);
         }
-        datatable = $('#itemstable').dataTable(
-            { "bProcessing": true,
+        datatable = $('#itemstable').dataTable({
+            "bProcessing": true,
             "aaData": itemarray,
             "aaSorting": [[ 2, "asc" ]],
             "aoColumns": [
@@ -242,7 +248,8 @@
                 { "sType": "string", "mData":function(data,type,val){return (categories.hasOwnProperty(data.categoryid)?categories[data.categoryid].name:'Misc'); } },
                 { "sType": "string", "mData":function(data,type,val){return (suppliers.hasOwnProperty(data.supplierid)?suppliers[data.supplierid].name:'Misc'); } },
                 { "sType": "html", mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="openEditDialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="removeItem($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false, sClass: "noexport" }
-            ] } );
+            ]
+        });
         // insert table wrapper
         $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
 
@@ -513,9 +520,158 @@
         filename = filename.replace(" ", "");
         WPOS.initSave(filename, data);
     }
+
+    var importdialog = null;
+    function openImportDialog(){
+        if (importdialog!=null) {
+            importdialog.csvImport("destroy");
+        }
+        importdialog = $("body").csvImport({
+            jsonFields: {
+                'code': {title:'Stock Code', required: true},
+                'name': {title:'Name', required: true},
+                'description': {title:'Description', required: false, value: ""},
+                'qty': {title:'Default Qty', required: false, value: 1},
+                'unit': {title:'Unit Price', required: false, value: ""},
+                'tax_name': {title:'Tax Rule Name', required: false, value: ""},
+                'supplier_name': {title:'Supplier Name', required: false, value: ""},
+                'category_name': {title:'Category Name', required: false, value: ""}
+            },
+            csvHasHeader: true,
+            importOptions: [
+                {label: "Set unknown tax names to no tax", id:"skip_tax", checked:false},
+                {label: "Create unknown suppliers", id:"add_suppliers", checked:true},
+                {label: "Create unknown categories", id:"add_categories", checked:true}
+            ],
+            // callbacks
+            onImport: function(jsondata, options){
+                //console.log(options);
+                importItems(jsondata, options);
+            }
+        });
+    }
+
+    function importItems(jsondata, options){
+        showModalLoader("Importing Items");
+        var total = jsondata.length;
+        var percent_inc = total / 100;
+        setModalLoaderStatus("Uploading data...");
+        var data = {"options":options, "import_data": jsondata};
+        var result = WPOS.sendJsonDataAsync('items/import/set', JSON.stringify(data), function(data){
+            if (data!==false){
+                WPOS.startEventSourceProcess(
+                    '/api/items/import/start',
+                    function(data){
+                        if (data.hasOwnProperty('progress')) {
+                            setModalLoaderSubStatus(data.progress +" of "+ total);
+                            var progress = Math.round(percent_inc*data.progress);
+                            setModalLoaderProgress(progress);
+                        }
+
+                        if (data.hasOwnProperty('status'))
+                            setModalLoaderStatus(data.status);
+
+                        if (data.hasOwnProperty('error')) {
+                            if (data.error == "OK") {
+                                showModalCloseButton('Item Import Complete!');
+                                console.log("Stream closed on completion");
+                            } else {
+                                showModalCloseButton("Error Importing Items", data.error);
+                            }
+                        }
+                    },
+                    function(e){
+                        showModalCloseButton("Event feed failed "+ e.message);
+                    }
+                );
+            } else {
+                showModalCloseButton("Item Import Failed!");
+            }
+        }, function(error){
+            showModalCloseButton("Item Import Failed!", error);
+        });
+        if (!result)
+            showModalCloseButton("Item Import Failed!");
+    }
+
+    var eventuiinit = false;
+    function initModalLoader(title){
+        $("#modalloader").removeClass('hide').dialog({
+            resizable: true,
+            width: 400,
+            modal: true,
+            autoOpen: false,
+            title: title,
+            title_html: true,
+            closeOnEscape: false,
+            open: function(event, ui) { $(".ui-dialog-titlebar-close").hide(); }
+        });
+    }
+    function showModalLoader(title){
+        if (!eventuiinit){
+            initModalLoader(title);
+            eventuiinit = true;
+        }
+        $("#modalloader_status").text('Initializing...');
+        $("#modalloader_output").text('');
+        $("#modalloader_cbtn").hide();
+        $("#modalloader_img").show();
+        var modalloader = $("#modalloader");
+        modalloader.dialog('open');
+    }
+    function setModalLoaderProgress(progress){
+        $("#modalloader_progbar").attr('width', progress+"%")
+    }
+    function showModalCloseButton(result, substatus){
+        $("#modalloader_status").text(result);
+        setModalLoaderSubStatus(substatus? substatus : '');
+        $("#modalloader_img").hide();
+        $("#modalloader_prog").hide();
+        $("#modalloader_cbtn").show();
+    }
+    function setModalLoaderStatus(status){
+        $("#modalloader_status").text(status);
+    }
+    function setModalLoaderSubStatus(status){
+        $("#modalloader_substatus").text(status);
+    }
 </script>
+<div id="modalloader" class="hide" style="width: 360px; height: 320px; text-align: center;">
+    <img id="modalloader_img" style="width: 128px; height: auto;" src="/admin/assets/images/cloud_loader.gif"/>
+    <div id="modalloader_prog" class="progress progress-striped active">
+        <div class="progress-bar" id="modalloader_progbar" style="width: 100%;"></div>
+    </div>
+    <h4 id="modalloader_status">Initializing...</h4>
+    <h5 id="modalloader_substatus"></h5>
+    <button id="modalloader_cbtn" class="btn btn-primary" style="display: none; margin-top:40px;" onclick="$('#modalloader').dialog('close');">Close</button>
+</div>
 <style type="text/css">
     #itemstable_processing {
         display: none;
+    }
+
+    body.dragging, body.dragging * {
+        cursor: move !important;
+    }
+
+    .dragged {
+        position: absolute;
+        opacity: 0.8;
+        z-index: 2000;
+    }
+
+    #dest_table li.excluded, #source_table li.excluded {
+        opacity: 0.8;
+        background-color: #f5f5f5;
+    }
+
+    .placeholder {
+        position: relative;
+        height: 40px;
+    }
+
+    .placeholder:before {
+        position: absolute;
+        /** Define arrowhead **/
     }
 </style>

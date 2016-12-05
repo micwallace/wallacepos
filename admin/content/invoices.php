@@ -3,8 +3,8 @@
     <h1 style="display: inline-block;">
         Invoices
     </h1>
-    <button style="display: inline-block; vertical-align: top; float: right; pad" class="btn btn-success btn-sm" onclick="exportCurrentInvoices();"><i class="icon-cloud-download align-top bigger-125"></i>Export CSV</button>
     <button style="display: inline-block; vertical-align: top; float: right;" class="btn btn-primary btn-sm" onclick="showInvoiceForm();"><i class="icon-plus-sign align-top bigger-125"></i>Add</button>
+    <button style="display: inline-block; vertical-align: top; float: right; margin-right: 10px;" class="btn btn-success btn-sm" onclick="exportCurrentInvoices();"><i class="icon-cloud-download align-top bigger-125"></i>Export CSV</button>
 </div><!-- /.page-header -->
 
 <div class="row">

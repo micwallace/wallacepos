@@ -725,7 +725,7 @@ function WPOS() {
         }
         } catch (ex) {
             switchToOffline();
-            alert("There was an error sending data, switching to offline mode");
+            alert("There was an error sending data, switching to offline mode.\nException: "+ex.message);
             return false;
         }
     };
@@ -771,7 +771,7 @@ function WPOS() {
                 }
             });
         } catch (ex) {
-            alert("Exception: "+ex);
+            alert("Exception: "+ex.message);
             callback(false);
         }
     };
@@ -816,6 +816,7 @@ function WPOS() {
             return false;
         }
         } catch (ex){
+            alert("There was an error connecting to the server: \nException: "+ex.message);
             return false;
         }
     };
@@ -863,7 +864,7 @@ function WPOS() {
                 }
             });
         } catch (ex) {
-            alert("Exception: "+ex);
+            alert("Exception: "+ex.message);
             if (callback)
                 callback(false);
         }
