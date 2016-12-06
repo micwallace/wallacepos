@@ -14,10 +14,7 @@ jQuery.extend( jQuery.fn.dataTableExt.oSort, {
     },
 
     "timestamp-pre": function ( a ) {
-        a = $(a).filter(function() {
-            return $(this).is('.timestamp')
-        }).text();
-        return parseInt( a );
+        return a;
     },
 
     "timestamp-asc": function ( a, b ) {
@@ -28,3 +25,10 @@ jQuery.extend( jQuery.fn.dataTableExt.oSort, {
         return b - a;
     }
 } );
+
+function datatableTimestampRender(type, val, renderFunction) {
+    if (type === 'display' || type === 'filter') {
+        return renderFunction(val);
+    }
+    return val;
+}

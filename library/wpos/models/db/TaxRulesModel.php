@@ -31,7 +31,7 @@ class TaxRulesModel extends DbConfig
     /**
      * @var array
      */
-    protected $_columns = ['id', 'name', 'data'];
+    protected $_columns = ['id', 'data'];
 
     /**
      * Init DB
@@ -55,10 +55,9 @@ class TaxRulesModel extends DbConfig
 
     /**
      * @param null $taxId
-     * @param null $name
      * @return array|bool Returns false on an unexpected failure or an array with the selected rows
      */
-    public function get($taxId = null, $name = null)
+    public function get($taxId = null)
     {
         $sql          = 'SELECT * FROM tax_rules';
         $placeholders = [];
@@ -68,13 +67,6 @@ class TaxRulesModel extends DbConfig
             }
             $sql .= ' id = '.$taxId;
             $placeholders[] = $taxId;
-        }
-        if ($name !== null) {
-            if (empty($placeholders)) {
-                $sql .= ' WHERE';
-            }
-            $sql .= ' name = '.$name;
-            $placeholders[] = $name;
         }
 
         return $this->select($sql, $placeholders);

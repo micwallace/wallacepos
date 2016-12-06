@@ -64,7 +64,7 @@ function checkDependencies(){
 		$result['node_socketio'] = false;
 		$result['all'] = false;
 	} else {
-        if (!$result['node_socketio']=isset($nodeextensions->dependencies->{"socket.io"}))
+        if (!$result['node_socketio']=(isset($nodeextensions->dependencies->{"socket.io"}) && !$nodeextensions->dependencies->{"socket.io"}->missing))
             $result['all'] = false;
 	}
 
@@ -162,17 +162,13 @@ function writeDatabaseConfig(){
 }
 
 function addAnalytics($type){
-    // Get cURL resource
     $curl = curl_init();
-    // Set some options - we are passing in a useragent too here
     curl_setopt_array($curl, array(
         CURLOPT_RETURNTRANSFER => 1,
         CURLOPT_URL => 'https://admin.wallaceit.com.au/customerapi/stats/add/'.$type.'?hostname='.$_SERVER['SERVER_NAME'].'&version='.(isset($_REQUEST['version']) ? $_REQUEST['version'] : DbUpdater::getLatestVersionName()),
         CURLOPT_USERAGENT => 'WallacePOS_Installer'
     ));
-    // Send the request & save response to $resp
-    $resp = curl_exec($curl);
-    // Close request to clear up some resources
+    curl_exec($curl);
     curl_close($curl);
 }
 

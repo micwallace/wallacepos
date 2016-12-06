@@ -17,19 +17,19 @@
     Manage your suppliers
 </div>
 
-<table id="supplierstable" class="table table-striped table-bordered table-hover">
+<table id="supplierstable" class="table table-striped table-bordered table-hover dt-responsive" style="width: 100%;">
 <thead>
 <tr>
-    <th class="center hidden-480 hidden-320 hidden-xs noexport">
+    <th data-priority="0" class="center noexport">
         <label>
             <input type="checkbox" class="ace" />
             <span class="lbl"></span>
         </label>
     </th>
-    <th>ID</th>
-    <th>Name</th>
-    <th># Items</th>
-    <th class="noexport"></th>
+    <th data-priority="4">ID</th>
+    <th data-priority="2">Name</th>
+    <th data-priority="3"># Items</th>
+    <th data-priority="1" class="noexport"></th>
 </tr>
 </thead>
 
@@ -75,29 +75,58 @@
             supitem = suppliers[key];
             suparray.push(supitem);
         }
-        datatable = $('#supplierstable').dataTable(
-            { "bProcessing": true,
+        datatable = $('#supplierstable').dataTable({
+            "bProcessing": true,
             "aaData": suparray,
             "aaSorting": [[ 2, "asc" ]],
             "aoColumns": [
-                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false, sClass:"hidden-480 hidden-320 hidden-xs noexport" },
+                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false, sClass:"noexport" },
                 { "mData":"id" },
                 { "mData":"name" },
                 { "mData": "numitems"},
                 { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="openeditsupdialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="removeSupplier($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false, sClass: "noexport" }
-            ] } );
-        // insert table wrapper
-        $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
-
-
-        $('table th input:checkbox').on('click' , function(){
-            var that = this;
-            $(this).closest('table').find('tr > td:first-child input:checkbox')
-                .each(function(){
-                    this.checked = that.checked;
-                    $(this).closest('tr').toggleClass('selected');
-                });
+            ],
+            "columns": [
+                {},
+                {type: "numeric"},
+                {type: "string"},
+                {type: "numeric"},
+                {}
+            ],
+            "fnInfoCallback": function( oSettings, iStart, iEnd, iMax, iTotal, sPre ) {
+                // Add selected row count to footer
+                var selected = this.api().rows('.selected').count();
+                return sPre+(selected>0 ? '<br/>'+selected+' row(s) selected <span class="action-buttons"><a class="red" onclick="removeSelectedSuppliers();"><i class="icon-trash bigger-130"></i></a></span>':'');
+            }
         });
+
+        datatable.find("tbody").on('click', '.dt-select-cb', function(e){
+            var row = $(this).parents().eq(3);
+            if (row.hasClass('selected')) {
+                row.removeClass('selected');
+            } else {
+                row.addClass('selected');
+            }
+            datatable.api().draw(false);
+            e.stopPropagation();
+        });
+
+        $('table.dataTable th input:checkbox').on('change' , function(){
+            var that = this;
+            $(this).closest('table.dataTable').find('tr > td:first-child input:checkbox')
+                .each(function(){
+                    var row = $(this).parents().eq(3);
+                    if ($(that).is(":checked")) {
+                        row.addClass('selected');
+                        $(this).prop('checked', true);
+                    } else {
+                        row.removeClass('selected');
+                        $(this).prop('checked', false);
+                    }
+                });
+            datatable.api().draw(false);
+        });
+
         // dialogs
         $( "#addsupdialog" ).removeClass('hide').dialog({
                 resizable: false,
@@ -210,6 +239,25 @@
             WPOS.util.hideLoader();
         }
     }
+
+    function removeSelectedSuppliers(){
+        var ids = datatable.api().rows('.selected').data().map(function(row){ return row.id });
+
+        var answer = confirm("Are you sure you want to delete "+ids.length+" selected items?");
+        if (answer){
+            // show loader
+            WPOS.util.hideLoader();
+            if (WPOS.sendJsonData("suppliers/delete", '{"id":"'+ids.join(",")+'"}')){
+                for (var i=0; i<ids.length; i++){
+                    delete suppliers[ids[i]];
+                }
+                reloadTable();
+            }
+            // hide loader
+            WPOS.util.hideLoader();
+        }
+    }
+
     function reloadData(){
         suppliers = WPOS.getJsonData("suppliers/get");
         reloadTable();
@@ -221,8 +269,9 @@
             tempsup = suppliers[key];
             suparray.push(tempsup);
         }
-        datatable.fnClearTable();
-        datatable.fnAddData(suparray);
+        datatable.fnClearTable(false);
+        datatable.fnAddData(suparray, false);
+        datatable.api().draw(false);
     }
 </script>
 <style type="text/css">

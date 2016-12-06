@@ -9,7 +9,7 @@
     </h1>
 </div><!-- /.page-header -->
 <div class="row">
-    <div class="col-sm-6">
+    <div class="col-md-12">
         <div class="widget-box transparent">
             <div class="widget-header widget-header-flat">
                 <h4 class="lighter">General</h4>
@@ -17,8 +17,8 @@
             <div class="widget-body" style="padding-top: 10px;">
                 <form class="form-horizontal">
                 <div class="form-group">
-                    <div class="col-sm-5"><label>Default Due Date:</label></div>
-                    <div class="col-sm-5">
+                    <div class="col-sm-2"><label>Default Due Date:</label></div>
+                    <div class="col-sm-6">
                     <select id="defaultduedtnum">
                         <option value="+1 ">1</option>
                         <option value="+2 ">2</option>
@@ -42,42 +42,28 @@
                 </div>
                 <div class="space-4"></div>
                 <div class="form-group">
-                    <div class="col-sm-5"><label>Default Template:</label></div>
-                    <div class="col-sm-5">
+                    <div class="col-sm-2"><label>Default Template:</label></div>
+                    <div class="col-sm-6">
                         <select id="defaulttemplate"></select><br/>
                     </div>
                 </div>
                 <div class="space-4"></div>
                 <div class="form-group">
-                    <div class="col-sm-5"><label>Payment Instructions:</label></div>
-                    <div class="col-sm-7">
-                    <div id="payinst" style="height: 175px; border: 1px solid #E5E5E5;" class="wysiwyg-editor">
+                    <div class="col-sm-2"><label>Payment Instructions:</label></div>
+                    <div class="col-sm-6" style="max-width: 650px;">
+                        <div id="payinst" style="height: 175px; border: 1px solid #E5E5E5;" class="wysiwyg-editor">
 
-                    </div>
+                        </div>
                     </div>
                 </div>
                     <div class="form-group">
-                        <div class="col-sm-5"><label>Email Message:</label></div>
-                        <div class="col-sm-7">
+                        <div class="col-sm-2"><label>Email Message:</label></div>
+                        <div class="col-sm-6" style="max-width: 650px;">
                             <div id="emailmsg" style="height: 175px; border: 1px solid #E5E5E5;" class="wysiwyg-editor">
 
                             </div>
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6" style="display: none;">
-        <div class="widget-box transparent">
-            <div class="widget-header widget-header-flat">
-                <h4 class="lighter">Invoice Template</h4>
-            </div>
-
-            <div class="widget-body" style="padding-top: 10px;">
-                <form class="form-horizontal">
-
-                    <div class="space-4"></div>
                 </form>
             </div>
         </div>

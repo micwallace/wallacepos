@@ -18,26 +18,24 @@
     Manage your product stock
 </div>
 
-<table id="stocktable" class="table table-striped table-bordered table-hover">
-<thead>
-<tr>
-    <th class="center hidden-480 hidden-320 hidden-xs noexport">
-        <label>
-            <input type="checkbox" class="ace" />
-            <span class="lbl"></span>
-        </label>
-    </th>
-    <th>Name</th>
-    <th>Supplier</th>
-    <th>Location</th>
-    <th>Qty</th>
-    <th class="noexport"></th>
-</tr>
-</thead>
-
-<tbody>
-
-</tbody>
+<table id="stocktable" class="table table-striped table-bordered table-hover dt-responsive" style="width:100%;">
+    <thead>
+        <tr>
+            <th data-priority="0" class="center noexport">
+                <label>
+                    <input type="checkbox" class="ace" />
+                    <span class="lbl"></span>
+                </label>
+            </th>
+            <th data-priority="2">Name</th>
+            <th data-priority="5">Supplier</th>
+            <th data-priority="3">Location</th>
+            <th data-priority="4">Qty</th>
+            <th data-priority="1" class="noexport"></th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
 </table>
 </div>
 </div>
@@ -122,28 +120,58 @@
             tempstock = stock[key];
             stockarray.push(tempstock);
         }
-        datatable = $('#stocktable').dataTable(
-            { "bProcessing": true,
+        datatable = $('#stocktable').dataTable({"bProcessing": true,
             "aaData": stockarray,
             "aaSorting": [[ 2, "asc" ]],
             "aoColumns": [
-                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false, sClass:"hidden-480 hidden-320 hidden-xs noexport" },
+                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false, sClass:"noexport" },
                 { mData:function(data,type,val){return (data.name==null?"Unknown":data.name) } },
                 { mData:"supplier" },
                 { mData:function(data,type,val){return (data.locationid!=='0'?(WPOS.locations.hasOwnProperty(data.locationid)?WPOS.locations[data.locationid].name:'Unknown'):'Warehouse');} },
                 { mData:"stocklevel" },
                 { mData:function(data,type,val){return '<div class="action-buttons"><a class="green" onclick="openEditStockDialog('+data.id+');"><i class="icon-pencil bigger-130"></i></a><a class="blue" onclick="openTransferStockDialog('+data.id+')"><i class="icon-arrow-right bigger-130"></i></a><a class="red" onclick="getStockHistory('+data.storeditemid+', '+data.locationid+');"><i class="icon-time bigger-130"></i></a></div>'; }, "bSortable": false, sClass: "noexport" }
-            ] } );
-        // insert table wrapper
-        $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
+            ],
+            "columns": [
+                {},
+                {type: "string"},
+                {type: "string"},
+                {type: "string"},
+                {type: "numeric"},
+                {}
+            ],
+            "fnInfoCallback": function( oSettings, iStart, iEnd, iMax, iTotal, sPre ) {
+                // Add selected row count to footer
+                var selected = this.api().rows('.selected').count();
+                return sPre+(selected>0 ? '<br/>'+selected+' row(s) selected':'');
+            }
+        });
 
-        $('table th input:checkbox').on('click' , function(){
+        // row selection checkboxes
+        datatable.find("tbody").on('click', '.dt-select-cb', function(e){
+            var row = $(this).parents().eq(3);
+            if (row.hasClass('selected')) {
+                row.removeClass('selected');
+            } else {
+                row.addClass('selected');
+            }
+            datatable.api().draw(false);
+            e.stopPropagation();
+        });
+
+        $('table.dataTable th input:checkbox').on('change' , function(){
             var that = this;
-            $(this).closest('table').find('tr > td:first-child input:checkbox')
+            $(this).closest('table.dataTable').find('tr > td:first-child input:checkbox')
                 .each(function(){
-                    this.checked = that.checked;
-                    $(this).closest('tr').toggleClass('selected');
+                    var row = $(this).parents().eq(3);
+                    if ($(that).is(":checked")) {
+                        row.addClass('selected');
+                        $(this).prop('checked', true);
+                    } else {
+                        row.removeClass('selected');
+                        $(this).prop('checked', false);
+                    }
                 });
+            datatable.api().draw(false);
         });
 
         // dialogs
@@ -361,8 +389,9 @@
             tempstock = stock[key];
             stockarray.push(tempstock);
         }
-        datatable.fnClearTable();
-        datatable.fnAddData(stockarray);
+        datatable.fnClearTable(false);
+        datatable.fnAddData(stockarray, false);
+        datatable.api().draw(false);
     }
     function exportStock(){
         var data  = WPOS.table2CSV($("#stocktable"));

@@ -18,21 +18,20 @@
                 </div>
 
                 <div class="wpostable">
-                    <table id="salestable" class="table table-striped table-bordered table-hover table-responsive">
+                    <table id="salestable" class="table table-striped table-bordered table-hover dt-responsive" style="width:100%;">
                         <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Ref</th>
-                            <th>User</th>
-                            <th>Device / Location</th>
-                            <th># Items</th>
-                            <th>Sale Time</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th></th>
-                        </tr>
+                            <tr>
+                                <th data-priority="1">ID</th>
+                                <th data-priority="7">Ref</th>
+                                <th data-priority="8">User</th>
+                                <th data-priority="3">Device / Location</th>
+                                <th data-priority="9"># Items</th>
+                                <th data-priority="4">Sale Time</th>
+                                <th data-priority="6">Total</th>
+                                <th data-priority="5">Status</th>
+                                <th data-priority="2"></th>
+                            </tr>
                         </thead>
-
                         <tbody>
 
                         </tbody>
@@ -69,8 +68,9 @@
             tempitem.devlocname = WPOS.devices[tempitem.devid].name+" / "+WPOS.locations[tempitem.locid].name;
             itemarray.push(tempitem);
         }
-        datatable.fnClearTable();
-        datatable.fnAddData(itemarray);
+        datatable.fnClearTable(false);
+        datatable.fnAddData(itemarray, false);
+        datatable.api().draw(false);
     }
     // functions for processing json data
     function getStatusHtml(status){
@@ -164,23 +164,34 @@
             tempitem.devlocname = WPOS.devices[tempitem.devid].name+" / "+WPOS.locations[tempitem.locid].name;
             itemarray.push(tempitem);
         }
-        datatable = $('#salestable').dataTable(
-            { "bProcessing": true,
-                "aaData": itemarray,
-                "aaSorting": [[ 1, "desc" ]],
-                "aoColumns": [
-                    { "sType": "numeric", "mData":"id" },
-                    { "sType": "numeric", "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
-                    { "sType": "string", "mData":function(data, type, val){ return WPOS.getConfigTable().users[data.userid].username;} },
-                    { "sType": "string", "mData":"devlocname" },
-                    { "sType": "numeric", "mData":"numitems" },
-                    { "sType": "timestamp", "mData":function(data, type, val){return WPOS.util.getDateFromTimestamp(data.processdt);} },
-                    { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["total"]);} },
-                    { "sType": "html", "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data));} },
-                    { "sType": "html", mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.transactions.openTransactionDialog($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'));"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.transactions.deleteTransaction($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'))"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
-                ] } );
-        // insert table wrapper
-        $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
+        datatable = $('#salestable').dataTable({
+            "bProcessing": true,
+            "aaData": itemarray,
+            "aaSorting": [[ 1, "desc" ]],
+            "aoColumns": [
+                { "mData":"id" },
+                { "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
+                { "mData":function(data, type, val){ return WPOS.getConfigTable().users[data.userid].username;} },
+                { "mData":"devlocname" },
+                { "mData":"numitems" },
+                { "sType": "timestamp", "mData":function(data, type, val){ return datatableTimestampRender(type, data.processdt, WPOS.util.getDateFromTimestamp);} },
+                { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["total"]);} },
+                { "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data));} },
+                { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.transactions.openTransactionDialog($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'));"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.transactions.deleteTransaction($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'))"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
+            ],
+            "columns": [
+                {type: "numeric"},
+                {type: "string"},
+                {type: "string"},
+                {type: "string"},
+                {type: "numeric"},
+                {type: "timestamp"},
+                {type: "currency"},
+                {type: "html"},
+                {}
+            ]
+        });
+
         // add controls
         $("#salestable_length").append('&nbsp;&nbsp;<div style="display: inline-block;"><label>Range: <input type="text" id="transstime" onclick="$(this).blur();" /></label> <label>to <input type="text" id="transetime" onclick="$(this).blur();" /></label></div>');
 

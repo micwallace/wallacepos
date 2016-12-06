@@ -19,25 +19,25 @@
     Manage your business products
 </div>
 
-<table id="itemstable" class="table table-striped table-bordered table-hover">
+<table id="itemstable" class="table table-striped table-bordered table-hover dt-responsive" style="width:100%;">
 <thead>
 <tr>
-    <th class="center hidden-480 hidden-320 hidden-xs noexport">
+    <th data-priority="0" class="center noexport">
         <label>
             <input type="checkbox" class="ace" />
             <span class="lbl"></span>
         </label>
     </th>
-    <th>ID</th>
-    <th>Name</th>
-    <th>Description</th>
-    <th>Tax</th>
-    <th>Default Qty</th>
-    <th>Price</th>
-    <th>Stockcode</th>
-    <th>Category</th>
-    <th>Supplier</th>
-    <th class="noexport"></th>
+    <th data-priority="1">ID</th>
+    <th data-priority="2">Name</th>
+    <th data-priority="8">Description</th>
+    <th data-priority="7">Tax</th>
+    <th data-priority="6">Default Qty</th>
+    <th data-priority="4">Price</th>
+    <th data-priority="5">Stockcode</th>
+    <th data-priority="9">Category</th>
+    <th data-priority="10">Supplier</th>
+    <th class="noexport" data-priority="2"></th>
 </tr>
 </thead>
 <tbody>
@@ -237,33 +237,65 @@
             "aaData": itemarray,
             "aaSorting": [[ 2, "asc" ]],
             "aoColumns": [
-                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false, sClass:"hidden-480 hidden-320 hidden-xs noexport" },
-                { "sType": "numeric", "mData":"id" },
-                { "sType": "string", "mData":"name" },
-                { "sType": "string", "mData":"description" },
-                { "sType": "string", "mData":"taxname" },
-                { "sType": "numeric", "mData":"qty" },
-                { "sType": "currency", "mData":function(data,type,val){return (data['price']==""?"":WPOS.util.currencyFormat(data["price"]));} },
-                { "sType": "string", "mData":"code" },
-                { "sType": "string", "mData":function(data,type,val){return (categories.hasOwnProperty(data.categoryid)?categories[data.categoryid].name:'Misc'); } },
-                { "sType": "string", "mData":function(data,type,val){return (suppliers.hasOwnProperty(data.supplierid)?suppliers[data.supplierid].name:'Misc'); } },
-                { "sType": "html", mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="openEditDialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="removeItem($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false, sClass: "noexport" }
-            ]
+                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false, sClass:"noexport" },
+                { "mData":"id" },
+                { "mData":"name" },
+                { "mData":"description" },
+                { "mData":"taxname" },
+                { "mData":"qty" },
+                { "mData":function(data,type,val){return (data['price']==""?"":WPOS.util.currencyFormat(data["price"]));} },
+                { "mData":"code" },
+                { "mData":function(data,type,val){return (categories.hasOwnProperty(data.categoryid)?categories[data.categoryid].name:'None'); } },
+                { "mData":function(data,type,val){return (suppliers.hasOwnProperty(data.supplierid)?suppliers[data.supplierid].name:'None'); } },
+                { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="openEditDialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="removeItem($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false, sClass: "noexport" }
+            ],
+            "columns": [
+                {},
+                {type: "numeric"},
+                {type: "string"},
+                {type: "string"},
+                {type: "string"},
+                {type: "numeric"},
+                {type: "currency"},
+                {type: "string"},
+                {type: "string"},
+                {type: "string"},
+                {}
+            ],
+            "fnInfoCallback": function( oSettings, iStart, iEnd, iMax, iTotal, sPre ) {
+                // Add selected row count to footer
+                var selected = this.api().rows('.selected').count();
+                return sPre+(selected>0 ? '<br/>'+selected+' row(s) selected <span class="action-buttons"><a class="red" onclick="removeSelectedItems();"><i class="icon-trash bigger-130"></i></a></span>':'');
+            }
         });
-        // insert table wrapper
-        $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
 
+        // row selection checkboxes
+        datatable.find("tbody").on('click', '.dt-select-cb', function(e){
+            var row = $(this).parents().eq(3);
+            if (row.hasClass('selected')) {
+                row.removeClass('selected');
+            } else {
+                row.addClass('selected');
+            }
+            datatable.api().draw(false);
+            e.stopPropagation();
+        });
 
-        $('table th input:checkbox').on('click' , function(){
+        $('table.dataTable th input:checkbox').on('change' , function(){
             var that = this;
-            $(this).closest('table').find('tr > td:first-child input:checkbox')
+            $(this).closest('table.dataTable').find('tr > td:first-child input:checkbox')
                 .each(function(){
-                    this.checked = that.checked;
-                    $(this).closest('tr').toggleClass('selected');
+                    var row = $(this).parents().eq(3);
+                    if ($(that).is(":checked")) {
+                        row.addClass('selected');
+                        $(this).prop('checked', true);
+                    } else {
+                        row.removeClass('selected');
+                        $(this).prop('checked', false);
+                    }
                 });
-
+            datatable.api().draw(false);
         });
-
 
         $('[data-rel="tooltip"]').tooltip({placement: tooltip_placement});
         function tooltip_placement(context, source) {
@@ -499,6 +531,25 @@
             WPOS.util.hideLoader();
         }
     }
+
+    function removeSelectedItems(){
+        var ids = datatable.api().rows('.selected').data().map(function(row){ return row.id });
+
+        var answer = confirm("Are you sure you want to delete "+ids.length+" selected items?");
+        if (answer){
+            // show loader
+            WPOS.util.hideLoader();
+            if (WPOS.sendJsonData("items/delete", '{"id":"'+ids.join(",")+'"}')){
+                for (var i=0; i<ids.length; i++){
+                    delete stock[ids[i]];
+                }
+                reloadTable();
+            }
+            // hide loader
+            WPOS.util.hideLoader();
+        }
+    }
+
     function reloadData(){
         stock = WPOS.getJsonData("items/get");
         reloadTable();
@@ -511,8 +562,9 @@
             tempitem.taxname = WPOS.getTaxTable().rules[tempitem.taxid].name;
             itemarray.push(tempitem);
         }
-        datatable.fnClearTable();
-        datatable.fnAddData(itemarray);
+        datatable.fnClearTable(false);
+        datatable.fnAddData(itemarray, false);
+        datatable.api().draw(false);
     }
     function exportItems(){
         var data  = WPOS.table2CSV($("#itemstable"));
@@ -532,7 +584,7 @@
                 'name': {title:'Name', required: true},
                 'description': {title:'Description', required: false, value: ""},
                 'qty': {title:'Default Qty', required: false, value: 1},
-                'unit': {title:'Unit Price', required: false, value: ""},
+                'price': {title:'Unit Price', required: false, value: ""},
                 'tax_name': {title:'Tax Rule Name', required: false, value: ""},
                 'supplier_name': {title:'Supplier Name', required: false, value: ""},
                 'category_name': {title:'Category Name', required: false, value: ""}
@@ -574,9 +626,16 @@
                         if (data.hasOwnProperty('error')) {
                             if (data.error == "OK") {
                                 showModalCloseButton('Item Import Complete!');
-                                console.log("Stream closed on completion");
                             } else {
                                 showModalCloseButton("Error Importing Items", data.error);
+                            }
+                            if (data.hasOwnProperty('data')){
+                                // update table with imported items
+                                for (var i in data.data) {
+                                    if (data.data.hasOwnProperty(i))
+                                        stock[i] = data.data[i];
+                                }
+                                reloadTable();
                             }
                         }
                     },
@@ -613,9 +672,10 @@
             eventuiinit = true;
         }
         $("#modalloader_status").text('Initializing...');
-        $("#modalloader_output").text('');
+        $("#modalloader_substatus").text('');
         $("#modalloader_cbtn").hide();
         $("#modalloader_img").show();
+        $("#modalloader_prog").show();
         var modalloader = $("#modalloader");
         modalloader.dialog('open');
     }

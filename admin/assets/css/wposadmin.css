@@ -32,10 +32,6 @@
     overflow: hidden;
 }
 
-.table_wrapper {
-    width: 100%;
-    overflow-x: auto !important;
-}
 .fixedlabel {
     min-width:90px !important;
 }
@@ -58,6 +54,32 @@
 }
 .tags .email-input {
     display: none !important;
+}
+
+.dataTables_wrapper .col-sm-12 {
+    padding: 0;
+    width: 100%;
+}
+
+table.dataTable {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+table.dataTable th {
+    border-bottom-width: 1px;
+}
+
+table.dataTable tbody tr.selected, table.dataTable tbody th.selected, table.dataTable tbody td.selected {
+    color: inherit !important;
+}
+table.dataTable tbody > tr.selected, table.dataTable tbody > tr > .selected {
+    background-color: inherit !important;
+}
+
+.dataTables_info {
+    padding-top: 2px !important;
+    font-size: 13px;
 }
 
 /* #Media Queries

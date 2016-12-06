@@ -16,15 +16,15 @@
                     Manage POS Devices
                 </div>
 
-                    <table id="devtable" class="table table-striped table-bordered table-hover">
+                    <table id="devtable" class="table table-striped table-bordered table-hover dt-responsive" style="width:100%;">
                         <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Location</th>
-                            <th>Type</th>
-                            <th>Status</th>
-                            <th></th>
+                            <th data-priority="0">ID</th>
+                            <th data-priority="2">Name</th>
+                            <th data-priority="4">Location</th>
+                            <th data-priority="5">Type</th>
+                            <th data-priority="3">Status</th>
+                            <th data-priority="1"></th>
                         </tr>
                         </thead>
 
@@ -48,13 +48,13 @@
                     Manage POS Locations
                 </div>
 
-                    <table id="loctable" class="table table-striped table-bordered table-hover">
+                    <table id="loctable" class="table table-striped table-bordered table-hover dt-responsive" style="width:100%;">
                         <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Status</th>
-                            <th></th>
+                            <th data-priority="0">ID</th>
+                            <th data-priority="2">Name</th>
+                            <th data-priority="3">Status</th>
+                            <th data-priority="1"></th>
                         </tr>
                         </thead>
 
@@ -183,42 +183,49 @@
             }
             devarray.push(tempitem);
         }
-        devtable = $('#devtable').dataTable(
-            { "bProcessing": true,
-                "aaData": devarray,
-                "aoColumns": [
-                    { "mData":"id" }, { "mData":"name" }, { "mData":"locationname" }, { "mData":function(data, type, val){ switch(data.type){case 'kitchen_terminal': return 'Kitchen/Bar Terminal'; case 'general_register': return 'General Register'; case 'order_register': return 'Order Register';} return ''; } },
-                    { "mData":function(data, type, val){ return '<i class="'+(data.disabled==1?'red icon-arrow-down':'green icon-arrow-up')+'"></i>'; } },
-                    { "mData":function(data, type, val){ return data.id==0?'':'<div class="action-buttons"><a class="green" onclick="openDevDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
-                        (data.disabled==1?'<a class="green" onclick="setItemDisabled(0, $(this).closest(\'tr\').find(\'td\').eq(0).text(), false)"><i class="icon-arrow-up bigger-130"></i></a><a class="red" onclick="removeDevItem($(this).closest(\'tr\').find(\'td\').eq(0).text())"><i class="icon-trash bigger-130"></i></a>':'<a class="red" onclick="setItemDisabled(0, $(this).closest(\'tr\').find(\'td\').eq(0).text(), true)"><i class="icon-arrow-down bigger-130"></i></a>')+'</div>'; }, "bSortable": false }
-                ] } );
-        // insert table wrapper
-        $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
+        devtable = $('#devtable').dataTable({
+            "bProcessing": true,
+            "aaData": devarray,
+            "aoColumns": [
+                { "mData":"id" },
+                { "mData":"name" },
+                { "mData":"locationname" },
+                { "mData":function(data, type, val){ switch(data.type){case 'kitchen_terminal': return 'Kitchen/Bar Terminal'; case 'general_register': return 'General Register'; case 'order_register': return 'Order Register';} return ''; } },
+                { "mData":function(data, type, val){ return '<i class="'+(data.disabled==1?'red icon-arrow-down':'green icon-arrow-up')+'"></i>'; } },
+                { "mData":function(data, type, val){ return data.id==0?'':'<div class="action-buttons"><a class="green" onclick="openDevDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
+                    (data.disabled==1?'<a class="green" onclick="setItemDisabled(0, $(this).closest(\'tr\').find(\'td\').eq(0).text(), false)"><i class="icon-arrow-up bigger-130"></i></a><a class="red" onclick="removeDevItem($(this).closest(\'tr\').find(\'td\').eq(0).text())"><i class="icon-trash bigger-130"></i></a>':'<a class="red" onclick="setItemDisabled(0, $(this).closest(\'tr\').find(\'td\').eq(0).text(), true)"><i class="icon-arrow-down bigger-130"></i></a>')+'</div>'; }, "bSortable": false }
+            ],
+            "columns": [
+                {type: "numeric"},
+                {type: "string"},
+                {type: "string"},
+                {type: "string"},
+                {type: "html"},
+                {}
+            ]
+        });
 
         var locarray = [];
         for (key in locations){
             locarray.push(locations[key]);
         }
-        loctable = $('#loctable').dataTable(
-            { "bProcessing": true,
-                "aaData": locarray,
-                "aoColumns": [
-                    { "mData":"id" }, { "mData":"name" },
-                    { "mData":function(data, type, val){ return '<i class="'+(data.disabled==1?'red icon-arrow-down':'green icon-arrow-up')+'"></i>'; } },
-                    { "mData":function(data, type, val){ return data.id==0?'':'<div class="action-buttons"><a class="green" onclick="openLocDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
-                        (data.disabled==1?'<a class="green" onclick="setItemDisabled(1, $(this).closest(\'tr\').find(\'td\').eq(0).text(), false)"><i class="icon-arrow-up bigger-130"></i></a><a class="red" onclick="removeLocItem($(this).closest(\'tr\').find(\'td\').eq(0).text())"><i class="icon-trash bigger-130"></i></a>':'<a class="red" onclick="setItemDisabled(1, $(this).closest(\'tr\').find(\'td\').eq(0).text(), true)"><i class="icon-arrow-down bigger-130"></i></a>')+'</div>'; }, "bSortable": false }
-                ] } );
-
-        $('table th input:checkbox').on('click' , function(){
-            var that = this;
-            $(this).closest('table').find('tr > td:first-child input:checkbox')
-                .each(function(){
-                    this.checked = that.checked;
-                    $(this).closest('tr').toggleClass('selected');
-                });
-
+        loctable = $('#loctable').dataTable({
+            "bProcessing": true,
+            "aaData": locarray,
+            "aoColumns": [
+                { "mData":"id" },
+                { "mData":"name" },
+                { "mData":function(data, type, val){ return '<i class="'+(data.disabled==1?'red icon-arrow-down':'green icon-arrow-up')+'"></i>'; } },
+                { "mData":function(data, type, val){ return data.id==0?'':'<div class="action-buttons"><a class="green" onclick="openLocDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
+                    (data.disabled==1?'<a class="green" onclick="setItemDisabled(1, $(this).closest(\'tr\').find(\'td\').eq(0).text(), false)"><i class="icon-arrow-up bigger-130"></i></a><a class="red" onclick="removeLocItem($(this).closest(\'tr\').find(\'td\').eq(0).text())"><i class="icon-trash bigger-130"></i></a>':'<a class="red" onclick="setItemDisabled(1, $(this).closest(\'tr\').find(\'td\').eq(0).text(), true)"><i class="icon-arrow-down bigger-130"></i></a>')+'</div>'; }, "bSortable": false }
+            ],
+            "columns": [
+                {type: "numeric"},
+                {type: "string"},
+                {type: "html"},
+                {}
+            ]
         });
-
 
         $('[data-rel="tooltip"]').tooltip({placement: tooltip_placement});
         function tooltip_placement(context, source) {
@@ -492,8 +499,9 @@
             }
             itemarray.push(devices[key]);
         }
-        devtable.fnClearTable();
-        devtable.fnAddData(itemarray);
+        devtable.fnClearTable(false);
+        devtable.fnAddData(itemarray, false);
+        datatable.api().draw(false);
     }
 
     function refreshLocTable(){
@@ -501,8 +509,9 @@
         for (var key in locations){
             itemarray.push(locations[key]);
         }
-        loctable.fnClearTable();
-        loctable.fnAddData(itemarray);
+        loctable.fnClearTable(false);
+        loctable.fnAddData(itemarray, false);
+        datatable.api().draw(false);
         // redraw the dev table, location names have changed
         refreshDevTable();
         // repopulate the select boxes

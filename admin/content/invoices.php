@@ -22,16 +22,16 @@
                     <table id="invoicestable" class="table table-striped table-bordered table-hover table-responsive">
                         <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Ref</th>
-                            <th>Customer</th>
-                            <th>User</th>
-                            <th>Invoice Date</th>
-                            <th>Due Date</th>
-                            <th>Total</th>
-                            <th>Balance</th>
-                            <th>Status</th>
-                            <th></th>
+                            <th data-priority="1">ID</th>
+                            <th data-priority="8">Ref</th>
+                            <th data-priority="3">Customer</th>
+                            <th data-priority="9">User</th>
+                            <th data-priority="4">Invoice Date</th>
+                            <th data-priority="10">Due Date</th>
+                            <th data-priority="7">Total</th>
+                            <th data-priority="6">Balance</th>
+                            <th data-priority="5">Status</th>
+                            <th data-priority="2"></th>
                         </tr>
                         </thead>
 
@@ -98,8 +98,9 @@
         for (var key in invoices){
             itemarray.push(invoices[key]);
         }
-        datatable.fnClearTable();
-        datatable.fnAddData(itemarray);
+        datatable.fnClearTable(false);
+        datatable.fnAddData(itemarray, false);
+        datatable.api().draw(false);
     }
     // functions for processing json data
     function getStatusHtml(status){
@@ -211,25 +212,36 @@
         for (var key in invoices){
             itemarray.push(invoices[key]);
         }
-        var timestamphtml = '<small class="hidden timestamp">';
-        datatable = $('#invoicestable').dataTable(
-            { "bProcessing": true,
-                "aaData": itemarray,
-                "aaSorting": [[8, "desc"],[ 0, "desc" ]],
-                "aoColumns": [
-                    { "sType": "numeric", "mData":"id" },
-                    { "sType": "string", "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
-                    { "sType": "string", "mData":function(data, type, val){ return (customers.hasOwnProperty(data.custid)?customers[data.custid].name:"N/A");} },
-                    { "sType": "string", "mData":function(data, type, val){ return WPOS.getConfigTable().users[data.userid].username;} },
-                    { "sType": "timestamp", "mData":function(data, type, val){return timestamphtml+data.processdt+'</small>'+WPOS.util.getShortDate(data.processdt);} },
-                    { "sType": "timestamp", "mData":function(data, type, val){return timestamphtml+data.duedt+'</small>'+WPOS.util.getShortDate(data.duedt);} },
-                    { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["total"]);} },
-                    { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["balance"]);} },
-                    { "sType": "html", "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data));} },
-                    { "sType": "html", mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.transactions.openTransactionDialog($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'));"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.transactions.deleteTransaction($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'))"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
-                ] } );
-        // insert table wrapper
-        $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
+        datatable = $('#invoicestable').dataTable({
+            "bProcessing": true,
+            "aaData": itemarray,
+            "aaSorting": [[8, "desc"],[ 0, "desc" ]],
+            "aoColumns": [
+                { "sType": "numeric", "mData":"id" },
+                { "sType": "string", "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
+                { "sType": "string", "mData":function(data, type, val){ return (customers.hasOwnProperty(data.custid)?customers[data.custid].name:"N/A");} },
+                { "sType": "string", "mData":function(data, type, val){ return WPOS.getConfigTable().users[data.userid].username;} },
+                { "sType": "timestamp", "mData":function(data, type, val){return datatableTimestampRender(type, data.processdt, WPOS.util.getShortDate);} },
+                { "sType": "timestamp", "mData":function(data, type, val){return datatableTimestampRender(type, data.duedt, WPOS.util.getShortDate);} },
+                { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["total"]);} },
+                { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["balance"]);} },
+                { "sType": "html", "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data));} },
+                { "sType": "html", mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.transactions.openTransactionDialog($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'));"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.transactions.deleteTransaction($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'))"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
+            ],
+            "columns": [
+                {type: "numeric"},
+                {type: "string"},
+                {type: "string"},
+                {type: "string"},
+                {type: "timestamp"},
+                {type: "timestamp"},
+                {type: "currency"},
+                {type: "currency"},
+                {type: "html"},
+                {}
+            ]
+        });
+
         // add controls
         $("#invoicestable_length").append('&nbsp;&nbsp;<div style="display: inline-block;"><label>Range: <input type="text" id="invstime" onclick="$(this).blur();" /></label> <label>to <input type="text" id="invetime" onclick="$(this).blur();" /></label></div>');
 

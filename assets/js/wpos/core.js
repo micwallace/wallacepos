@@ -970,7 +970,14 @@ function WPOS() {
         if (typeof value === 'object'){
             configtable.item_categories[value.id] = value;
         } else {
-            delete configtable.item_categories[value];
+            if (typeof value === 'string') {
+                var ids = value.split(",");
+                for (var i=0; i<ids.length; i++){
+                    delete configtable.item_categories[ids[i]];
+                }
+            } else {
+                delete configtable.item_categories[value];
+            }
         }
         WPOS.items.generateItemGridCategories();
         localStorage.setItem("wpos_config", JSON.stringify(configtable));
@@ -1234,7 +1241,14 @@ function WPOS() {
         if (typeof itemobject === 'object'){
             itemtable[itemobject.id] = itemobject;
         } else {
-            delete itemtable[itemobject];
+            if (typeof itemobject === 'string') {
+                var ids = itemobject.split(",");
+                for (var i=0; i<ids.length; i++){
+                    delete itemtable[ids[i]];
+                }
+            } else {
+                delete itemtable[itemobject];
+            }
         }
         localStorage.setItem("wpos_items", JSON.stringify(itemtable));
         generateItemIndex();

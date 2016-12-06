@@ -69,7 +69,7 @@ function WPOSTransactions() {
                 { "sType": "string", "mData":function(data, type, val){ return getDeviceLocationText(data.devid, data.locid); } },
                 { "sType": "numeric", "mData":"numitems" },
                 { "sType": "currency", "mData":function(data,type,val){return WPOS.util.currencyFormat(data["total"]);} },
-                { "sType": "timestamp", "mData":function(data, type, val){return WPOS.util.getDateFromTimestamp(data.processdt);} },
+                { "sType": "timestamp", "mData":function(data, type, val){return datatableTimestampRender(type, data.processdt, WPOS.util.getDateFromTimestamp);} },
                 { "sType": "html", "mData":function(data,type,val){return getStatusHtml(getTransactionStatus(data.ref));} },
                 { "sType": "html", mData:function(data,type,val){ return "<button class='btn btn-sm btn-primary' onclick='WPOS.trans.showTransactionInfo("+"\""+data.ref+"\""+")'>View</button>"; }, "bSortable": false }
             ],
@@ -91,8 +91,9 @@ function WPOSTransactions() {
         for (var key in sales){
             tableData.push(sales[key]);
         }
-        datatable.fnClearTable();
-        datatable.fnAddData(tableData);
+        datatable.fnClearTable(false);
+        datatable.fnAddData(tableData, false);
+        datatable.api().draw(false);
     }
 
     function getDeviceLocationText(deviceid, locationid){

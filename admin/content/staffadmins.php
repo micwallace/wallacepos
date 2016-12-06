@@ -17,13 +17,13 @@
                     Manage POS users and Administrators
                 </div>
 
-                    <table id="usertable" class="table table-striped table-bordered table-hover">
+                    <table id="usertable" class="table table-striped table-bordered table-hover dt-responsive" style="width:100%;">
                         <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Username</th>
-                            <th>Status</th>
-                            <th></th>
+                            <th data-priority="1">ID</th>
+                            <th data-priority="3">Username</th>
+                            <th data-priority="4">Status</th>
+                            <th data-priority="2"></th>
                         </tr>
                         </thead>
 
@@ -183,28 +183,23 @@
         for (var key in users){
             itemarray.push(users[key]);
         }
-        datatable = $('#usertable').dataTable(
-            { "bProcessing": true,
-                "aaData": itemarray,
-                "aoColumns": [
-                    { mData:"id" }, { mData:"username" },
-                    { mData:function(data, type, val){ return '<i class="'+(data.disabled==1?'red icon-arrow-down':'green icon-arrow-up')+'"></i>'; } },
-                    { mData:function(data, type, val){ return data.id==0?'':'<div class="action-buttons"><a class="green" onclick="openEditUserDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
-                        (data.id!=1?(data.disabled==1?'<a class="green" onclick="setUserDisabled($(this).closest(\'tr\').find(\'td\').eq(0).text(), false)"><i class="icon-arrow-up bigger-130"></i></a><a class="red" onclick="removeItem($(this).closest(\'tr\').find(\'td\').eq(0).text())"><i class="icon-trash bigger-130"></i></a>':'<a class="red" onclick="setUserDisabled($(this).closest(\'tr\').find(\'td\').eq(0).text(), true)"><i class="icon-arrow-down bigger-130"></i></a>'):'')+'</div>'; }, "bSortable": false }
-                ] } );
-        // insert table wrapper
-        $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
-
-        $('table th input:checkbox').on('click' , function(){
-            var that = this;
-            $(this).closest('table').find('tr > td:first-child input:checkbox')
-                .each(function(){
-                    this.checked = that.checked;
-                    $(this).closest('tr').toggleClass('selected');
-                });
-
+        datatable = $('#usertable').dataTable({
+            "bProcessing": true,
+            "aaData": itemarray,
+            "aoColumns": [
+                { mData:"id" },
+                { mData:"username" },
+                { mData:function(data, type, val){ return '<i class="'+(data.disabled==1?'red icon-arrow-down':'green icon-arrow-up')+'"></i>'; } },
+                { mData:function(data, type, val){ return data.id==0?'':'<div class="action-buttons"><a class="green" onclick="openEditUserDialog($(this).closest(\'tr\').find(\'td\').eq(0).text());"><i class="icon-pencil bigger-130"></i></a>'+
+                    (data.id!=1?(data.disabled==1?'<a class="green" onclick="setUserDisabled($(this).closest(\'tr\').find(\'td\').eq(0).text(), false)"><i class="icon-arrow-up bigger-130"></i></a><a class="red" onclick="removeItem($(this).closest(\'tr\').find(\'td\').eq(0).text())"><i class="icon-trash bigger-130"></i></a>':'<a class="red" onclick="setUserDisabled($(this).closest(\'tr\').find(\'td\').eq(0).text(), true)"><i class="icon-arrow-down bigger-130"></i></a>'):'')+'</div>'; }, "bSortable": false }
+            ],
+            "columns": [
+                {type: "numeric"},
+                {type: "string"},
+                {type: "html"},
+                {}
+            ]
         });
-
 
         $('[data-rel="tooltip"]').tooltip({placement: tooltip_placement});
         function tooltip_placement(context, source) {
@@ -468,8 +463,9 @@
         for (var key in users){
             itemarray.push(users[key]);
         }
-        datatable.fnClearTable();
-        datatable.fnAddData(itemarray);
+        datatable.fnClearTable(false);
+        datatable.fnAddData(itemarray, false);
+        datatable.api().draw(false);
     }
 </script>
 <style type="text/css">

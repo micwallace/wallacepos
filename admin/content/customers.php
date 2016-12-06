@@ -18,23 +18,23 @@
                     Manage your customer base
                 </div>
 
-                    <table id="customertable" class="table table-striped table-bordered table-hover">
+                    <table id="customertable" class="table table-striped table-bordered table-hover dt-responsive" style="width: 100%;">
                         <thead>
                         <tr>
-                            <th class="center hidden-480 hidden-320 hidden-xs noexport">
+                            <th data-priority="0"  class="center noexport">
                                 <label>
                                     <input type="checkbox" class="ace" />
                                     <span class="lbl"></span>
                                 </label>
                             </th>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Mobile</th>
-                            <th>Suburb</th>
-                            <th>Postcode</th>
-                            <th></th>
+                            <th data-priority="2" >ID</th>
+                            <th data-priority="3" >Name</th>
+                            <th data-priority="4" >Email</th>
+                            <th data-priority="5" >Phone</th>
+                            <th data-priority="6" >Mobile</th>
+                            <th data-priority="7" >Suburb</th>
+                            <th data-priority="8" >Postcode</th>
+                            <th data-priority="1" ></th>
                         </tr>
                         </thead>
 
@@ -58,32 +58,67 @@
         for (var key in data){
             itemarray.push(data[key]);
         }
-        datatable = $('#customertable').dataTable(
-            { "bProcessing": true,
-                "aaData": itemarray,
-                "aoColumns": [
-                    { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace" type="checkbox"><span class="lbl"></span></label><div>', "bSortable": false, sClass:"hidden-480 hidden-320 hidden-xs noexport" },
-                    { "mData":"id" },
-                    { "mData":"name" },
-                    { "mData":"email" },
-                    { "mData":"phone" },
-                    { "mData":"mobile" },
-                    { "mData":"suburb" },
-                    { "mData":"postcode" },
-                    { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.customers.openCustomerDialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.customers.deleteCustomer($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
-                ] } );
-        // insert table wrapper
-        $(".dataTables_wrapper table").wrap("<div class='table_wrapper'></div>");
-
-        $('table th input:checkbox').on('click' , function(){
-            var that = this;
-            $(this).closest('table').find('tr > td:first-child input:checkbox')
-                .each(function(){
-                    this.checked = that.checked;
-                    $(this).closest('tr').toggleClass('selected');
-                });
-
+        datatable = $('#customertable').dataTable({
+            "bProcessing": true,
+            "aaData": itemarray,
+            "aoColumns": [
+                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', "bSortable": false, sClass:"noexport" },
+                { "mData":"id" },
+                { "mData":"name" },
+                { "mData":"email" },
+                { "mData":"phone" },
+                { "mData":"mobile" },
+                { "mData":"suburb" },
+                { "mData":"postcode" },
+                { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.customers.openCustomerDialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.customers.deleteCustomer($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
+            ],
+            "columns": [
+                {},
+                {type: "numeric"},
+                {type: "string"},
+                {type: "string"},
+                {type: "string"},
+                {type: "numeric"},
+                {type: "currency"},
+                {type: "string"},
+                {type: "string"},
+                {type: "string"},
+                {}
+            ],
+            "fnInfoCallback": function( oSettings, iStart, iEnd, iMax, iTotal, sPre ) {
+                // Add selected row count to footer
+                var selected = this.api().rows('.selected').count();
+                return sPre+(selected>0 ? '<br/>'+selected+' row(s) selected':'');
+            }
         });
+
+        datatable.find("tbody").on('click', '.dt-select-cb', function(e){
+            var row = $(this).parents().eq(3);
+            if (row.hasClass('selected')) {
+                row.removeClass('selected');
+            } else {
+                row.addClass('selected');
+            }
+            datatable.api().draw(false);
+            e.stopPropagation();
+        });
+
+        $('table.dataTable th input:checkbox').on('change' , function(){
+            var that = this;
+            $(this).closest('table.dataTable').find('tr > td:first-child input:checkbox')
+                .each(function(){
+                    var row = $(this).parents().eq(3);
+                    if ($(that).is(":checked")) {
+                        row.addClass('selected');
+                        $(this).prop('checked', true);
+                    } else {
+                        row.removeClass('selected');
+                        $(this).prop('checked', false);
+                    }
+                });
+            datatable.api().draw(false);
+        });
+
         // hide loader
         WPOS.util.hideLoader();
     });
@@ -97,8 +132,9 @@
         for (var key in data){
             itemarray.push(data[key]);
         }
-        datatable.fnClearTable();
-        datatable.fnAddData(itemarray);
+        datatable.fnClearTable(false);
+        datatable.fnAddData(itemarray, false);
+        datatable.api().draw(false);
     }
     function exportCustomers(){
         var data  = WPOS.table2CSV($("#customertable"));

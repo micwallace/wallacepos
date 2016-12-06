@@ -89,11 +89,17 @@ class SuppliersModel extends DbConfig
      */
     public function remove($id = null)
     {
-        if ($id === null) {
+        $placeholders = [];
+        $sql = "DELETE FROM stored_suppliers WHERE";
+        if (is_numeric($id)){
+            $sql .= " `id`=:id;";
+            $placeholders[":id"] = $id;
+        } else if (is_array($id)) {
+            $id = array_map([$this->_db, 'quote'], $id);
+            $sql .= " `id` IN (" . implode(', ', $id) . ");";
+        } else {
             return false;
         }
-        $sql          = "DELETE FROM stored_suppliers WHERE id=:id;";
-        $placeholders = [":id"=>$id];
 
         return $this->delete($sql, $placeholders);
 
