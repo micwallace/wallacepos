@@ -44,8 +44,22 @@ function errorHandler($errorno, $errstr, $errfile, $errline){
 
     $result['errorCode'] = "phperr";
 
-    $result[ $errorno==E_WARNING ? 'warning' : 'error'] .=  $errstr . " " . $errfile . " on line " . $errline . "\n";
+    $result['error'] .=  "ERROR: " . ": " . $errstr . " " . $errfile . " on line " . $errline . "\n";
 }
+
+/**
+ * Php warning handler
+ * @param $errorno
+ * @param $errstr
+ * @param $errfile
+ * @param $errline
+ */
+function warningHandler($errorno, $errstr, $errfile, $errline){
+    global $result;
+
+    $result['warning'] .= "WARNING: " . $errstr . " " . $errfile . " on line " . $errline . "\n";
+}
+
 /**
  * Php exception handler, sets & returns json result object
  * @param Exception $ex
@@ -57,7 +71,7 @@ function exceptionHandler(Throwable $ex){
 
     if ($result['error'] == "OK") $result['error'] = "";
 
-    $result['error'] .= $ex->getMessage() . "\nFile: " . $ex->getFile() . " line " . $ex->getLine();
+    $result['error'] .= "EXCEPTION: " .$ex->getMessage() . "\nFile: " . $ex->getFile() . " line " . $ex->getLine();
 
     die(json_encode($result));
 }

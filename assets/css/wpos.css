@@ -22,6 +22,9 @@ body {
     min-height: calc(100vh - 45px);
     padding: 12px 10px 40px 10px !important;
 }
+.ui-dialog.setup-dialog {
+    z-index: 3100 !important;
+}
 #items {
     min-height: 300px;
 }
@@ -151,7 +154,7 @@ body {
     max-width: 450px;
     margin-bottom: 38px;
     overflow: visible !important;
-    overflow-x: visible !important;
+    overflow-x: visible !important; /* Needed for when overflow is overridden */
 }
 #iboxhandle {
     position: absolute;

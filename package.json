@@ -1,7 +1,8 @@
 {
   "name": "wpos",
   "version": "1.0.0",
-  "description": "",
+  "repository": "https://github.com/micwallace/wallacepos.git",
+  "description": "Web based POS system",
   "main": "/app/api/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

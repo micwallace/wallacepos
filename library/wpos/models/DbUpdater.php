@@ -129,7 +129,7 @@ class DbUpdater {
             return "The database has not been installed, use the installer instead";
         }
 
-        if (version_compare($version, $cur_version, '>')){
+        if (version_compare($version, $cur_version) < 1){
             return "Already upgraded to version ".$version;
         }
 
@@ -143,7 +143,7 @@ class DbUpdater {
         echo("Current version is " . $cur_version . "<br/>");
         echo("Upgrading to version " . $version . "...<br/>");
 
-        for ($i=$cur_index; $i<$last_index; $i++) {
+        for ($i=$cur_index+1; $i<=$last_index; $i++) {
             $versionInfo = self::getVersionInfo($i);
             echo("Running version " . $versionInfo['name'] . " updates...<br/>");
 
@@ -160,7 +160,7 @@ class DbUpdater {
 
         try {
             if ($versionInfo['db']) {
-                echo("Updating database...");
+                echo("Updating database...<br/>");
                 $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/installer/schemas/update".$versionInfo['name'].".sql";
                 if (!file_exists($path)){
                     return "Schema does not exist";
@@ -174,7 +174,7 @@ class DbUpdater {
                 }
             }
             if ($versionInfo['script']) {
-                echo("Running update script...");
+                echo("Running update script...<br/>");
                 switch ($versionInfo['name']) {
                     case "1.0":
                         $this->upgradeVersion1_0();
@@ -189,7 +189,7 @@ class DbUpdater {
                         $this->upgradeVersion1_4_0();
                         break;
                     default:
-                        return "Update script refered to in schema but not found.";
+                        return "Update script refered to in schema but not found.<br/>";
                 }
             }
 
@@ -209,7 +209,8 @@ class DbUpdater {
         // set default template values & copy templates
         WposAdminSettings::putValue('pos', 'rectemplate', 'receipt');
         WposAdminSettings::putValue('invoice', 'defaulttemplate', 'invoice');
-        mkdir($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/templates/");
+        if (!file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/templates/"))
+            mkdir($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/templates/");
         WposTemplates::restoreDefaults();
         // put alternate language values
         $labels = json_decode('{"cash":"Cash","credit":"Credit","eftpos":"Eftpos","cheque":"Cheque","deposit":"Deposit","tendered":"Tendered","change":"Change","transaction-ref":"Transaction Ref","sale-time":"Sale Time","subtotal":"Subtotal","total":"Total","item":"Item","items":"Items","refund":"Refund","void-transaction":"Void Transaction"}}');

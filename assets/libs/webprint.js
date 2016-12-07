@@ -94,7 +94,8 @@ var WebPrint = function (init, opt) {
     function openPrintWindow() {
         wpready = false;
         wpwindow = window.open("http://"+options.relayHost+":"+options.relayPort+"/printwindow", 'WebPrintService');
-        wpwindow.blur();
+        if (wpwindow)
+            wpwindow.blur();
         window.focus();
     }
 

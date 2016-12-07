@@ -348,14 +348,16 @@ function WPOS() {
             alert("Please select a item from the dropdowns or specify a new name.");
         } else {
             // call the setup function
-            if (deviceSetup(devid, devname, locid, locname)) {
-                currentuser = null;
-                initialsetup = false;
-                $("#setupdiv").dialog("close");
-                showLogin();
-            } else {
-                alert("There was a problem setting up the device, please try again.");
-            }
+            deviceSetup(devid, devname, locid, locname, function(result){
+                if (result) {
+                    currentuser = null;
+                    initialsetup = false;
+                    $("#setupdiv").dialog("close");
+                    showLogin();
+                } else {
+                    alert("There was a problem setting up the device, please try again.");
+                }
+            });
         }
         WPOS.util.hideLoader();
     };
@@ -383,6 +385,7 @@ function WPOS() {
             }
             WPOS.util.hideLoader();
             // show the setup dialog
+            $("#setupdiv").parent().css('z-index', "3200 !important");
             $("#setupdiv").dialog("open");
         });
     }
@@ -1066,7 +1069,7 @@ function WPOS() {
      * @param {int} newlocname ; if not null, the newlocname field is ignored and blah blah blah....
      * @returns {boolean}
      */
-    function deviceSetup(devid, newdevname, locid, newlocname) {
+    function deviceSetup(devid, newdevname, locid, newlocname, callback) {
         var data = {};
         data.uuid = setDeviceUUID(false);
         if (devid === "") {
@@ -1080,14 +1083,14 @@ function WPOS() {
             data.locationid = locid;
         }
         WPOS.sendJsonDataAsync("devices/setup", JSON.stringify(data), function(configobj){
-            if (configobj) {
+            if (configobj !== false) {
                 localStorage.setItem("wpos_config", JSON.stringify(configobj));
                 configtable = configobj;
-                return true;
             } else {
                 removeDeviceUUID(true);
-                return false;
             }
+            if (callback)
+                callback(configobj !== false);
         });
     }
 
@@ -1531,6 +1534,7 @@ $(function () {
         modal        : true,
         closeOnEscape: false,
         autoOpen     : false,
+        dialogClass: 'setup-dialog',
         open         : function (event, ui) {
             $(".ui-dialog-titlebar-close").hide();
         },
