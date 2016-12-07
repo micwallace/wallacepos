@@ -85,7 +85,7 @@
                     <div class="form-group">
                         <label class="col-sm-5">Promo QR code:</label>
                         <div class="col-sm-5"><input type="text" id="recqrcode" /><br/><small>Leave blank to disable</small>
-                            <img width="100" src="/docs/qrcode.png">
+                            <br/><img id="qrpreview" width="150" src="">
                         </div>
                     </div>
                 </form>
@@ -134,7 +134,7 @@
                 <form class="form-horizontal">
                     <div>
                         <div class="form-group">
-                            <div class="col-sm-5"><label>Allow Change of Stored Item Prices:</label></div>
+                            <div class="col-sm-5"><label>Allow Changing Stored Item Prices:</label></div>
                             <div class="col-sm-5">
                                 <select id="priceedit">
                                     <option value="blank">When Price is Blank</option>
@@ -151,6 +151,13 @@
                                     <option value="5">5¢</option>
                                     <option value="10">10¢</option>
                                 </select>
+                            </div>
+                        </div>
+                        <div class="space-4"></div>
+                        <div class="form-group">
+                            <div class="col-sm-5"><label>Allow negative item prices:</label></div>
+                            <div class="col-sm-5">
+                                <input id="negative_items" type="checkbox" />
                             </div>
                         </div>
                     </div>
@@ -171,12 +178,18 @@
             // show loader
             WPOS.util.showLoader();
             var data = {};
-            $("form :input").each(function(){
-                data[$(this).prop('id')] = $(this).val();
+            $("#maincontent").find("form :input").each(function(){
+                if ($(this).is(':checkbox')) {
+                    data[$(this).prop('id')] = $(this).is(":checked") ? true : false;
+                } else {
+                    data[$(this).prop('id')] = $(this).val();
+                }
             });
             // fix for checkbox
-            data.recprintlogo = $("#recprintlogo").is(":checked")?true:false;
+            //data.recprintlogo = $("#recprintlogo").is(":checked")?true:false;
+            //data.negative_items = $("#negative_items").is(":checked")?true:false;
             WPOS.sendJsonData("settings/pos/set", JSON.stringify(data));
+            refreshPreviewImages();
             // hide loader
             WPOS.util.hideLoader();
         }
@@ -185,16 +198,26 @@
             options = WPOS.getJsonData("settings/pos/get");
             // load option values into the form
             for (var i in options){
-                $("#"+i).val(options[i]);
+                var input = $("#"+i);
+                if (input.is(':checkbox')) {
+                    input.prop('checked', options[i]);
+                } else {
+                    input.val(options[i]);
+                }
             }
             // unfortunately the above doesn't work for checkboxes :( so a fix is below :)
-            if (options.recprintlogo==true){
+            /*if (options.recprintlogo==true){
                 $("#recprintlogo").prop("checked", "checked");
-            }
+            }*/
             refreshTemplateList(options['rectemplate']);
+            refreshPreviewImages();
+        }
+
+        function refreshPreviewImages(){
             // set logo images
-            $("#reclogoprev").attr("src", options.reclogo);
-            $("#emaillogoprev").attr("src", options.recemaillogo);
+            $("#reclogoprev").attr("src", options.reclogo + "?t=" + new Date().getTime());
+            $("#emaillogoprev").attr("src", options.recemaillogo + "?t=" + new Date().getTime());
+            $("#qrpreview").attr("src", (options.recqrcode!=="" ? "/docs/qrcode.png?t=" + new Date().getTime() : ""));
         }
 
         function refreshTemplateList(selectedid){

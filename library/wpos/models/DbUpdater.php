@@ -93,7 +93,7 @@ class DbUpdater {
         '1.1'=>['name'=>'1.1', 'db'=>true, 'script'=>false],
         '1.2'=>['name'=>'1.2', 'db'=>true, 'script'=>true],
         '1.3'=>['name'=>'1.3', 'db'=>true, 'script'=>true],
-        '1.4.0'=>['name'=>'1.4.0', 'db'=>true, 'script'=>false],
+        '1.4.0'=>['name'=>'1.4.0', 'db'=>true, 'script'=>true],
     ];
 
     public static function getLatestVersionName(){
@@ -185,6 +185,9 @@ class DbUpdater {
                     case "1.3":
                         $this->upgradeVersion1_3();
                         break;
+                    case "1.4.0":
+                        $this->upgradeVersion1_4_0();
+                        break;
                     default:
                         return "Update script refered to in schema but not found.";
                 }
@@ -196,6 +199,10 @@ class DbUpdater {
         } catch (Exception $e){
             return $e->getMessage();
         }
+    }
+
+    private function upgradeVersion1_4_0(){
+        WposAdminSettings::putValue('pos', 'negative_items', false);
     }
 
     private function upgradeVersion1_3(){

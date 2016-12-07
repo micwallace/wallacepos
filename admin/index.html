@@ -69,7 +69,7 @@
 						</small>
 					</a><!-- /.brand -->
 				</div><!-- /.navbar-header -->
-                <div style="position: absolute; right: 0;">
+                <div style="position: absolute; right: 0; overflow:hidden;">
                     <button class="btn logout_btn" onclick="WPOS.logout();">Logout</button>
                 </div>
 			</div><!-- /.container -->
@@ -303,15 +303,19 @@
 				<i class="icon-double-angle-up icon-only bigger-110"></i>
 			</a>
 		</div><!-- /.main-container -->
-        <div id="modaldiv" class="login-layout" style="background-color:#000000; z-index: 3000;">
+        <div id="loginmodal" class="login-layout">
             <div id="loginbox" class="login-box widget-box visible no-border">
                 <div class="widget-main">
                     <h2 class="header blue lighter bigger">
                         <img style="height: 40px; margin-top: -5px;" src="/assets/images/apple-touch-icon-72x72.png">&nbsp;WallacePOS Admin
                     </h2>
-                    <div class="space-6"></div>
-                    <div class="space-6"></div>
-                    <div id="logindiv" style="display: none; height: 240px;">
+                    <div class="space-2"></div>
+                    <div id="login-banner" class="alert alert-block alert-success" style="display:none;">
+                        <i class="icon icon-lock green" style="margin-right: 3px;"></i>
+                        <span id="login-banner-txt"></span>
+                    </div>
+                    <div class="space-10"></div>
+                    <div id="logindiv" style="display: none;">
                         <label class="block clearfix">
                     <span class="block input-icon input-icon-right">
                         <input class="form-control" id="loguser" type="text" placeholder="Username"/>
@@ -321,7 +325,7 @@
                         <label class="block clearfix">
                     <span class="block input-icon input-icon-right">
                         <input class="form-control" id="logpass" onkeypress="if(event.keyCode == 13){WPOS.login();}" type="password"  placeholder="Password"/>
-                        <i class="icon-lock"></i>
+                        <i class="icon-lock" style="margin-right: 1px;"></i>
                     </span>
                         </label>
                         <div class="space-6"></div>
@@ -331,7 +335,7 @@
                         </button>
                         <div class="space-6"></div>
                     </div>
-                    <div id="loadingdiv" style="height: 225px;">
+                    <div id="loadingdiv">
                         <h3 id="loadingbartxt">Initializing</h3>
                         <div id="loadingprogdiv" class="progress progress-striped active">
                             <div class="progress-bar" id="loadingprog" style="width: 100%;"></div>

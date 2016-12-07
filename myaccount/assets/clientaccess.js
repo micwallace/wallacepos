@@ -97,7 +97,7 @@ function WPOSClientDash(){
     this.loadPageContent = function(query){
         $.get("content/"+sec+".php", query, function(data){
             if (data=="AUTH"){
-                WPOS.triggerLogin();
+                WPOS.sessionExpired();
             } else {
                 $("#maincontent").html(data);
             }
@@ -168,7 +168,7 @@ function WPOSClientDash(){
         $("#modaldiv").show();
         WPOS.util.hideLoader();
     }
-    this.triggerLogin = function(){
+    this.sessionExpired = function(){
         WPOS.stopPageLoader();
         $("#modaldiv").show();
         alert("Your session has expired, please login again.");
@@ -205,7 +205,7 @@ function WPOSClientDash(){
                 return json.data;
             } else {
                 if (errCode == "auth") {
-                    WPOS.triggerLogin();
+                    WPOS.sessionExpired();
                     return false;
                 } else {
                     alert(err);
@@ -247,7 +247,7 @@ function WPOSClientDash(){
                 return json.data;
             } else {
                 if (errCode == "auth") {
-                    WPOS.triggerLogin();
+                    WPOS.sessionExpired();
                     return false;
                 } else {
                     alert(err);

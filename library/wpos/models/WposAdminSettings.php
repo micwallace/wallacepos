@@ -205,6 +205,7 @@ class WposAdminSettings {
                     if ($this->data->recqrcode !== $configbk->recqrcode && $this->data->recqrcode!=""){
                         $this->generateQRCode();
                     }
+                    $this->curconfig->{"negative_items"} = false;
                 }
 
                 foreach ($this->curconfig as $key=>$value){

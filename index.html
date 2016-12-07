@@ -70,9 +70,12 @@
     <li onclick="WPOS.trans.setupTransactionView();"><a href="#tabs-2">Sales</a></li>
     <li onclick="WPOS.reports.populateOverview();"><a href="#tabs-3">Reports</a></li>
     <li><a href="#tabs-4">Settings</a></li>
-    <button onClick="WPOS.logout();" style="float:right; height: 45px;" class="btn logout_btn">Logout</button>
-    <button title="Expand window" id="window_width_toggle" onClick="expandWindow();" style="float:right; vertical-align: middle; margin-top: 10px; margin-right: 5px; margin-left: 5px;" class="btn btn-xs btn-primary"><i class="icon icon-expand"></i></button>
-    <button title="Open Administration Dashboard" onClick="window.open('/admin');" style="float:right; vertical-align: middle; margin-top: 10px; margin-right: 5px; margin-left: 5px;" class="btn btn-xs btn-primary"><i class="icon icon-cog">&nbsp;Admin</i></button>
+    <button onClick="WPOS.logout();" style="float:right; height: 45px; padding: 6px 8px;" class="btn logout_btn"><i class="glyphicon glyphicon-log-out"></i>Logout</button>
+    <div style="float:right; vertical-align: middle; margin-top: 10px; text-align: right;">
+        <button title="Open Administration Dashboard" onClick="window.open('/admin');" style="margin-right: 4px; margin-left: 4px;" class="btn btn-xs btn-primary"><i class="icon icon-cog">&nbsp;Admin</i></button>
+        <button title="Lock terminal or switch user" id="switch_user_btn" onClick="WPOS.lockSession();" style="margin-right: 4px; margin-left: 4px;" class="btn btn-xs btn-primary"><i class="icon icon-lock"></i>&nbsp;Lock</button>
+        <button title="Expand window" id="window_width_toggle" onClick="expandWindow();" style="margin-right: 4px; margin-left: 6px;" class="btn btn-xs btn-primary"><i class="icon icon-expand"></i></button>
+    </div>
 </ul>
 <div id="tabs-1">
     <div id="sales">
@@ -115,8 +118,9 @@
                     </tbody>
                 </table>
                 </div>
-                <span id="invaliditemnotice" style="float: left; display: none;" class="text-warning bigger-110 red"><i
-                        class="icon-warning-sign"></i>Invalid items marked in red will not be added to the sale</span>
+                <span id="invaliditemnotice" style="float: left; display: none;" class="text-warning bigger-110 red">
+                    <i class="icon-warning-sign"></i>&nbsp;Invalid items marked in red will not be added to the sale
+                </span>
                 <button style="float:right; font-size: 14px !important; margin-top:10px;" class="btn btn-sm btn-primary" onClick="WPOS.items.addManualItemRow();">Add Item</button>
             </div>
             <div id="totals">
@@ -873,15 +877,19 @@
     </div>
 </div><iframe id="dlframe" style="width: 1px;height: 1px; border: 0; position: absolute; bottom: 0; left: 0; z-index: -1;"></iframe>
 </div>
-<div id="modaldiv" class="login-layout" style="background-color:#000000; z-index: 1000;">
+<div id="loginmodal" class="login-layout">
     <div id="loginbox" class="login-box widget-box visible no-border">
         <div class="widget-main">
             <h2 class="header blue lighter bigger">
                 <img style="height: 40px; margin-top: -5px;" src="/assets/images/apple-touch-icon-72x72.png">&nbsp;WallacePOS
             </h2>
-            <div class="space-6"></div>
-            <div class="space-6"></div>
-            <div id="logindiv" style="display: none; height: 240px;">
+            <div class="space-2"></div>
+            <div id="login-banner" class="alert alert-block alert-success" style="display:none;">
+                <i class="icon icon-lock green" style="margin-right: 3px;"></i>
+                <span id="login-banner-txt"></span>
+            </div>
+            <div class="space-10"></div>
+            <div id="logindiv" style="display: none;">
                 <label class="block clearfix">
                     <span class="block input-icon input-icon-right">
                         <input class="form-control" id="username" name="username" type="text" placeholder="Username"/>

@@ -471,11 +471,12 @@ function WPOSTransactions() {
     var remtrans = {};
 
     function searchRemoteTransactions(searchdata) {
-        remtrans = WPOS.sendJsonData("sales/search", JSON.stringify(searchdata));
-        if (remtrans !== false) {
-            loadIntoTable(remtrans);
-            repositionDialog();
-        }
+        WPOS.sendJsonDataAsync("sales/search", JSON.stringify(searchdata), function(result){
+            if (result !== false){
+                loadIntoTable(remtrans);
+                repositionDialog();
+            }
+        });
     }
 
     this.clearSearch = function(){
@@ -500,21 +501,24 @@ function WPOSTransactions() {
             WPOS.util.showLoader();
             var ref = $('#transref').text();
             var notes = $('#transnotes').val();
-            if (WPOS.sendJsonData("sales/updatenotes", JSON.stringify({"ref":ref, "notes":notes}))!==false){
-                // update local copy
-                var sale = WPOS.trans.getTransactionRecord(ref);
-                if (sale!=false){
-                    // set new notes
-                    sale.salenotes = notes;
-                    if (WPOS.sales.isSaleOffline(ref)===true){
-                        WPOS.sales.updateOfflineSale(sale);
-                    } else {
-                        WPOS.updateSalesTable(ref, sale)
+            WPOS.sendJsonDataAsync("sales/updatenotes", JSON.stringify({"ref":ref, "notes":notes}), function(result){
+
+                if (result!==false){
+                    // update local copy
+                    var sale = WPOS.trans.getTransactionRecord(ref);
+                    if (sale!=false){
+                        // set new notes
+                        sale.salenotes = notes;
+                        if (WPOS.sales.isSaleOffline(ref)===true){
+                            WPOS.sales.updateOfflineSale(sale, "sales/updatenotes");
+                        } else {
+                            WPOS.updateSalesTable(ref, sale)
+                        }
                     }
                 }
-            }
-            // hide loader
-            WPOS.util.hideLoader();
+                // hide loader
+                WPOS.util.hideLoader();
+            });
         }
     }
 

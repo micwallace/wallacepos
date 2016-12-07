@@ -111,7 +111,7 @@ function WPOSAdmin(){
         }
         $.get(contenturl, query, function(data){
             if (data=="AUTH"){
-                WPOS.triggerLogin();
+                WPOS.sessionExpired();
             } else {
                 $("#maincontent").html(data);
             }
@@ -142,20 +142,53 @@ function WPOSAdmin(){
     // authentication
     this.isLogged = function(){
         WPOS.util.showLoader();
-        var user = WPOS.getJsonData("hello");
-        if (user!=false){
-            if (user.isadmin==1 || (user.sections!=null && user.sections.access!='no')){
-                curuser = user;
-                WPOS.initAdmin();
-            } else {
-                alert("You do not have permission to enter this area");
+        getLoginStatus(function(user){
+            if (user!=false){
+                if (user.isadmin==1 || (user.sections!=null && user.sections.access!='no')){
+                    curuser = user;
+                    WPOS.initAdmin();
+                } else {
+                    alert("You do not have permission to enter this area");
+                }
             }
+            $('#loadingdiv').hide();
+            $('#logindiv').show();
+            $("#loginbutton").removeAttr('disabled', 'disabled');
+            WPOS.util.hideLoader();
+        });
+    };
+    function getLoginStatus(callback){
+        return WPOS.getJsonDataAsync("hello", callback);
+    }
+    var sessionTimer = null;
+    function startSessionCheck(){
+        if (sessionTimer==null)
+            sessionTimer = setInterval(startSessionCheck, 630000);
+
+        getLoginStatus(function(user){
+            if (user==false)
+                WPOS.sessionExpired();
+        });
+    }
+    function stopSessionCheck(){
+        clearInterval(sessionTimer);
+        sessionTimer = null;
+    }
+    function showLoginDiv(message){
+        if (message){
+            $("#login-banner-txt").text(message);
+            $("#login-banner").show();
+        } else {
+            $("#login-banner").hide();
         }
+        $('#loginmodal').show();
+    }
+    function hideLoginDiv(){
+        $('#loginmodal').hide();
         $('#loadingdiv').hide();
         $('#logindiv').show();
         $("#loginbutton").removeAttr('disabled', 'disabled');
-        WPOS.util.hideLoader();
-    };
+    }
     this.login = function () {
         WPOS.util.showLoader();
         performLogin();
@@ -175,19 +208,20 @@ function WPOSAdmin(){
         // hash password
         password = WPOS.util.SHA256(password);
         // authenticate
-        var user = WPOS.sendJsonData("auth", JSON.stringify({username: username, password: password}));
-        if (user!==false){
-            if (user.isadmin==1 || (user.sections!=null && user.sections.access!='no')){
-                curuser = user;
-                WPOS.initAdmin();
-            } else {
-                alert("You do not have permission to enter this area");
+        WPOS.sendJsonDataAsync("auth", JSON.stringify({username: username, password: password}), function(user){
+            if (user!==false){
+                if (user.isadmin==1 || (user.sections!=null && user.sections.access!='no')){
+                    curuser = user;
+                    WPOS.initAdmin();
+                } else {
+                    alert("You do not have permission to enter this area");
+                }
             }
-        }
-        passfield.val('');
-        WPOS.util.hideLoader();
-        $(loginbtn).val('Login');
-        $(loginbtn).removeAttr('disabled', 'disabled');
+            passfield.val('');
+            WPOS.util.hideLoader();
+            $(loginbtn).val('Login');
+            $(loginbtn).removeAttr('disabled', 'disabled');
+        });
     }
     this.logout = function () {
         var answer = confirm("Are you sure you want to logout?");
@@ -200,15 +234,15 @@ function WPOSAdmin(){
         WPOS.util.showLoader();
         WPOS.stopSocket();
         WPOS.stopPageLoader();
+        stopSessionCheck();
         WPOS.getJsonData("logout");
-        $("#modaldiv").show();
+        showLoginDiv();
         WPOS.util.hideLoader();
     }
-    this.triggerLogin = function(){
+    this.sessionExpired = function(){
         WPOS.stopPageLoader();
         WPOS.stopSocket();
-        $("#modaldiv").show();
-        alert("Your session has expired, please login again.");
+        showLoginDiv("Your session has expired, please login again.");
         WPOS.util.hideLoader();
     };
     this.initAdmin = function(){
@@ -217,7 +251,8 @@ function WPOSAdmin(){
         // Load needed config
         fetchConfigTable();
         WPOS.startPageLoader();
-        $("#modaldiv").hide();
+        startSessionCheck();
+        hideLoginDiv();
     };
     function hidePermSections(){
         // hide/show settings
@@ -290,7 +325,7 @@ function WPOSAdmin(){
                 return json.data;
             } else {
                 if (errCode == "auth") {
-                    WPOS.triggerLogin();
+                    WPOS.sessionExpired();
                     return false;
                 } else {
                     alert(err);
@@ -302,6 +337,48 @@ function WPOSAdmin(){
         alert("There was an error connecting to the server: \n"+response.statusText);
         return false;
     }
+
+    this.getJsonDataAsync = function (action, callback) {
+        // send request to server
+        try {
+            $.ajax({
+                url     : "/api/"+action,
+                type    : "GET",
+                dataType: "json",
+                timeout : 10000,
+                cache   : false,
+                success : function(json){
+                    var errCode = json.errorCode;
+                    var err = json.error;
+                    if (err == "OK") {
+                        // echo warning if set
+                        if (json.hasOwnProperty('warning')){
+                            alert(json.warning);
+                        }
+                        if (callback)
+                            callback(json.data);
+                    } else {
+                        if (errCode == "auth"){
+                            WPOS.sessionExpired();
+                            return false;
+                        }
+                        alert(err);
+                        if (callback)
+                            callback(false);
+                    }
+                },
+                error   : function(jqXHR, status, error){
+                    alert(error);
+                    if (callback)
+                        callback(false);
+                }
+            });
+        } catch (ex) {
+            alert("Exception: "+ex);
+            if (callback)
+                callback(false);
+        }
+    };
 
     this.sendJsonData = function  (action, data) {
         // send request to server
@@ -330,7 +407,7 @@ function WPOSAdmin(){
                 return json.data;
             } else {
                 if (errCode == "auth") {
-                    WPOS.triggerLogin();
+                    WPOS.sessionExpired();
                     return false;
                 } else {
                     alert(err);
@@ -363,7 +440,7 @@ function WPOSAdmin(){
                         callback(json.data);
                     } else {
                         if (errCode == "auth") {
-                            WPOS.triggerLogin();
+                            WPOS.sessionExpired();
                         } else {
                             if (typeof errorCallback == "function")
                                 return errorCallback(json.error);
@@ -415,7 +492,7 @@ function WPOSAdmin(){
                     callback(data.data);
                 } else {
                     if (errCode == "auth") {
-                        WPOS.triggerLogin();
+                        WPOS.sessionExpired();
                         return false;
                     } else {
                         alert(err);

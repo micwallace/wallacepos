@@ -728,6 +728,7 @@ function WPOSSales() {
     function validateSalesItems(){
         var qty,name, unit, mod, tempprice;
         var numinvalid = 0;
+        var allow_negative = WPOS.getConfigTable().pos.negative_items;
         $("#itemtable").children(".item_row").each(function (index, element) {
                 qty = parseFloat($(element).find(".itemqty").val());
                 name = $(element).find(".itemname").val();
@@ -735,7 +736,7 @@ function WPOSSales() {
                 var itemdata = $(element).find(".itemid").data('options');
                 mod = itemdata.hasOwnProperty('mod') ? itemdata.mod.total : 0;
                 tempprice = parseFloat("0.00");
-                if (qty > 0 && name != "" && unit>0) {
+                if (qty > 0 && name != "" && (unit>0 || allow_negative)) {
                     // add item modification total to unit price & calculate item total
                     tempprice = qty * (unit + mod);
                     // calculate item tax
@@ -956,19 +957,22 @@ function WPOSSales() {
         var answer = confirm("Are you sure you want to delete this order?");
         if (answer){
             WPOS.util.showLoader();
-            if (WPOS.sendJsonData("orders/remove", JSON.stringify({ref: ref}))!==false){
-                var cursale = WPOS.trans.getTransactionRecord(ref);
-                removeSalesRecord(ref);
-                // if the order is loaded we need to clear the sales form
-                if (ref==curref)
-                    clearSalesForm();
-                // process the orders
-                WPOS.orders.processOrder(ref, cursale);
-            } else {
-                alert("Could not delete the order!");
-            }
-            WPOS.util.hideLoader();
-            WPOS.trans.showTransactionView();
+            WPOS.sendJsonDataAsync("orders/remove", JSON.stringify({ref: ref}), function(result){
+
+                if (result){
+                    var cursale = WPOS.trans.getTransactionRecord(ref);
+                    removeSalesRecord(ref);
+                    // if the order is loaded we need to clear the sales form
+                    if (ref==curref)
+                        clearSalesForm();
+                    // process the orders
+                    WPOS.orders.processOrder(ref, cursale);
+                } else {
+                    alert("Could not delete the order!");
+                }
+                WPOS.util.hideLoader();
+                WPOS.trans.showTransactionView();
+            });
         }
     };
 
@@ -1618,7 +1622,7 @@ function WPOSSales() {
 
     function removeSalesRecord(ref){
         // add to java object
-        WPOS.removeFromSalesTable(ref);
+        WPOS.trans.removeFromSalesTable(ref);
         // remove from local storage
         var jsonsales;
         if (localStorage.getItem("wpos_csales") !== null) {
@@ -1733,18 +1737,21 @@ function WPOSSales() {
                     removeOfflineSale(jsonosales[key].data.ref);
                     // add json response to todays records
                     addSalesRecord(jsonresponse);
-                } else {
-                    // damn so close, go back into offline mode
-                    // TODO: check connectivity, skip this record & move on, there may be an error with this record: keep track of errornous sales count & display in status.
-                    if (WPOS.switchToOffline()) {
-                        // update status
-                        WPOS.setStatusBar(3, "WPOS is offline ("+WPOS.sales.getOfflineSalesNum()+" offline records)");
-                        return false;
-                    }
                 }
                 uploadcount++;
             }
-
+            var count = WPOS.sales.getOfflineSalesNum();
+            if (count > 0){
+                // damn so close, go back into offline mode
+                if (WPOS.switchToOffline()) {
+                    // update status
+                    WPOS.setStatusBar(3, "WPOS is offline ("+count+" offline records)");
+                    return false;
+                }
+            } else {
+                $("#backup_btn").hide();
+                return true;
+            }
         }
         return true;
     }
