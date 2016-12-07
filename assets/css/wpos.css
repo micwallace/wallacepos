@@ -2,7 +2,6 @@
 html, body {
     margin: 0;
     padding: 0;
-    overflow: hidden;
 }
 body {
 	background-color:#000000 !important;
@@ -44,6 +43,7 @@ body {
     height:100vh;
     background-color:#000000;
     z-index: 3000;
+    overflow: auto;
 }
 #loginbox {
     width: 400px;
