@@ -162,9 +162,10 @@ function WPOSAdmin(){
     }
     var sessionTimer = null;
     function startSessionCheck(){
-        if (sessionTimer==null)
+        if (sessionTimer==null){
             sessionTimer = setInterval(startSessionCheck, 630000);
-
+            return;
+        }
         getLoginStatus(function(user){
             if (user==false)
                 WPOS.sessionExpired();
