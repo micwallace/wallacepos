@@ -248,6 +248,11 @@ class WposPosSetup
                     return $result;
                 }
             }
+        } else {
+            if (($this->data->locationname=$this->doesLocationExist($this->data->locationid))===false){
+                $result['error'] = "Could not find a location with the specified ID";
+                return $result;
+            }
         }
         // insert new device
         if ($this->data->deviceid == null) {
@@ -284,14 +289,15 @@ class WposPosSetup
                 $result['error'] = "The deviceid specified is disabled";
                 return $result;
             }
+            $deviceData = json_decode($dev['data']);
+            $this->data->deviceid = $dev['id'];
             if ($this->data->locationid != null){ // if location id is left out, we can leave device at it's current location
                 // check if location exists (and enabled) before updating device location
-                if (!$this->doesLocationExist($this->data->locationid)){
+                /*if (!$this->doesLocationExist($this->data->locationid)){
                     $result['error'] = "The locationid specified does not exist or is disabled";
                     return $result;
-                }
+                }*/
                 // update location
-                $deviceData = json_decode($dev['data']);
                 $deviceData->locationid = $this->data->locationid;
                 if ($this->devMdl->edit($this->data->deviceid, $deviceData)===false){
                     $result['error'] = "Failed to update the devices location: ".$this->devMdl->errorInfo;
@@ -299,6 +305,12 @@ class WposPosSetup
                 }
             }
         }
+
+        $socketIO = new WposSocketIO();
+        $deviceData->id = $this->data->deviceid;
+        $deviceData->locationname = $this->data->locationname;
+        $socketIO->sendDeviceConfigUpdate($deviceData);
+
         // insert the md5 signature in the device_map table
         if ($this->addNewUuid($this->data->uuid, $this->data->deviceid)) {
             // create json record to return to the client
@@ -341,7 +353,7 @@ class WposPosSetup
             $result['error'] = $errors;
             return $result;
          }
-         if (!$this->doesLocationExist($this->data->locationid)){
+         if (($locname=$this->doesLocationExist($this->data->locationid))===false){
             $result['error'] = "The location id specified does not exist";
             return $result;
          }
@@ -349,6 +361,9 @@ class WposPosSetup
             $result['error'] = "Could not add the device: ".$this->devMdl->errorInfo;
          } else {
             $this->data->id = $newid;
+            $this->data->locationname = $locname;
+            $socketIO = new WposSocketIO();
+            $socketIO->sendDeviceConfigUpdate($this->data);
             // log data
             Logger::write("New device added", "CONFIG", json_encode($this->data));
             $result['data'] = $this->data;
@@ -363,23 +378,24 @@ class WposPosSetup
      */
     public function updateDevice($result){
         // validate input
-        $jsonval = new JsonValidate($this->data, '{"id":1, "name":"", "locationid":1, "type":"", "ordertype":"", "orderdisplay":""}');
+        $jsonval = new JsonValidate($this->data, '{"id":1, "name":"", "locationid":1, "type":"", "ordertype":"", "orderdisplay":true}');
         if (($errors = $jsonval->validate())!==true){
             $result['error'] = $errors;
             return $result;
         }
-        if (!$this->doesLocationExist($this->data->locationid)){
+        if (($locname=$this->doesLocationExist($this->data->locationid))===false){
             $result['error'] = "The location id specified does not exist";
             return $result;
         }
         if ($this->devMdl->edit($this->data->id, $this->data)!==false) {
+            $this->data->locationname = $locname;
             $result['data'] = $this->data;
             $socketIO = new WposSocketIO();
-            $socketIO->sendDeviceConfigUpdate($this->data->id, $this->data);
+            $socketIO->sendDeviceConfigUpdate($this->data);
             // log data
             Logger::write("Device updated", "CONFIG", json_encode($this->data));
         } else {
-            $result['error'] = "Could not update the device";
+            $result['error'] = "Could not update the device: ".$this->devMdl->errorInfo;
         }
         return $result;
     }
@@ -398,11 +414,11 @@ class WposPosSetup
         if ($this->devMdl->remove($this->data->id)!==false) {
             $result['data'] = true;
             $socketIO = new WposSocketIO();
-            $socketIO->sendDeviceConfigUpdate($this->data->id, "removed");
+            $socketIO->sendDeviceConfigUpdate(['id'=>$this->data->id, 'a'=>"removed"]);
             // log data
             Logger::write("Device deleted with id:".$this->data->id, "CONFIG");
         } else {
-            $result['error'] = "Could not remove the device";
+            $result['error'] = "Could not remove the device: ".$this->devMdl->errorInfo;
         }
         return $result;
     }
@@ -421,17 +437,17 @@ class WposPosSetup
         // get location id
         if ($this->data->disable==false){ // we don't want to enable a device with a disabled location
             $dev = $this->devMdl->get($this->data->id)[0];
-            if (!$this->doesLocationExist($dev['locationid'])){
+            if ($this->doesLocationExist($dev['locationid'])===false){
                 $result['error'] = "The devices location is disabled, pick a new location or enable it.";
                 return $result;
             }
         }
         if ($this->devMdl->setDisabled($this->data->id, boolval($this->data->disable))===false) {
-            $result['error'] = "Could not enable/disable the device";
+            $result['error'] = "Could not enable/disable the device: ".$this->devMdl->errorInfo;
         }
         if ($this->data->disable){
             $socketIO = new WposSocketIO();
-            $socketIO->sendDeviceConfigUpdate($this->data->id, "disabled");
+            $socketIO->sendDeviceConfigUpdate(['id'=>$this->data->id, 'a'=>"disabled"]);
         }
         // log data
         Logger::write("Device ".($this->data->disable==true?"disabled":"enabled")." with id:".$this->data->id, "CONFIG");
@@ -452,7 +468,7 @@ class WposPosSetup
         }
         // get location id
         if (($result['data']=$this->devMdl->getUuids($this->data->id))===false){
-            $result['error'] = "Could not retrieve device registrations";
+            $result['error'] = "Could not retrieve device registrations: ".$this->devMdl->errorInfo;
         }
 
         return $result;
@@ -475,7 +491,7 @@ class WposPosSetup
             // log data
             Logger::write("Device registration deleted with id:".$this->data->id, "CONFIG");
         } else {
-            $result['error'] = "Could not remove the device registration";
+            $result['error'] = "Could not remove the device registration: ".$this->devMdl->errorInfo;
         }
 
         return $result;
@@ -504,7 +520,7 @@ class WposPosSetup
             return $result;
         }
         if (!$this->data->id = $this->addNewLocation($this->data->name)){
-            $result['error'] = "Could not add the location";
+            $result['error'] = "Could not add the location: ".$this->locMdl->errorInfo;
         } else {
             $result['data'] = $this->data;
         }
@@ -528,7 +544,7 @@ class WposPosSetup
             // log data
             Logger::write("Location updated", "CONFIG", json_encode($this->data));
         } else {
-            $result['error'] = "Could not update the location";
+            $result['error'] = "Could not update the location: ".$this->locMdl->errorInfo;
         }
         return $result;
     }
@@ -554,7 +570,7 @@ class WposPosSetup
             // log data
             Logger::write("Location deleted with id:".$this->data->id, "CONFIG");
         } else {
-            $result['error'] = "Could not delete the location";
+            $result['error'] = "Could not delete the location: ".$this->locMdl->errorInfo;
         }
         return $result;
     }
@@ -578,7 +594,7 @@ class WposPosSetup
             }
         }
         if ($this->devMdl->setDisabled($this->data->id, boolval($this->data->disable))===false) {
-            $result['error'] = "Could not enable/disable the location";
+            $result['error'] = "Could not enable/disable the location: ".$this->locMdl->errorInfo;
         }
 
         // log data
@@ -593,13 +609,13 @@ class WposPosSetup
      * @return bool
      */
     private function doesLocationExist($id){
-        $loc = $this->devMdl->get($id);
+        $loc = $this->locMdl->get($id);
         if (sizeof($loc)>0){
             $loc = $loc[0];
             if ($loc['disabled']==0){
                 // for this function we don't want disabled devices
                 // (ie, it would allow adding disabled location to a device or enabling device with disabled location)
-                return true;
+                return $loc['name'];
             }
         }
         return false;

@@ -44,7 +44,9 @@ function errorHandler($errorno, $errstr, $errfile, $errline){
 
     $result['errorCode'] = "phperr";
 
-    $result['error'] .=  "ERROR: " . ": " . $errstr . " " . $errfile . " on line " . $errline . "\n";
+    $result['error'] =  "ERROR: " . ": " . $errstr . " " . $errfile . " on line " . $errline . "\n";
+
+    die(json_encode($result));
 }
 
 /**

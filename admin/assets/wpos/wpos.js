@@ -85,9 +85,8 @@ function WPOSAdmin(){
                     delete splits[0];
                     //Create the params string
                     var params = splits.join('&');
-                    var query = params;
                     //Send the ajax request
-                    WPOS.loadPageContent(query);
+                    WPOS.loadPageContent(params);
                 }
             } else {
                 WPOS.goToHome();
@@ -567,6 +566,18 @@ function WPOSAdmin(){
 
                     case "regreq":
                         socket.emit('reg', {deviceid: 0, username: curuser.username});
+                        break;
+
+                    case "config":
+                        if (data.type=="deviceconfig"){
+                            if (data.data.hasOwnProperty('a')){
+                                if (data.data.a=="removed")
+                                    delete WPOS.devices[data.id];
+                            } else {
+                                WPOS.devices[data.data.id] = data.data;
+                                WPOS.locations[data.data.locationid] = {name: data.data.locationname};
+                            }
+                        }
                         break;
 
                     case "error":

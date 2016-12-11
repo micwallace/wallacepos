@@ -50,6 +50,7 @@
     <script type="text/javascript" src="/assets/js/wpos/reports.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/print.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/orders.js"></script>
+    <script type="text/javascript" src="/assets/js/wpos/eftpos.js"></script>
     <script type="text/javascript" src="/assets/js/wpos/utilities.js"></script>
     <script type="text/javascript" src="/assets/libs/webprint.js"></script>
     <!-- Websocket library -->
@@ -124,7 +125,7 @@
                 <button style="float:right; font-size: 14px !important; margin-top:10px;" class="btn btn-sm btn-primary" onClick="WPOS.items.addManualItemRow();">Add Item</button>
             </div>
             <div id="totals">
-                <div style="display:inline-block; max-width:450px; vertical-align:top;">
+                <div id="totals-container">
                     <div class="totalsbox">
                         <div>
                             <div class="totalslabel">Subtotal:</div>
@@ -173,7 +174,7 @@
                         </tr>
                     </table>
                 </div>
-                <div id="regkey-container">
+                <div id="regkey-container" class="pull-right">
                         <div id="regkey-inner">
                         <div id="registerkeydiv">
                             <button class="regbtn btn btn-success" onClick="WPOS.sales.showPaymentDialog();">Process
@@ -865,15 +866,15 @@
 <div id="statusbar" style="width:100%; position:absolute; bottom:0; min-height:40px; background-color:#666666; padding-top: 10px;">
     <div class="col-sm-3 col-xs-6" style="vertical-align: middle;">
         <div id="printstat">
-            <i class="icon-print icon-large white"></i>&nbsp;<span id="printstattxt" class="white">Initializing...</span>
+            <i class="icon-print icon-large white" style="margin-right: 5px;"></i>&nbsp;<span id="printstattxt" class="white">Initializing...</span>
         </div>
     </div>
-    <div class="col-sm-6 text-center white">
-        <span class="biz_name"></span> - <span class="device_name"></span> - <span class="location_name"></span>
-    </div>
-    <div id="wposstat" class="col-sm-3 col-xs-6 text-right">
+    <div id="wposstat" class="col-sm-3 col-sm-push-6 col-xs-6 text-right">
         <span id="wposstattxt" class="white">WPOS is Online</span>
-        <span id="wposstaticon" class="badge badge-success" style="margin-left: 5px; margin-right: 5px;"><i class="icon-ok"></i></span>
+        <span id="wposstaticon" class="badge badge-success" style="margin-left: 5px;"><i class="icon-ok"></i></span>
+    </div>
+    <div class="col-sm-6 col-sm-pull-3 text-center white" style="padding-bottom: 10px;">
+        <span class="biz_name"></span> - <span class="device_name"></span> - <span class="location_name"></span>
     </div>
 </div><iframe id="dlframe" style="width: 1px;height: 1px; border: 0; position: absolute; bottom: 0; left: 0; z-index: -1;"></iframe>
 </div>

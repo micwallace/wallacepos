@@ -30,7 +30,7 @@ body {
 #totals {
     width:calc(100% - 13px);
     margin-top:10px;
-    padding-bottom: 40px;
+    margin-bottom: 50px;
     position: absolute;
     bottom: 0;
 }
@@ -263,6 +263,12 @@ body {
     font-size: 13px;
 }
 
+#totals-container {
+    display:inline-block;
+    max-width:450px;
+    vertical-align:top;
+}
+
 /* #Media Queries
 ================================================== */
 
@@ -323,11 +329,6 @@ body {
     .settings-row label label {
         min-width: 70px;
     }
-    #regkey-container {
-        width: 100%;
-        margin-top: 20px;
-        text-align: center;
-    }
     #ibox {
         max-width: 160px;
     }
@@ -336,5 +337,13 @@ body {
     }
     .ui-dialog {
         width: 100% !important;
+    }
+}
+
+@media only screen and (max-width: 630px) {
+    #regkey-container {
+        width: 100%;
+        margin-top: 20px;
+        text-align: center;
     }
 }

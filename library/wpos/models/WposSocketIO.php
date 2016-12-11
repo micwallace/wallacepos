@@ -202,12 +202,9 @@ class WposSocketIO {
     /**
      * Send updated device specific config
      * @param $newconfig
-     * @param $configset; the set name for the values
      * @return bool
      */
-    public function sendDeviceConfigUpdate($id, $newconfig){
-        $ids = new stdClass();
-        $ids->{$id} = $id;
-        return $this->sendDataToDevices(['a' => 'config', 'type' => 'deviceconfig', 'data' => $newconfig], $ids);
+    public function sendDeviceConfigUpdate($newconfig){
+        return $this->sendDataToDevices(['a' => 'config', 'type' => 'deviceconfig', 'data' => $newconfig], null);
     }
 }

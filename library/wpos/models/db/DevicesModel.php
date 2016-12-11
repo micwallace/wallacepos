@@ -214,7 +214,7 @@ class DevicesModel extends DbConfig
         if ($id === null) {
             return false;
         }
-        $sql = "DELETE FROM devices WHERE id= :id";
+        $sql = "DELETE devices, device_map FROM devices INNER JOIN device_map ON devices.id=device_map.deviceid WHERE devices.id= :id";
         $placeholders = [':id'=>$id];
 
         return $this->delete($sql, $placeholders);

@@ -8,6 +8,11 @@ ALTER TABLE `sale_items`
 
 ALTER TABLE `customers`
   CHANGE COLUMN `notes` `notes` varchar(2048) NOT NULL DEFAULT '',
+  CHANGE COLUMN `pass` `pass` varchar(512) NOT NULL DEFAULT '',
+  CHANGE COLUMN `token` `token` varchar(256) NOT NULL DEFAULT '',
+  CHANGE COLUMN `activated` `activated` int(1) NOT NULL DEFAULT 0,
+  CHANGE COLUMN `disabled` `disabled` int(1) NOT NULL DEFAULT 0,
+  CHANGE COLUMN `lastlogin` `lastlogin` datetime NULL DEFAULT NULL,
   CHANGE COLUMN `dt` `dt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 ALTER TABLE `devices`

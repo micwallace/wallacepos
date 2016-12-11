@@ -1,2 +1,2 @@
-https://github.com/heroku/heroku-buildpack-nodejs.git#v91
-https://github.com/micwallace/dokku-buildpack-apache.git#v0.0.3
+https://github.com/heroku/heroku-buildpack-nodejs.git#v75
+https://github.com/micwallace/dokku-buildpack-apt-apache-php.git#dev

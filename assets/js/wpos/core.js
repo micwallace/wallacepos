@@ -955,23 +955,40 @@ function WPOS() {
         return false;
     }
 
-    function updateConfig(key, value){
+    function updateConfig(key, data){
         console.log("Processing config ("+key+") update");
-        console.log(value);
-        if (key=='item_categories')
-            return updateCategory(value);
+        //console.log(data);
 
-        if (key=="deviceconfig" && (value=="removed" || value=="disabled")){
-            // device removed
-            removeDeviceUUID();
-            logout();
-            alert("This device has been "+value+" by the administrator,\ncontact your device administrator for help.");
-            return;
-        } else if (key=="deviceconfig"){
-            // update root level config values
-            configtable.devicename = value.name;
+        if (key=='item_categories')
+            return updateCategory(data);
+
+        if (key=="deviceconfig"){
+            if (data.id==configtable.deviceid) {
+                if (data.hasOwnProperty('a') && (data.a == "removed" || data.a == "disabled")) {
+                    // device removed
+                    if (data.a == "removed")
+                        removeDeviceUUID();
+                    logout();
+                    alert("This device has been " + data.a + " by the administrator,\ncontact your device administrator for help.");
+                    return;
+                }
+                // update root level config values
+                configtable.devicename = data.name;
+                configtable.locationname = data.locationname;
+                populateDeviceInfo();
+            } else {
+                if (data.data.hasOwnProperty('a')){
+                    if (data.data.a=="removed")
+                        delete configtable.devices[data.id];
+                } else {
+                    configtable.devices[data.id] = data;
+                    configtable.locations[data.locationid] = {name: data.locationname};
+                }
+                return;
+            }
         }
-        configtable[key] = value; // write to current data
+
+        configtable[key] = data; // write to current data
         localStorage.setItem("wpos_config", JSON.stringify(configtable));
         setAppCustomization();
     }
@@ -1363,7 +1380,6 @@ function WPOS() {
 
                     case "config":
                         updateConfig(data.type, data.data);
-                        populateDeviceInfo();
                         break;
 
                     case "regreq":
@@ -1735,14 +1751,21 @@ $(function () {
 
     // set padding for item list
     setItemListPadding();
+    setStatusbarPadding();
     window.onresize = function(){
         setItemListPadding();
+        setStatusbarPadding();
     };
 });
 
+function setStatusbarPadding(){
+    var height = $("#statusbar").height();
+    $("#totals").css("margin-bottom", (20+height)+"px");
+}
+
 function setItemListPadding(){
     var height = $("#totals").height();
-    $("#items").css("margin-bottom", (80 + height) +"px");
+    $("#items").css("margin-bottom", (80+height)+"px");
 }
 
 function expandWindow(){

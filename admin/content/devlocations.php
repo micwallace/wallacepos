@@ -428,7 +428,7 @@
         device.locationid = $("#devlocid").val();
         device.type = $("#devtype").val();
         device.ordertype = $("#devordertype").val();
-        device.orderdisplay = $("#devorderdisplay").prop('checked')==true?1:0;
+        device.orderdisplay = $("#devorderdisplay").prop('checked')==true;
         device.kitchenid = $("#devkitchenid").val();
         var id = $("#devid").val();
         if (id==0){
@@ -501,7 +501,7 @@
         }
         devtable.fnClearTable(false);
         devtable.fnAddData(itemarray, false);
-        datatable.api().draw(false);
+        devtable.api().draw(false);
     }
 
     function refreshLocTable(){
@@ -511,7 +511,7 @@
         }
         loctable.fnClearTable(false);
         loctable.fnAddData(itemarray, false);
-        datatable.api().draw(false);
+        loctable.api().draw(false);
         // redraw the dev table, location names have changed
         refreshDevTable();
         // repopulate the select boxes

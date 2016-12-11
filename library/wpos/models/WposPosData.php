@@ -114,7 +114,6 @@ class WposPosData
     public function getPosDevices($result)
     {
         $devMdl  = new DevicesModel();
-        $locMdl  = new LocationsModel();
         $devices = $devMdl->get();
         if (is_array($devices)) {
             $data = [];

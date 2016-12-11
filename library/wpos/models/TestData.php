@@ -372,12 +372,12 @@ class TestData {
             echo("Inserted Locations.<br/>");
         }
 
-        $devices = json_decode('[{"id": 1, "name":"Register 1", "locationid":1, "type":"general_register", "dt":"0000-00-00 00:00:00"},
-                        {"id": 2, "name":"Register 2", "locationid":1, "type":"general_register", "dt":"0000-00-00 00:00:00"},
-                        {"id": 3, "name":"Register 1", "locationid":2, "type":"general_register", "dt":"0000-00-00 00:00:00"},
-                        {"id": 4, "name":"Register 2", "locationid":2, "type":"general_register", "dt":"0000-00-00 00:00:00"},
-                        {"id": 5, "name":"Register 1", "locationid":3, "type":"general_register", "dt":"0000-00-00 00:00:00"},
-                        {"id": 6, "name":"Register 1", "locationid":4, "type":"general_register", "dt":"0000-00-00 00:00:00"}]');
+        $devices = json_decode('[{"id": 1, "name":"Register 1", "locationid":1, "type":"general_register", "ordertype":"", "orderdisplay":"", "dt":"0000-00-00 00:00:00"},
+                        {"id": 2, "name":"Register 2", "locationid":1, "type":"general_register", "ordertype":"", "orderdisplay":"", "dt":"0000-00-00 00:00:00"},
+                        {"id": 3, "name":"Register 1", "locationid":2, "type":"general_register", "ordertype":"", "orderdisplay":"", "dt":"0000-00-00 00:00:00"},
+                        {"id": 4, "name":"Register 2", "locationid":2, "type":"general_register", "ordertype":"", "orderdisplay":"", "dt":"0000-00-00 00:00:00"},
+                        {"id": 5, "name":"Register 1", "locationid":3, "type":"general_register", "ordertype":"", "orderdisplay":"", "dt":"0000-00-00 00:00:00"},
+                        {"id": 6, "name":"Register 1", "locationid":4, "type":"general_register", "ordertype":"", "orderdisplay":"", "dt":"0000-00-00 00:00:00"}]');
 
         if ($devices===false){
             die("Failed to add devices");
