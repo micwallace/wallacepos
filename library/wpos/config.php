@@ -12,8 +12,8 @@ if (!isset($_SERVER['DOCUMENT_ROOT'])) {
 // load timezone config if available
 // TODO: cache this somehow
 $timezone = "Australia/Sydney";
-if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json")){
-    $GLOBALS['config'] = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json"));
+if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/.config.json")){
+    $GLOBALS['config'] = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/.config.json"));
     if (isset($GLOBALS['config']->timezone))
         $timezone = $GLOBALS['config']->timezone;
 }
@@ -23,14 +23,6 @@ ini_set('date.timezone', $timezone);
 // Error handling
 ini_set('display_errors', 'On');
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
-register_shutdown_function('shutdownHandler');
-
-function shutdownHandler() {
-    global $result;
-    $error = error_get_last();
-    if ($error['type'] === E_ERROR)
-        die(json_encode($result));
-}
 
 /**
  * Php error handler, sets & returns json result object
@@ -43,6 +35,8 @@ function errorHandler($errorno, $errstr, $errfile, $errline){
     global $result;
 
     $result['errorCode'] = "phperr";
+
+    if ($result['error'] == "OK") $result['error'] = "";
 
     $result['error'] =  "ERROR: " . ": " . $errstr . " " . $errfile . " on line " . $errline . "\n";
 

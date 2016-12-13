@@ -252,13 +252,18 @@ class WposAdminSettings {
         return $result;
     }
 
-    // Get general config values that are stored in .config.json
+    /**
+     * Get general config values that are stored in .config.json
+     * @param bool $includeServerside
+     * @return mixed|stdClass
+     */
     public static function getConfigFileValues($includeServerside = false){
+        $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/.config.json";
         $config = new stdClass();
-        if (is_object($GLOBALS['config'])){
+        if (isset($GLOBALS['config']) && is_object($GLOBALS['config'])){
             $config = $GLOBALS['config'];
-        } else if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json")){
-            $config = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json"));
+        } else if (file_exists($path)){
+            $config = json_decode(file_get_contents($path));
         }
 
         if (!$includeServerside){
@@ -267,6 +272,7 @@ class WposAdminSettings {
             unset($config->email_tls);
             unset($config->email_user);
             unset($config->email_pass);
+            unset($config->feedserver_key);
         }
 
         return $config;
@@ -278,19 +284,39 @@ class WposAdminSettings {
      * @return mixed|stdClass updated config values
      */
     private function updateConfigFileValues($config){
+        $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/.config.json";
         $curconfig = new stdClass();
-        if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json")){
-            $curconfig = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/wpos/.config.json"));
+        if (file_exists($path)){
+            $curconfig = json_decode(file_get_contents($path));
             if ($curconfig) {
                 foreach ($curconfig as $key=>$value){
                     if (isset($config->{$key}))
                         $curconfig->{$key} = $config->{$key};
                 }
 
-                file_put_contents($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . "library/wpos/.config.json", json_encode($curconfig));
+                file_put_contents($path, json_encode($curconfig));
             }
         }
         return $curconfig;
+    }
+
+    /**
+     * Updates config.json values
+     * @param $key
+     * @param $value
+     * @return mixed|stdClass updated config values
+     */
+    public static function setConfigFileValue($key, $value){
+        $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/.config.json";
+        if (file_exists($path)){
+            $curconfig = json_decode(file_get_contents($path));
+            if ($curconfig) {
+                $curconfig->{$key} = $value;
+                if (file_put_contents($path, json_encode($curconfig)))
+                    return true;
+            }
+        }
+        return false;
     }
 
     /**

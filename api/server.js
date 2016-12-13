@@ -12,9 +12,14 @@
 var http = require('http');
 var app = http.createServer(wshandler);
 var fs = require('fs');
-var config = JSON.parse(fs.readFileSync(__dirname+'/../library/wpos/.config.json', 'utf8'));
-var port = config.hasOwnProperty('feedserver_port') ? config.feedserver_port : 8080;
-var ip = config.feedserver_proxy ? '127.0.0.1' : '0.0.0.0';
+var config = null;
+var configpath = __dirname+'/../docs/.config.json';
+
+if (fs.existsSync(configpath))
+    config = JSON.parse(fs.readFileSync(configpath, 'utf8'));
+var port = (config && config.hasOwnProperty('feedserver_port')) ? config.feedserver_port : 8080;
+var ip = (!config || config.feedserver_proxy) ? '127.0.0.1' : '0.0.0.0';
+var hashkey = (config && config.hasOwnProperty('feedserver_key')) ? config.feedserver_key : "5d40b50e172646b845640f50f296ac3fcbc191a7469260c46903c43cc6310ace"; // key for php interaction, provides extra security
 
 app.listen(port, ip);
 
@@ -26,8 +31,6 @@ function wshandler(req, res) {
 
 var devices = {};
 var sessions = {};
-
-var hashkey = "dgqsy8DgvyKl6RhCngOuFzNosbnThPZnMHCpZZm58GGb7Nnr2Y1tzVVudRBAj1ad"; // key for php interaction, provides extra security
 
 io.sockets.on('connection', function (socket) {
     // START AUTHENTICATION
@@ -101,6 +104,15 @@ io.sockets.on('connection', function (socket) {
                     console.log("Removed PHP session: " + data.data);
                 }
             }
+        } else {
+            console.log("Send request not processed, no valid hashkey!");
+        }
+    });
+
+    socket.on('hashkey', function (data) {
+        // check for hashkey
+        if (hashkey == data.hashkey) {
+            hashkey = data.newhashkey;
         } else {
             console.log("Send request not processed, no valid hashkey!");
         }

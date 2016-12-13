@@ -65,7 +65,7 @@
         var sales = WPOS.transactions.getTransactions();
         for (var key in sales){
             tempitem = sales[key];
-            tempitem.devlocname = WPOS.devices[tempitem.devid].name+" / "+WPOS.locations[tempitem.locid].name;
+            tempitem.devlocname = (WPOS.devices.hasOwnProperty(tempitem.devid)?WPOS.devices[tempitem.devid].name:'NA')+" / "+(WPOS.locations.hasOwnProperty(tempitem.locid)?WPOS.locations[tempitem.locid].name:'NA');
             itemarray.push(tempitem);
         }
         datatable.fnClearTable(false);
@@ -161,17 +161,17 @@
         var tempitem;
         for (var key in sales){
             tempitem = sales[key];
-            tempitem.devlocname = WPOS.devices[tempitem.devid].name+" / "+WPOS.locations[tempitem.locid].name;
+            tempitem.devlocname = (WPOS.devices.hasOwnProperty(tempitem.devid)?WPOS.devices[tempitem.devid].name:'NA')+" / "+(WPOS.locations.hasOwnProperty(tempitem.locid)?WPOS.locations[tempitem.locid].name:'NA');
             itemarray.push(tempitem);
         }
         datatable = $('#salestable').dataTable({
             "bProcessing": true,
             "aaData": itemarray,
-            "aaSorting": [[ 1, "desc" ]],
+            "aaSorting": [[ 0, "desc" ]],
             "aoColumns": [
                 { "mData":"id" },
                 { "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
-                { "mData":function(data, type, val){ return WPOS.getConfigTable().users[data.userid].username;} },
+                { "mData":function(data, type, val){ var users = WPOS.getConfigTable().users; if (users.hasOwnProperty(data.userid)){ return users[data.userid].username; } return 'N/A'; } },
                 { "mData":"devlocname" },
                 { "mData":"numitems" },
                 { "sType": "timestamp", "mData":function(data, type, val){ return datatableTimestampRender(type, data.processdt, WPOS.util.getDateFromTimestamp);} },

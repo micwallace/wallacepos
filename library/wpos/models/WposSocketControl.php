@@ -25,6 +25,9 @@ class WposSocketControl {
 
     private $isWindows = false;
 
+    /**
+     * WposSocketControl constructor.
+     */
     function __construct(){
         $this->isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
     }
@@ -34,14 +37,19 @@ class WposSocketControl {
      * @param $result array Current result array
      * @return mixed API result array
      */
-    public function startSocketServer($result){
+    public function startSocketServer($result=['error'=>'OK']){
 		if ($this->isWindows) {
 			pclose(popen('START "WPOS" node '.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'api/server.js','r'));
 		} else {
-			exec("nodejs ".$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."api/server.js > /dev/null & echo $!", $output);
+            $args = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."api/server.js > /dev/null &";
+			exec("nodejs ".$args, $output, $res);
+            // try the alternative command if nodejs fails
+            if ($res>0)
+                exec("node ".$args, $output, $res);
         }
+        sleep(1); // Wait a bit to see if nodejs exits
 		if ($this->getServerStat()===false){
-            $result['error'] = "Failed to start the feed server!";
+            $result['error'] = "Failed to start the feed server! ".(isset($output)?json_encode($output):'');
         }
         return $result;
     }
@@ -51,14 +59,14 @@ class WposSocketControl {
      * @param $result array Current result array
      * @return mixed API result array
      */
-    public function stopSocketServer($result){
+    public function stopSocketServer($result=['error'=>'OK']){
 		if ($this->isWindows) {
 			exec('TASKKILL /F /FI "WindowTitle eq WPOS"', $output);
 		} else {
 			exec('kill `ps aux | grep "[n]odejs '.$_SERVER['DOCUMENT_ROOT'].'" | awk \'{print $2}\'`', $output);
 		}
         if ($this->getServerStat()===true){
-            $result['error'] = "Failed to stop the feed server!";
+            $result['error'] = "Failed to stop the feed server! ".(isset($output)?json_encode($output):'');
         }
         return $result;
     }
@@ -68,8 +76,8 @@ class WposSocketControl {
      * @param $result array Current result array
      * @return mixed API result array
      */
-    public function isServerRunning($result){
-        $result['data'] = array("status"=>$this->getServerStat());
+    public function isServerRunning($result=['error'=>'OK']){
+        $result['data'] = ["status"=>$this->getServerStat()];
         return $result;
     }
 
@@ -78,7 +86,7 @@ class WposSocketControl {
      * @param $result array Current result array
      * @return mixed API result array
      */
-    public function restartSocketServer($result){
+    public function restartSocketServer($result=['error'=>'OK']){
         $result['data'] = true; // server currently running
         $result = $this->stopSocketServer($result);
         if ($result['error']=="OK"){ // successfully stopped server
@@ -105,7 +113,7 @@ class WposSocketControl {
 				return true;
 			}
 		} else {
-			exec('ps aux | grep "[n]odejs '.$_SERVER['DOCUMENT_ROOT'].'"', $output);
+			exec('ps aux | grep -E "[n]ode(js)? '.$_SERVER['DOCUMENT_ROOT'].'"', $output);
 			if (strpos($output[0], $_SERVER['DOCUMENT_ROOT'])!==false){
 				return true;
 			} else {

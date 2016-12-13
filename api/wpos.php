@@ -704,7 +704,7 @@ function routeApiCall($action, $data, $result) {
         case "message/send":
             $socket = new WposSocketIO();
             if ($data->device === null) {
-                if (($error = $socket->sendBroadcastMessage($data->message)) !== true) {
+                if (($error = $socket->sendMessageToDevices(null, $data->message)) !== true) {
                     $result['error'] = $error;
                 }
             } else {

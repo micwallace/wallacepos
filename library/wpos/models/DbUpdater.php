@@ -26,6 +26,7 @@ class DbUpdater {
 
     function __construct(){
         $this->db = new DbConfig();
+        header("Content-Type: text/plain");
     }
 
     public function install(){
@@ -65,6 +66,11 @@ class DbUpdater {
                 }
 
                 WposAdminSettings::putValue('general', 'version', $this->getLatestVersionName());
+
+                $socket = new WposSocketControl();
+                if (!$socket->isServerRunning())
+                    $socket->startSocketServer();
+
             }
         } catch (Exception $e){
             return $e->getMessage();
@@ -74,17 +80,22 @@ class DbUpdater {
 
     public function checkStorageTemplate(){
         // set permissions
-	if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-		if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/logs')==false){
-            exec('ROBOCOPY "'.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/." "'.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/" /E');
-		}
-	} else { //  Assume Linux
-		// copy docs template if it doesn't exist
-		if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/logs')==false){
-		    exec('cp -a "'.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/." "'.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/"');
-		}
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/logs')==false){
+                exec('ROBOCOPY "'.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/." "'.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/" /E');
+            }
+        } else { //  Assume Linux
+            // copy docs template if it doesn't exist
+            if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/logs')==false){
+                exec('cp -arn "'.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/." "'.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/"');
+            }
+            // copy static config file from template if it doesn't exist
+            if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/.config.json')==false)
+                copy($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/templates/.config.json', $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/.config.json');
             exec('chmod -R 774 '.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/');
-            exec('chmod 774 '.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'library/wpos/.config.json');
+            exec('chmod -R 774 '.$_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/.config.json');
+            $socket = new WposSocketIO();
+            $socket->generateHashKey();
 	    }
     }
 
@@ -133,25 +144,29 @@ class DbUpdater {
             return "Already upgraded to version ".$version;
         }
 
-        echo("Backing up database...<br/>");
+        echo("Backing up database...\n");
         WposAdminUtilities::backUpDatabase(false);
 
         $keys = array_keys(self::$versions);
         $cur_index = array_search($cur_version, $keys);
         $last_index = array_search($version, $keys);
 
-        echo("Current version is " . $cur_version . "<br/>");
-        echo("Upgrading to version " . $version . "...<br/>");
+        echo("Current version is " . $cur_version . "\n");
+        echo("Upgrading to version " . $version . "...\n");
 
         for ($i=$cur_index+1; $i<=$last_index; $i++) {
             $versionInfo = self::getVersionInfo($i);
-            echo("Running version " . $versionInfo['name'] . " updates...<br/>");
+            echo("Running version " . $versionInfo['name'] . " updates...\n");
 
             $result = $this->performUpgradeIncrement($versionInfo);
             if ($result !== true) {
                 return $result;
             }
         }
+
+        // Send reset request to all online terminals
+        $socket = new WposSocketIO();
+        $socket->sendResetCommand();
 
         return "Update completed";
     }
@@ -160,7 +175,7 @@ class DbUpdater {
 
         try {
             if ($versionInfo['db']) {
-                echo("Updating database...<br/>");
+                echo("Updating database...\n");
                 $path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/installer/schemas/update".$versionInfo['name'].".sql";
                 if (!file_exists($path)){
                     return "Schema does not exist";
@@ -174,7 +189,7 @@ class DbUpdater {
                 }
             }
             if ($versionInfo['script']) {
-                echo("Running update script...<br/>");
+                echo("Running update script...\n");
                 switch ($versionInfo['name']) {
                     case "1.0":
                         $this->upgradeVersion1_0();
@@ -189,7 +204,7 @@ class DbUpdater {
                         $this->upgradeVersion1_4_0();
                         break;
                     default:
-                        return "Update script refered to in schema but not found.<br/>";
+                        return "Update script referred to in schema but not found.\n";
                 }
             }
 
@@ -203,6 +218,18 @@ class DbUpdater {
 
     private function upgradeVersion1_4_0(){
         WposAdminSettings::putValue('pos', 'negative_items', false);
+        // copy static config file if it doesn't exist
+        if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/.config.json')==false){
+            // copy current version or use template
+            if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'library/wpos/.config.json')){
+                copy($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'library/wpos/.config.json', $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/.config.json');
+            } else {
+                copy($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/templates/.config.json', $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/.config.json');
+            }
+            copy($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/.htaccess', $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/.htaccess');
+        }
+        $socket = new WposSocketIO();
+        $socket->generateHashKey();
     }
 
     private function upgradeVersion1_3(){
@@ -240,7 +267,7 @@ class DbUpdater {
                 $sql = "UPDATE `sale_items` SET `tax`=:tax WHERE `id`=:id";
                 $this->db->update($sql, [":tax"=>json_encode($taxdata), ":id"=>$item['id']]);
             } else {
-                echo("Item record ".$item['id']." already updated, skipping item table update...<br/>");
+                echo("Item record ".$item['id']." already updated, skipping item table update...\n");
             }
         }
         // remove the "notax taxdata field, update gst to id=1"
@@ -261,7 +288,7 @@ class DbUpdater {
                 }
                 $needsupdate=true;
             } else {
-                echo("Record ".$sale['id']." already updated, skipping sale taxdata update...<br/>");
+                echo("Record ".$sale['id']." already updated, skipping sale taxdata update...\n");
             }
             foreach($data->items as $skey=>$sitem){
                 if (is_numeric($sitem->tax)){
@@ -277,7 +304,7 @@ class DbUpdater {
                     $data->items[$skey]->tax = $taxdata;
                     $needsupdate=true;
                 } else {
-                    echo("Item record ".$sale['id']." already updated, skipping sale itemdata update...<br/>");
+                    echo("Item record ".$sale['id']." already updated, skipping sale itemdata update...\n");
                 }
             }
             if ($needsupdate){
@@ -324,7 +351,7 @@ class DbUpdater {
                     $this->db->update($sql, [":data"=>$data, ":id"=>$device['id']]);
                 }
             } else {
-                echo("Device record ".$device['id']." already updated, skipping sale itemdata update...<br/>");
+                echo("Device record ".$device['id']." already updated, skipping sale itemdata update...\n");
             }
         }
 

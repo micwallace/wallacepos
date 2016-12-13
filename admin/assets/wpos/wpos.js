@@ -591,7 +591,7 @@ function WPOSAdmin(){
                             }
                         }
 
-                        alert(data.data);
+                        alert(data.data.message);
                         break;
                 }
                 //alert(data.a);
