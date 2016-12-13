@@ -81,7 +81,7 @@ WallacePOS requires:
         sudo apt-get update
         sudo apt-get install nodejs && apt-get install npm
         cd %/your_install_dir%/api
-        sudo npm install socket.io@0.9.17
+        sudo npm install socket.io
     ```
 
 ## Installation & Startup
