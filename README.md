@@ -59,10 +59,11 @@ WallacePOS requires:
                      Order deny,allow
                      Allow from all
              </Proxy>
-             ProxyPass /socket.io/1/websocket/ ws://localhost:8080/socket.io/1/websocket/
-             ProxyPassReverse /socket.io/1/websocket/ ws://localhost:8080/socket.io/1/websocket
-             ProxyPass /socket.io/ http://localhost:8080/socket.io/
-             ProxyPassReverse /socket.io/ http://localhost:8080/socket.io/
+             RewriteEngine On
+             RewriteCond %{HTTP:Connection} Upgrade [NC]
+             RewriteRule /(.*) ws://localhost:8080/$1 [P,L]
+             ProxyPass        /socket.io http://localhost:8080/socket.io/
+             ProxyPassReverse /socket.io http://localhost:8080/socket.io/
              <Location /socket.io>
                      Order allow,deny
                      Allow from all
@@ -87,10 +88,12 @@ WallacePOS requires:
 
 1. Clone the latest WallacePOS release to %your_install_dir% if you haven't done so already.
    The installation dir must be your Apache document root directory!
+   
+2. Run `composer install` in your install directory to update PHP dependencies (you may need to install composer first).
 
-2. Visit /installer in your browser & follow the installation wizard.
+3. Visit /installer in your browser & follow the installation wizard.
 
-3. Login to the admin dashboard at /admin, from the menu go to Settings -> Utilities and make sure the feed server has been started successfully.
+4. Login to the admin dashboard at /admin, from the menu go to Settings -> Utilities and make sure the feed server has been started successfully.
 
 ## Deploying using dokku
 
