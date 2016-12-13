@@ -191,7 +191,7 @@ class WposPosSetup
      * @return array|bool
      */
     private function getLocations(){
-        $locations  = $this->devMdl->get();
+        $locations  = $this->locMdl->get();
         if ($locations === false){
             return false;
         }
@@ -273,7 +273,7 @@ class WposPosSetup
                 if (($newid = $this->addNewDevice($deviceData))!==false) {
                     $this->data->deviceid = $newid;
                 } else {
-                    $result['error'] = "Insertion of new device record failed: ".$this->locMdl->errorInfo;
+                    $result['error'] = "Insertion of new device record failed: ".$this->devMdl->errorInfo;
                     return $result;
                 }
             }
@@ -544,7 +544,7 @@ class WposPosSetup
             // log data
             Logger::write("Location updated", "CONFIG", json_encode($this->data));
         } else {
-            $result['error'] = "Could not update the location: ".$this->locMdl->errorInfo;
+            $result['error'] = "Could not update the location: ".$this->devMdl->errorInfo;
         }
         return $result;
     }

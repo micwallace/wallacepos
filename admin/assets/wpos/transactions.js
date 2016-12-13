@@ -60,15 +60,13 @@ function WPOSTransactions() {
         $("#transid").text(record.id);
         $("#transtime").text(WPOS.util.getDateFromTimestamp(record.processdt));
         $("#transptime").text(record.dt);
-        $("#transuser").text(WPOS.users[record.userid].username);
-        var device = (WPOS.devices.hasOwnProperty(record.devid) ? WPOS.devices[record.devid].name : 'Undefined');
-        var location = (WPOS.locations.hasOwnProperty(record.locid) ? WPOS.locations[record.locid].name : 'Undefined');
+        $("#transuser").text((WPOS.users.hasOwnProperty(record.userid) ? WPOS.users[record.userid].username : 'NA'));
+        var device = (WPOS.devices.hasOwnProperty(record.devid) ? WPOS.devices[record.devid].name : 'NA');
+        var location = (WPOS.locations.hasOwnProperty(record.locid) ? WPOS.locations[record.locid].name : 'NA');
         $("#transdev").text(device);
         $("#transloc").text(location);
         $("#transnotes").val(record.notes);
         $("#transsubtotal").text(WPOS.util.currencyFormat(record.subtotal));
-
-
 
         if (record.discount > 0) {
             $("#transdiscount").text(record.discount + "% (" + WPOS.util.currencyFormat(record.discountval) + ')');
@@ -248,9 +246,9 @@ function WPOSTransactions() {
 
     function populateSharedVoidData(record) {
         $("#reftime").text(WPOS.util.getDateFromTimestamp(record.processdt));
-        $("#refuser").text(WPOS.users[record.userid].username);
-        $("#refdev").text(WPOS.devices[record.deviceid].name);
-        $("#refloc").text(WPOS.locations[record.locationid].name);
+        $("#refuser").text((WPOS.users.hasOwnProperty(record.userid) ? WPOS.users[record.userid].username : 'NA'));
+        $("#refdev").text((WPOS.devices.hasOwnProperty(record.devid) ? WPOS.devices[record.devid].name : 'NA'));
+        $("#refloc").text((WPOS.locations.hasOwnProperty(record.locid) ? WPOS.locations[record.locid].name : 'NA'));
         $("#refreason").text(record.reason);
     }
 
