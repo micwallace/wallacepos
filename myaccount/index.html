@@ -13,18 +13,18 @@
         <link rel="apple-touch-icon" sizes="114x114" href="/assets/images/apple-touch-icon-114x114.png">
 		<!-- basic styles -->
 
-		<link href="/admin/assets/css/bootstrap.min.css" rel="stylesheet" />
+		<link href="/assets/css/bootstrap.min.css" rel="stylesheet" />
 
-		<link rel="stylesheet" href="/admin/assets/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="/assets/css/font-awesome.min.css" />
 
 		<!-- fonts -->
 
-		<link rel="stylesheet" href="/admin/assets/css/ace-fonts.css" />
+		<link rel="stylesheet" href="/assets/css/ace-fonts.css" />
 
 		<!-- ace styles -->
 
-		<link rel="stylesheet" href="/admin/assets/css/ace.min.css" />
-		<link rel="stylesheet" href="/admin/assets/css/ace-rtl.min.css" />
+		<link rel="stylesheet" href="/assets/css/ace.min.css" />
+		<!--<link rel="stylesheet" href="/admin/assets/css/ace-rtl.min.css" />-->
 		<link rel="stylesheet" href="/admin/assets/css/ace-skins.min.css" />
 
 		<!--[if lte IE 8]>
@@ -167,7 +167,7 @@
 				<i class="icon-double-angle-up icon-only bigger-110"></i>
 			</a>
 		</div><!-- /.main-container -->
-        <div id="modaldiv" class="login-layout" style="background-color:#000000; z-index: 2000;">
+        <div id="loginmodal" class="login-layout">
             <div id="loginbox" class="login-box widget-box visible no-border">
                 <div class="widget-main">
                     <h2 class="header blue lighter bigger">
@@ -175,7 +175,7 @@
                     </h2>
                     <div class="space-6"></div>
                     <div class="space-6"></div>
-                    <div id="logindiv" style="display: none; height: 240px;">
+                    <div id="logindiv">
                         <label class="block clearfix">
                     <span class="block input-icon input-icon-right">
                         <input class="form-control" id="loguser" type="text" placeholder="Username"/>
@@ -195,7 +195,7 @@
                         <div class="space-6"></div>
                         <img id="loginbizlogo" style="max-height: 90px;" src="">
                     </div>
-                    <div id="loadingdiv" style="height: 225px;">
+                    <div id="loadingdiv">
                         <h3 id="loadingbartxt">Initializing</h3>
                         <div id="loadingprogdiv" class="progress progress-striped active">
                             <div class="progress-bar" id="loadingprog" style="width: 100%;"></div>
