@@ -236,11 +236,11 @@ function WPOSTransactions() {
             var tempdata;
             for (var i = 0; i < record.refunddata.length; i++) {
                 tempdata = record.refunddata[i];
-                $(refundtable).append('<tr><td><span class="label label-warning arrowed">Refund</span></td><td>' + WPOS.util.getDateFromTimestamp(tempdata.processdt) + '</td><td><button class="btn btn-sm btn-primary" onclick="showRefundDialog(' + i + ');">View</button></td><td><button onclick="removeVoid(' + curid + ', ' + tempdata.processdt + ');" class="btn btn-sm btn-danger">X</button></td></tr>');
+                $(refundtable).append('<tr><td><span class="label label-warning arrowed">Refund</span></td><td>' + WPOS.util.getDateFromTimestamp(tempdata.processdt) + '</td><td><button class="btn btn-sm btn-primary" onclick="WPOS.transactions.showRefundDialog(' + i + ');">View</button></td><td><button onclick="WPOS.transactions.removeVoid(' + curid + ', ' + tempdata.processdt + ');" class="btn btn-sm btn-danger">X</button></td></tr>');
             }
         }
         if (record.voiddata !== undefined && record.voiddata !== null) {
-            $(refundtable).append('<tr>><td><span class="label label-danger arrowed">Void</span></td><td>' + WPOS.util.getDateFromTimestamp(record.voiddata.processdt) + '</td><td><button class="btn btn-sm btn-primary" onclick="showVoidDialog();">View</button></td><td><button onclick="removeVoid(' + curid + ', ' + record.voiddata.processdt + ');" class="btn btn-sm btn-danger">X</button></td></tr>');
+            $(refundtable).append('<tr>><td><span class="label label-danger arrowed">Void</span></td><td>' + WPOS.util.getDateFromTimestamp(record.voiddata.processdt) + '</td><td><button class="btn btn-sm btn-primary" onclick="WPOS.transactions.showVoidDialog();">View</button></td><td><button onclick="WPOS.transactions.removeVoid(' + curid + ', ' + record.voiddata.processdt + ');" class="btn btn-sm btn-danger">X</button></td></tr>');
         }
     }
 
