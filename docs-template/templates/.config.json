@@ -1,0 +1,11 @@
+{
+  "timezone":"Australia/Sydney",
+  "email_host":"127.0.0.1",
+  "email_port":"25",
+  "email_tls":true,
+  "email_user":"",
+  "email_pass":"",
+  "feedserver_port":8080,
+  "feedserver_proxy":true,
+  "feedserver_key":"5d40b50e172646b845640f50f296ac3fcbc191a7469260c46903c43cc6310ace"
+}
