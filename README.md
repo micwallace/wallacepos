@@ -99,7 +99,7 @@ WallacePOS requires:
 
 To deploy WallacePOS on dokku:
 
-1. Install [dokku-buildpack-multi](https://github.com/pauldub/dokku-multi-buildpack) on your dokku host.
+1. Install the [dokku-apt](https://github.com/F4-Group/dokku-apt) plugin on your dokku host.
 
 2. Fork the WallacePOS to a PRIVATE repo (IMPORTANT), edit /library/wpos/.dbconfig.json and fill in your own values.
 
