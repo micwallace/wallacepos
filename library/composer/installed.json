@@ -1,0 +1,173 @@
+[
+    {
+        "name": "psr/log",
+        "version": "1.0.2",
+        "version_normalized": "1.0.2.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/php-fig/log.git",
+            "reference": "4ebe3a8bf773a19edfe0a84b6585ba3d401b724d"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/php-fig/log/zipball/4ebe3a8bf773a19edfe0a84b6585ba3d401b724d",
+            "reference": "4ebe3a8bf773a19edfe0a84b6585ba3d401b724d",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.0"
+        },
+        "time": "2016-10-10 12:19:37",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "1.0.x-dev"
+            }
+        },
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "Psr\\Log\\": "Psr/Log/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "PHP-FIG",
+                "homepage": "http://www.php-fig.org/"
+            }
+        ],
+        "description": "Common interface for logging libraries",
+        "homepage": "https://github.com/php-fig/log",
+        "keywords": [
+            "log",
+            "psr",
+            "psr-3"
+        ]
+    },
+    {
+        "name": "wisembly/elephant.io",
+        "version": "v3.2.0",
+        "version_normalized": "3.2.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/Wisembly/elephant.io.git",
+            "reference": "e08dfbf261b759e76ebe403aeed0e4a50b613c7e"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/Wisembly/elephant.io/zipball/e08dfbf261b759e76ebe403aeed0e4a50b613c7e",
+            "reference": "e08dfbf261b759e76ebe403aeed0e4a50b613c7e",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.4.0",
+            "psr/log": "~1.0"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "~4.0"
+        },
+        "time": "2016-10-25 07:52:01",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "ElephantIO\\": [
+                    "src/",
+                    "test/"
+                ]
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Baptiste Clavié",
+                "email": "baptiste@wisembly.com",
+                "homepage": "http://baptiste.xn--clavi-fsa.net/",
+                "role": "Maintainer"
+            },
+            {
+                "name": "Guillaume Potier",
+                "email": "guillaume@wisembly.com",
+                "role": "Maintainer"
+            },
+            {
+                "name": "Ludovic Barreca",
+                "email": "ludogp2@gmail.com",
+                "role": "Project Founder"
+            },
+            {
+                "name": "Elephant.IO Community",
+                "role": "Contributors :)"
+            }
+        ],
+        "description": "Send events to a websocket real time engine though PHP",
+        "homepage": "http://elephant.io",
+        "keywords": [
+            "dialog",
+            "nodejs",
+            "real time",
+            "websocket"
+        ]
+    },
+    {
+        "name": "ifsnop/mysqldump-php",
+        "version": "v2.2",
+        "version_normalized": "2.2.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/ifsnop/mysqldump-php.git",
+            "reference": "6c1b84c5b05d862d15ba9ddf92c7d99a3d81e439"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/ifsnop/mysqldump-php/zipball/6c1b84c5b05d862d15ba9ddf92c7d99a3d81e439",
+            "reference": "6c1b84c5b05d862d15ba9ddf92c7d99a3d81e439",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.0"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "3.7.*",
+            "squizlabs/php_codesniffer": "1.*"
+        },
+        "time": "2016-09-07 06:56:07",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "Ifsnop\\": "src/Ifsnop/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Diego Torres",
+                "homepage": "https://github.com/ifsnop",
+                "role": "Developer"
+            }
+        ],
+        "description": "This is a php version of linux's mysqldump in terminal \"$ mysqldump -u username -p...\"",
+        "homepage": "https://github.com/ifsnop/mysqldump-php",
+        "keywords": [
+            "backup",
+            "database",
+            "dump",
+            "export",
+            "mysql",
+            "mysqldump",
+            "pdo",
+            "sqlite"
+        ]
+    }
+]
