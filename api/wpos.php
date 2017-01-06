@@ -110,6 +110,7 @@ if ($_REQUEST['a']!=="multi"){
         $result['error'] = "No API request data provided";
         returnResult($result);
     }
+    $result['data']=array();
     // loop through each request, stop & return the first error if encountered
     foreach ($requests as $action=>$data){
         if ($data==null) {
