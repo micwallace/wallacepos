@@ -39,7 +39,7 @@
                     </div>
                     <div class="form-group">
                         <div class="col-sm-12">
-                            <div id="template" style="height: 175px; border: 1px solid #E5E5E5;" class="wysiwyg-editor">
+                            <div id="template" style="height: 440px; width: 100%;">
 
                             </div>
                         </div>
@@ -50,18 +50,27 @@
         </div>
     </div>
     <div class="col-sm-12 align-center form-actions">
+        <button class="btn btn-warning" type="button" onclick="restoreTemplate();"><i class="icon-undo align-top bigger-125"></i>Restore</button>
         <button class="btn btn-success" type="button" onclick="saveTemplate();"><i class="icon-save align-top bigger-125"></i>Save</button>
     </div>
 </div>
+<script language="javascript" src="/admin/assets/js/ace/ace.js"></script>
 <script type="text/javascript">
     var templates;
+    var templateEditor;
+    var curId = null;
 
     function loadTemplates(){
         templates = WPOS.getJsonData("templates/get");
-        var first = Object.keys(templates)[0];
+        var id;
+        if (curId!=null && templates.hasOwnProperty(curId)){
+            id = curId;
+        } else {
+            id = Object.keys(templates)[0];
+        }
         // load the first template into the form
-        loadTemplate(first);
-        refreshTemplateList(first);
+        loadTemplate(id);
+        refreshTemplateList(id);
     }
 
     function refreshTemplateList(selectedid){
@@ -74,13 +83,20 @@
 
     function loadTemplate(id){
         var template = templates[id];
+        curId = id;
         $("#template_type").val(template.type);
         $("#template_name").val(template.name);
-        $("#template").html(template.template.replace('<style type="text/css">', '<style type="text/css" scoped>'));
+        templateEditor = ace.edit("template");
+        templateEditor.setOption("showPrintMargin", false);
+        templateEditor.setTheme("ace/theme/chrome");
+        templateEditor.getSession().setMode("ace/mode/html");
+        templateEditor.setValue(template.template, 1);
+        templateEditor.resize(true);
+        templateEditor.gotoLine(0, 0, true);
     }
 
     function saveTemplate(){
-        var data = {id: $("#template_list").val(), name: $("#template_name").val(), template: $("#template").html()};
+        var data = {id: $("#template_list").val(), name: $("#template_name").val(), template: templateEditor.getValue()};
         var result = WPOS.sendJsonData("templates/edit", JSON.stringify(data));
         if (result!==false){
             templates[data.id].name = data.name;
@@ -88,18 +104,21 @@
             refreshTemplateList(data.id);
             // update global config
             var template = templates[data.id];
-            delete template.template;
             WPOS.updateConfig('templates~'+data.id, template);
         }
         // hide loader
         WPOS.util.hideLoader();
     }
 
+    function restoreTemplate(){
+        var answer = confirm("Are you sure you want to restore the current template?\nThis will destroy all changes you have made.");
+        if (answer) {
+            WPOS.sendJsonData('templates/restore', '{"filename":"'+templates[curId].filename+'"}');
+            loadTemplates();
+        }
+    }
+
     $(function(){
-        // email wysiwyg
-        $('.wysiwyg-toolbar').remove();
-        $('.wysiwyg-editor').ace_wysiwyg();
-        $(".wysiwyg-toolbar").addClass('wysiwyg-style2');
         loadTemplates();
         // hide loader
         WPOS.util.hideLoader();

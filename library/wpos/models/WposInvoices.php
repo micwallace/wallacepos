@@ -97,7 +97,7 @@ class WposInvoices {
 
     public function getInvoices($result){
         // if range is not set, use the default
-        if (!isset($this->data->stime) || !isset($this->data->etime)){
+        if (!isset($this->data->stime) && !isset($this->data->etime)){
             $this->data->etime = time()*1000;
             $this->data->stime = strtotime("-1 month")*1000;
         }
@@ -117,6 +117,30 @@ class WposInvoices {
             }
             $result['data'] = $invoicedata;
         }
+        return $result;
+    }
+
+    /**
+     * Searches sales for the given reference.
+     * @param $searchdata
+     * @param $result
+     * @return mixed Returns sales that match the specified ref.
+     */
+    public function searchInvoices($searchdata, $result)
+    {
+        $salesMdl = new InvoicesModel();
+        $dbSales  = $salesMdl->get(null, $searchdata->ref, true);
+        if (is_array($dbSales)) {
+            $sales = [];
+            foreach ($dbSales as $sale) {
+                $jsonObj             = json_decode($sale['data'], true);
+                $sales[$sale['ref']] = $jsonObj;
+            }
+            $result['data'] = $sales;
+        } else if ($dbSales === false) {
+            $result['error'] = $salesMdl->errorInfo;
+        }
+
         return $result;
     }
 

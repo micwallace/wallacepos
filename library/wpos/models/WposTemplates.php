@@ -133,7 +133,12 @@ class WposTemplates
      * Restore default templates
      * @return string
      */
-    public static function restoreDefaults(){
+    public static function restoreDefaults($filename=null){
+        if ($filename!=null){
+            if (file_exists($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs-template/templates/".$filename))
+                copy($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs-template/templates/".$filename, $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/templates/".$filename);
+            return;
+        }
         foreach (glob($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs-template/templates/*") as $file) {
             copy($file, $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."docs/templates/".basename($file));
         }

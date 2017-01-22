@@ -176,7 +176,7 @@ class WposPosData
      * @return mixed
      */
     public function getSales($result){
-        if (!isset($this->data->stime) || !isset($this->data->etime)){
+        if (!isset($this->data->stime) && !isset($this->data->etime)){
             // time not set, retrieving POS records, get config.
             $WposConfig = new WposAdminSettings();
             $config = $WposConfig->getSettingsObject("pos");

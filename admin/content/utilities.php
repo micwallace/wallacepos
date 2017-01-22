@@ -215,7 +215,7 @@
     }
 
     function restoreTemplates(){
-        var answer = confirm("Are you sure you want to restore the default template files?");
+        var answer = confirm("Are you sure you want to restore the default template files?\nThis will DESTROY all changes you have made to the default templates.");
         if (answer)
             WPOS.getJsonData('templates/restore');
     }

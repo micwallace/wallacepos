@@ -96,6 +96,14 @@ table.dataTable tbody > tr.selected, table.dataTable tbody > tr > .selected {
     font-size: 13px;
 }
 
+.refsearchbox {
+    margin-right: 8px;
+}
+
+.hasDatepicker {
+    width: 90px;
+}
+
 /* #Media Queries
 ================================================== */
 
@@ -123,6 +131,13 @@ table.dataTable tbody > tr.selected, table.dataTable tbody > tr > .selected {
         width: 350px;
         margin-left:-175px;
     }
+    .refsearchbox {
+        float: none !important;
+        margin: 10px 0 0 8px;
+    }
+    .dataTables_wrapper .row:nth-child(1), .dataTables_length, .dataTables_filter {
+        text-align: left !important;
+    }
 }
 
 /* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
@@ -138,6 +153,16 @@ table.dataTable tbody > tr.selected, table.dataTable tbody > tr > .selected {
     }
     .dataTables_filter {
         float:left;
+    }
+    .refsearchbox {
+        float: none !important;
+        margin: 10px 0 0 8px;
+    }
+    .refsearchbox input {
+        width: 135px;
+    }
+    .dataTables_wrapper .row:nth-child(1), .dataTables_length {
+        text-align: left !important;
     }
 }
 

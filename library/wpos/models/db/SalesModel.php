@@ -207,10 +207,12 @@ class SalesModel extends TransactionsModel
      * @param bool $includeorders
      * @return array|bool Returns false on failure or an array with sales on success
      */
-    public function getRangeWithRefunds($stime, $etime, $deviceids=null, $status=null, $statparity=true, $includeorders=true){
+    public function getRangeWithRefunds($stime, $etime=null, $deviceids=null, $status=null, $statparity=true, $includeorders=true){
 
-        $placeholders = [":stime"=>$stime, ":etime"=>$etime];
-        $sql = 'SELECT s.* FROM sales as s LEFT JOIN sale_voids as v ON s.id=v.saleid WHERE ((s.processdt>= :stime AND s.processdt<= :etime) OR (v.processdt>= :stime AND v.processdt<= :etime))';
+        $placeholders = [":stime"=>$stime];
+        if ($etime!=null)
+            $placeholders[":etime"] = $etime;
+        $sql = 'SELECT s.* FROM sales as s LEFT JOIN sale_voids as v ON s.id=v.saleid WHERE ((s.processdt>= :stime'.($etime!=null?' AND s.processdt<= :etime':'').') OR (v.processdt>= :stime'.($etime!==null?' AND v.processdt<= :etime':'').'))';
 
         if ($deviceids !== null) {
             if (is_array($deviceids)){

@@ -3,7 +3,12 @@
     <h1 style="display: inline-block;">
         POS Sales
     </h1>
-    <button style="display: inline-block; vertical-align: top; float: right;" class="btn btn-success btn-sm" onclick="exportCurrentSales();"><i class="icon-cloud-download align-top bigger-125"></i>Export CSV</button>
+    <button class="btn btn-success btn-sm pull-right" onclick="exportCurrentSales();"><i class="icon-cloud-download align-top bigger-125"></i>Export CSV</button>
+    <div class="pull-right refsearchbox">
+        <label for="refsearch">Ref:</label>&nbsp;<input id="refsearch" type="text" style="height: 35px;" onkeypress="if(event.keyCode == 13){doSearch();}"/>
+        <button class="btn btn-primary btn-sm" style="vertical-align: top;" onclick="doSearch();"><i class="icon-search align-top bigger-125"></i>Search</button>
+        <button id="refsearch_clearbtn" class="btn btn-warning btn-sm" style="display: none; vertical-align: top;" onclick="reloadSalesData();"><i class="icon-remove align-top bigger-125"></i></button>
+    </div>
 </div><!-- /.page-header -->
 
 <div class="row">
@@ -46,12 +51,13 @@
 <script type="text/javascript">
     //var sales = null;
     var datatable;
-    var etime = new Date().getTime();
-    var stime = (etime - 604800000); // a week ago
+    var etime = null; // start will no end time, so sales in different timezones show up.
+    var stime = (new Date().getTime() - 604800000); // a week ago
     // functions for opening info dialogs and populating data
     function reloadSalesData(){
         // show loader
         WPOS.util.showLoader();
+        resetSearchBox();
         var sales = WPOS.sendJsonData("sales/get", JSON.stringify({"stime":stime, "etime":etime}));
         WPOS.transactions.setTransactions(sales);
         reloadSalesTable();
@@ -69,9 +75,43 @@
             itemarray.push(tempitem);
         }
         datatable.fnClearTable(false);
-        datatable.fnAddData(itemarray, false);
+        if (itemarray.length>0)
+            datatable.fnAddData(itemarray, false);
         datatable.api().draw(false);
     }
+
+    function doSearch(){
+        var ref = $("#refsearch").val();
+        if (ref==""){
+            alert("Please enter a full or partial transaction reference.");
+            return;
+        }
+        var data = {ref: ref};
+        WPOS.sendJsonDataAsync("sales/search", JSON.stringify(data), function(sales){
+            var itemarray = [];
+            if (sales !== false){
+                WPOS.transactions.setTransactions(sales);
+                var tempitem;
+                for (var key in sales){
+                    tempitem = sales[key];
+                    tempitem.devlocname = (WPOS.devices.hasOwnProperty(tempitem.devid)?WPOS.devices[tempitem.devid].name:'NA')+" / "+(WPOS.locations.hasOwnProperty(tempitem.locid)?WPOS.locations[tempitem.locid].name:'NA');
+                    itemarray.push(tempitem);
+                }
+                datatable.fnClearTable(false);
+                console.log(itemarray);
+                if (itemarray.length>0)
+                    datatable.fnAddData(itemarray, false);
+                datatable.api().draw(false);
+                $("#refsearch_clearbtn").show();
+            }
+        });
+    }
+
+    function resetSearchBox(){
+        $("#refsearch_clearbtn").hide();
+        $("#refsearch").val('');
+    }
+
     // functions for processing json data
     function getStatusHtml(status){
         var stathtml;
@@ -194,9 +234,13 @@
 
         // add controls
         $("#salestable_length").append('&nbsp;&nbsp;<div style="display: inline-block;"><label>Range: <input type="text" id="transstime" onclick="$(this).blur();" /></label> <label>to <input type="text" id="transetime" onclick="$(this).blur();" /></label></div>');
+        var wrapper = $(".dataTables_wrapper");
+        wrapper.find('.row:eq(0) > .col-sm-6:eq(0)').removeClass('col-sm-6').addClass('col-sm-8');
+        wrapper.find('.row:eq(0) > .col-sm-6:eq(0)').removeClass('col-sm-6').addClass('col-sm-4');
 
+        var maxdate = new Date().getTime();
         var sselect = $("#transstime"), eselect =$("#transetime");
-        sselect.datepicker({dateFormat:"dd/mm/yy", maxDate: new Date(etime),
+        sselect.datepicker({dateFormat:"dd/mm/yy", maxDate: new Date(maxdate),
             onSelect: function(text, inst){
                 var date = $("#transstime").datepicker("getDate");
                 date.setHours(0); date.setMinutes(0); date.setSeconds(0);
@@ -204,7 +248,7 @@
                 reloadSalesData();
             }
         });
-        eselect.datepicker({dateFormat:"dd/mm/yy", maxDate: new Date(etime),
+        eselect.datepicker({dateFormat:"dd/mm/yy", maxDate: new Date(maxdate),
             onSelect: function(text, inst){
                 var date = $("#transetime").datepicker("getDate");
                 date.setHours(23); date.setMinutes(59); date.setSeconds(59);
@@ -213,7 +257,6 @@
             }
         });
         sselect.datepicker('setDate', new Date(stime));
-        eselect.datepicker('setDate', new Date(etime));
 
         // hide loader
         WPOS.util.hideLoader();

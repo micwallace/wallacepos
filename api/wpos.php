@@ -472,6 +472,13 @@ function routeApiCall($action, $data, $result) {
             $result = $invMdl->getInvoices($result);
             break;
 
+        case "invoices/search":
+            $invMdl = new WposInvoices();
+            if (isset($data)) {
+                $result = $invMdl->searchInvoices($data, $result);
+            }
+            break;
+
         case "invoices/add":
             $invMdl = new WposInvoices($data);
             $result = $invMdl->createInvoice($result);
@@ -765,7 +772,7 @@ function routeApiCall($action, $data, $result) {
             $result = $tempMdl->editTemplate($result);
             break;
         case "templates/restore":
-            WposTemplates::restoreDefaults();
+            WposTemplates::restoreDefaults((isset($data->filename)?$data->filename:null));
             break;
 
         default:

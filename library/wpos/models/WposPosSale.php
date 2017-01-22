@@ -156,14 +156,14 @@ class WposPosSale {
                 return $result;
             }
             // log data
-            Logger::write("Order added with ref: ".$this->ref, "ORDER", json_encode($this->jsonobj));
+            Logger::write("Order added with ref: ".$this->ref." (ID:".$this->id.")", "ORDER", json_encode($this->jsonobj));
         } else {
             if ($this->updateOrderRecord()===false){
                 $result["error"] = "Could not update order: ".$this->salesMdl->errorInfo;
                 return $result;
             }
             // log data
-            Logger::write("Order updated with ref: ".$this->ref, "ORDER", json_encode($this->jsonobj));
+            Logger::write("Order updated with ref: ".$this->ref." (ID:".$this->id.")", "ORDER", json_encode($this->jsonobj));
         }
 
         $result['data'] = $this->jsonobj;
@@ -197,7 +197,7 @@ class WposPosSale {
         $this->broadcastSale($this->jsonobj->devid, false, true);
 
         // log data
-        Logger::write("Order deleted with ref: ".$this->ref, "ORDER");
+        Logger::write("Order deleted with ref: ".$this->ref." (ID:".$this->id.")", "ORDER");
 
         return $result;
     }
@@ -254,7 +254,14 @@ class WposPosSale {
             $this->dt = date("Y-m-d H:i:s");
             // insert items and payments. If these fail, try to reverse the transaction; incomplete transactions should not exist
             if (!$this->insertTransactionItems() || !$this->insertTransactionPayments()) {
-                if ($this->removeTransactionRecords()) { // TODO: at the moment this deletes the transaction entry, which is bad for orders, we should keep a copy of the original json to restore from when it's an order.
+                // If the sale is a current order, roll back to previous order data, otherwise remove the sale object
+                if ($orderid>0){
+                    $this->jsonobj = json_decode($sale[0]['data']);
+                    $rollbackRes = $this->insertTransactionRecord(0, $orderid);
+                } else {
+                    $rollbackRes = $this->removeTransactionRecords();
+                }
+                if ($rollbackRes!==false) {
                     $result['error'] = "My SQL server error: the transactions did not complete successfully and has been rolled back: ".$this->itemErr.$this->paymentErr;
                 } else {
                     $result['error'] = "My SQL server error: the transaction did not complete and the changes failed to roll back please contact support to remove invalid records: ".$this->itemErr.$this->paymentErr;
@@ -270,9 +277,10 @@ class WposPosSale {
             // Create transaction history record
             WposTransactions::addTransactionHistory($this->id, $this->jsonobj->userid, "Created", "Sale created");
             // log data
-            Logger::write("Sale Processed with ref: ".$this->ref, "SALE", json_encode($this->jsonobj));
+            Logger::write("Sale Processed with ref: ".$this->ref." (ID:".$this->id.")", "SALE", json_encode($this->jsonobj));
         } else {
-            $this->removeTransactionRecords(); // TODO: at the moment this deletes the transaction entry...see above.
+            if ($orderid==0)
+                $this->removeTransactionRecords(); // This is probably not needed but oh well
             $result['error'] = "My SQL server error: the transaction did not complete successfully and has been rolled back. ".$this->salesMdl->errorInfo;
             return $result;
         }
@@ -445,7 +453,7 @@ class WposPosSale {
                     // Create transaction history record
                     WposTransactions::addTransactionHistory($this->id, isset($_SESSION['userId'])?$_SESSION['userId']:0, "Refunded", "Sale refunded");
                     // log data
-                    Logger::write("Refund processed with ref: ".$this->ref, "REFUND", json_encode($refund));
+                    Logger::write("Refund processed with ref: ".$this->ref." (ID:".$this->id.")", "REFUND", json_encode($refund));
                 }
 
             }
@@ -471,7 +479,7 @@ class WposPosSale {
                     // Create transaction history record
                     WposTransactions::addTransactionHistory($this->id, isset($_SESSION['userId'])?$_SESSION['userId']:0, "Voided", "Sale voided");
                     // log data
-                    Logger::write("Sale voided with ref: ".$this->ref, "VOID", json_encode($this->voiddata));
+                    Logger::write("Sale voided with ref: ".$this->ref." (ID:".$this->id.")", "VOID", json_encode($this->voiddata));
                 }
             }
         }
