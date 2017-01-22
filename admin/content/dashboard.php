@@ -66,9 +66,32 @@
 
         <div class="infobox-data">
             <span id="takings" class="infobox-data-number">-</span>
-            <div class="infobox-content">Takings</div>
+            <div class="infobox-content">Revenue</div>
+        </div>
+    </div><br/>
+
+    <div class="infobox infobox-orange infobox-cost">
+        <div class="infobox-icon">
+            <i class="icon-dollar"></i>
+        </div>
+
+        <div class="infobox-data">
+            <span id="cost" class="infobox-data-number">-</span>
+            <div class="infobox-content">Cost</div>
         </div>
     </div>
+
+    <div class="infobox infobox-green infobox-profit">
+        <div class="infobox-icon">
+            <i class="icon-dollar"></i>
+        </div>
+
+        <div class="infobox-data">
+            <span id="profit" class="infobox-data-number">-</span>
+            <div class="infobox-content">Profit</div>
+        </div>
+    </div>
+
     </div>
     </div>
 </div>
@@ -316,6 +339,8 @@
         $("#voidnum").text(totals.voidnum);
         $("#voidtotal").text(WPOS.util.currencyFormat(totals.voidtotal));
         $("#takings").text(WPOS.util.currencyFormat(totals.totaltakings, true));
+        $("#cost").text(WPOS.util.currencyFormat(totals.cost, true));
+        $("#profit").text(WPOS.util.currencyFormat(totals.profit, true));
         // Set onclicks
         $(".infobox-sales").on('click', function(){ WPOS.transactions.openTransactionList(totals.salerefs); });
         $(".infobox-refunds").on('click', function(){ WPOS.transactions.openTransactionList(totals.refundrefs); });
@@ -499,7 +524,7 @@
         }
         // generate plot data
         var tempdate;
-        var sales = [], refunds = [], takings = [], salerefs = [], refundrefs = [], takingrefs = [];
+        var sales = [], refunds = [], takings = [],  cost = [],  profit = [], salerefs = [], refundrefs = [], takingrefs = [];
         // create the data object
         for (var i in jdata) {
             tempdate = new Date();
@@ -514,8 +539,10 @@
             refunds.push([ tempdate, jdata[i].refundtotal]);
             takingrefs.push(jdata[i].refs);
             takings.push([ tempdate, jdata[i].totaltakings]);
+            cost.push([ tempdate, jdata[i].cost]);
+            profit.push([ tempdate, jdata[i].profit]);
         }
-        var data = [{ label: "Sales", refs:salerefs, data: sales, color: "#9ABC32" },{ label: "Refunds", refs:refundrefs, data: refunds, color: "#EDC240" },{ label: "Takings", refs: takingrefs, data: takings, color: "#3983C2" }];
+        var data = [{ label: "Profit", refs: takingrefs, data: profit, color: "#29AB87" },{ label: "Cost", refs: takingrefs, data: cost, color: "#EA3C53" },{ label: "Sales", refs:salerefs, data: sales, color: "#9ABC32" },{ label: "Refunds", refs:refundrefs, data: refunds, color: "#EDC240" },{ label: "Revenue", refs: takingrefs, data: takings, color: "#3983C2" }];
         // render the graph
         $.plot("#sales-charts", data, {
             hoverable: true,

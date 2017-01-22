@@ -52,9 +52,9 @@ class SalesModel extends TransactionsModel
      * @param $processdt
      * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
      */
-    public function create($ref, $data, $status, $userId, $deviceId, $locationId, $custId, $discount, $rounding, $total, $processdt)
+    public function create($ref, $data, $status, $userId, $deviceId, $locationId, $custId, $discount, $rounding, $cost, $total, $processdt)
     {
-        $sql = "INSERT INTO sales (ref, type, channel, data, userid, deviceid, locationid, custid, discount, rounding, total, status, processdt, dt) VALUES (:ref, 'sale', 'pos', :data, :userid, :deviceid, :locationid, :custid, :discount, :rounding, :total, :status, :processdt, '".date("Y-m-d H:i:s")."')";
+        $sql = "INSERT INTO sales (ref, type, channel, data, userid, deviceid, locationid, custid, discount, rounding, cost, total, status, processdt, dt) VALUES (:ref, 'sale', 'pos', :data, :userid, :deviceid, :locationid, :custid, :discount, :rounding, :cost, :total, :status, :processdt, '".date("Y-m-d H:i:s")."')";
         $placeholders = [
             ':ref'        => $ref,
             ':data'       => $data,
@@ -64,6 +64,7 @@ class SalesModel extends TransactionsModel
             ':custid'     => $custId,
             ':discount'   => $discount,
             ':rounding'   => $rounding,
+            ':cost'   => $cost,
             ':total'      => $total,
             ':status'      => $status,
             ':processdt'      => $processdt
@@ -295,7 +296,7 @@ class SalesModel extends TransactionsModel
      * @param null $processdt
      * @return bool|int Returns false on failure or number of rows affected on success
      */
-    public function edit($saleid=null, $saleref=null, $data, $status = null, $userid=null, $devid=null, $locid=null, $custid=null, $discount=null, $total=null, $processdt=null){
+    public function edit($saleid=null, $saleref=null, $data, $status = null, $userid=null, $devid=null, $locid=null, $custid=null, $discount=null, $rounding=null, $cost=null, $total=null, $processdt=null){
         if (!is_numeric($saleid) && ($saleref==null || $saleref=="")){ return false; }
         $sql = "UPDATE sales SET data= :data";
         $sqlcond = ""; // conditions to preprend
@@ -339,6 +340,14 @@ class SalesModel extends TransactionsModel
         if ($discount !== null) {
             $sql .= ', discount= :discount';
             $placeholders[':discount'] = $discount;
+        }
+        if ($rounding !== null) {
+            $sql .= ', rounding= :rounding';
+            $placeholders[':rounding'] = $rounding;
+        }
+        if ($cost !== null) {
+            $sql .= ', cost= :cost';
+            $placeholders[':cost'] = $cost;
         }
         if ($total !== null) {
             $sql .= ', total= :total';

@@ -35,6 +35,13 @@
                     </div>
                     <div class="space-4"></div>
                     <div class="form-group">
+                        <label class="col-sm-5">Print Sale ID:</label>
+                        <div class="col-sm-5">
+                            <input type="checkbox" id="recprintid" /><br/>
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
                         <label class="col-sm-5">Receipt Printer Logo:</label>
                         <div class="col-sm-5">
                             <input type="text" id="reclogo" /><br/>

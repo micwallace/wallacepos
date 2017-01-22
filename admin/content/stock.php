@@ -1,7 +1,7 @@
 <!-- WallacePOS: Copyright (c) 2014 WallaceIT <micwallace@gmx.com> <https://www.gnu.org/licenses/lgpl.html> -->
 <div class="page-header">
     <h1 class="inline">
-        Item Stock
+        Item Inventory
     </h1>
     <button onclick="openAddStockDialog();" id="addbtn" class="btn btn-primary btn-sm pull-right"><i class="icon-pencil align-top bigger-125"></i>Add</button>
     <button class="btn btn-success btn-sm pull-right" style="margin-right: 10px;" onclick="exportStock();"><i class="icon-cloud-download align-top bigger-125"></i>Export CSV</button>
@@ -15,7 +15,7 @@
 <div class="col-xs-12">
 
 <div class="table-header">
-    Manage your product stock
+    Manage your product inventory
 </div>
 
 <table id="stocktable" class="table table-striped table-bordered table-hover dt-responsive" style="width:100%;">

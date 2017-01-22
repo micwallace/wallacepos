@@ -65,8 +65,17 @@ class TransactionsModel extends DbConfig
      * @return array|bool Returns false on failure or an array with a single record on success
      */
     public function getByRef($ref){
-        $sql = 'SELECT * FROM sales WHERE ref= :ref;';
-        $placeholders = [":ref"=>$ref];
+        $sql = 'SELECT * FROM sales WHERE';
+        $placeholders = [];
+        if (is_array($ref)) {
+            $ref = array_map([$this->_db, 'quote'], $ref);
+            $sql .= " `ref` IN (" . implode(', ', $ref) . ");";
+        } else if (is_numeric(str_replace("-", "", $ref))){
+            $sql .= " `ref`=:ref;";
+            $placeholders[":ref"] = $ref;
+        } else {
+            return false;
+        }
         return $this->select($sql, $placeholders);
     }
 
@@ -155,7 +164,7 @@ class TransactionsModel extends DbConfig
     public function getTotals($stime, $etime, $status=null, $statparity=true, $includeorders=false, $ttype=null){
 
         $placeholders = [":stime"=>$stime, ":etime"=>$etime];
-        $sql = "SELECT *, COALESCE(SUM(total), 0) as stotal, COUNT(id) as snum, COALESCE(GROUP_CONCAT(ref SEPARATOR ','),'') as refs FROM sales WHERE (processdt>= :stime AND processdt<= :etime)";
+        $sql = "SELECT *, COALESCE(SUM(total), 0) as stotal, COALESCE(SUM(cost), 0) as ctotal, COUNT(id) as snum, COALESCE(GROUP_CONCAT(ref SEPARATOR ','),'') as refs FROM sales WHERE (processdt>= :stime AND processdt<= :etime)";
 
         if ($status !== null) {
             $sql .= ' AND status'.($statparity?'=':'!=').' :status';

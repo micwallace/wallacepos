@@ -204,6 +204,9 @@ class DbUpdater {
                     case "1.4.0":
                         $this->upgradeVersion1_4_0();
                         break;
+                    case "1.4.1":
+                        $this->upgradeVersion1_4_1();
+                        break;
                     default:
                         return "Update script referred to in schema but not found.\n";
                 }
@@ -215,6 +218,15 @@ class DbUpdater {
         } catch (Exception $e){
             return $e->getMessage();
         }
+    }
+
+    private function upgradeVersion1_4_1(){
+        // set print id setting
+        WposAdminSettings::putValue('pos', 'recprintid', false);
+        $labels = WposAdminSettings::getSettingsObject('general')->altlabels;
+        $labels->{"transaction-id"} = "Transaction ID";
+        WposAdminSettings::putValue('general', 'altlabels', $labels);
+        return true;
     }
 
     private function upgradeVersion1_4_0(){

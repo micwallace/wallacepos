@@ -83,6 +83,10 @@
                         <td><input id="itemdesc" type="text"/></td>
                     </tr>
                     <tr>
+                        <td style="text-align: right;"><label>Unit Cost:&nbsp;</label></td>
+                        <td><input id="itemcost" type="text" value="0"/></td>
+                    </tr>
+                    <tr>
                         <td style="text-align: right;"><label>Unit Price:&nbsp;</label></td>
                         <td><input id="itemprice" type="text" value="0"/></td>
                     </tr>
@@ -171,6 +175,10 @@
         <tr>
             <td style="text-align: right;"><label>Description:&nbsp;</label></td>
             <td><input id="newitemdesc" type="text"/></td>
+        </tr>
+        <tr>
+            <td style="text-align: right;"><label>Unit Cost:&nbsp;</label></td>
+            <td><input id="newitemcost" type="text" value="0"/></td>
         </tr>
         <tr>
             <td style="text-align: right;"><label>Unit Price:&nbsp;</label></td>
@@ -403,6 +411,7 @@
         $("#itemqty").val(item.qty);
         $("#itemtax").val(item.taxid);
         $("#itemcode").val(item.code);
+        $("#itemcost").val(item.cost);
         $("#itemprice").val(item.price);
         $("#itemsupplier").val(item.supplierid);
         $("#itemcategory").val(item.categoryid);
@@ -453,6 +462,7 @@
         WPOS.util.showLoader();
         var item = {};
         var result;
+        var costval;
         if (isnewitem){
             // adding a new item
             item.code = $("#newitemcode").val();
@@ -461,6 +471,8 @@
             item.alt_name = $("#newitemaltname").val();
             item.description = $("#newitemdesc").val();
             item.taxid = $("#newitemtax").val();
+            costval = $("#newitemcost").val();
+            item.cost = (costval ? costval : 0);
             item.price = $("#newitemprice").val();
             item.supplierid = $("#newitemsupplier").val();
             item.categoryid = $("#newitemcategory").val();
@@ -481,6 +493,8 @@
             item.alt_name = $("#itemaltname").val();
             item.description = $("#itemdesc").val();
             item.taxid = $("#itemtax").val();
+            costval = $("#itemcost").val();
+            item.cost = (costval ? costval : 0);
             item.price = $("#itemprice").val();
             item.supplierid = $("#itemsupplier").val();
             item.categoryid = $("#itemcategory").val();
@@ -584,6 +598,7 @@
                 'name': {title:'Name', required: true},
                 'description': {title:'Description', required: false, value: ""},
                 'qty': {title:'Default Qty', required: false, value: 1},
+                'cost': {title:'Unit Cost', required: false, value: 0.00},
                 'price': {title:'Unit Price', required: false, value: ""},
                 'tax_name': {title:'Tax Rule Name', required: false, value: ""},
                 'supplier_name': {title:'Supplier Name', required: false, value: ""},

@@ -187,7 +187,7 @@ function WPOSUtil() {
         if (!taxrules.hasOwnProperty(taxruleid)) return true;
         return taxrules[taxruleid].inclusive;
     };*/
-    this.calcTax = function(taxruleid, itemtotal){
+    this.calcTax = function(taxruleid, itemtotal, itemcost){
         var tax = {total:0, values:{}, inclusive:true};
         if (!WPOS.getTaxTable().rules.hasOwnProperty(taxruleid))
             return tax;
@@ -199,13 +199,15 @@ function WPOSUtil() {
         var taxablemulti = rule.inclusive?getTaxableTotal(rule, locationid):0;
         var tempitem;
         var tempval;
+        var taxableamt;
         // check in locations, if location rule present get tax totals
         if (rule.locations.hasOwnProperty(locationid)){
             for (i=0; i<rule.locations[locationid].length; i++){
                 if (taxitems.hasOwnProperty(rule.locations[locationid][i])){
                     tempitem = taxitems[rule.locations[locationid][i]];
                     if (!tax.values.hasOwnProperty(rule.locations[locationid][i])) tax.values[tempitem.id]= 0;
-                    tempval = rule.inclusive ? getIncludedTax(tempitem.multiplier, taxablemulti, itemtotal) : getExcludedTax(tempitem.multiplier, itemtotal);
+                    taxableamt = (tempitem.type=="vat" ? itemcost : itemtotal);
+                    tempval = rule.inclusive ? getIncludedTax(tempitem.multiplier, taxablemulti, taxableamt) : getExcludedTax(tempitem.multiplier, taxableamt);
                     tax.values[tempitem.id] += tempval;
                     tax.total += tempval;
                     if (rule.mode=="single")
@@ -218,7 +220,8 @@ function WPOSUtil() {
             if (taxitems.hasOwnProperty(rule.base[i])){
                 tempitem = taxitems[rule.base[i]];
                 if (!tax.values.hasOwnProperty(rule.base[i])) tax.values[tempitem.id]= 0;
-                tempval = rule.inclusive ? getIncludedTax(tempitem.multiplier, taxablemulti, itemtotal) : getExcludedTax(tempitem.multiplier, itemtotal);
+                taxableamt = (tempitem.type=="vat" ? itemcost : itemtotal);
+                tempval = rule.inclusive ? getIncludedTax(tempitem.multiplier, taxablemulti, taxableamt) : getExcludedTax(tempitem.multiplier, taxableamt);
                 tax.values[tempitem.id] += tempval;
                 tax.total += tempval;
                 if (rule.mode=="single")

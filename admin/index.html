@@ -159,7 +159,7 @@
                                 <li id="menustock" class="privmenuitem">
                                     <a  href="#!stock">
                                         <i class="icon-double-angle-right"></i>
-                                        Stock
+                                        Inventory
                                     </a>
                                 </li>
 
@@ -691,6 +691,8 @@
                 <div class="space-4"></div>
                 <label class="fixedlabel">Description: </label><textarea style="width: 178px;" id="transitemdesc"></textarea>
                 <div class="space-4"></div>
+                <label class="fixedlabel">Cost: </label><input type="text" id="transitemcost"/>
+                <div class="space-4"></div>
                 <label class="fixedlabel">Unit: </label><input type="text" id="transitemunit" onchange="WPOS.transactions.calculateItemTotals();"/>
                 <div class="space-4"></div>
                 <label class="fixedlabel">Tax: </label><select type="text" id="transitemtaxid" class="taxselect" onchange="WPOS.transactions.calculateItemTotals();"></select>
@@ -811,7 +813,7 @@
         <div id="translistdialog" class="hide">
             <table class="table table-responsive">
                 <thead>
-                <tr>
+                <tr id="translistheader">
                     <th>Ref</th>
                     <th>Details</th>
                 </tr>

@@ -28,7 +28,7 @@ function WPOSItems() {
      */
     this.addManualItemRow = function () {
         // add the row
-        addItemRow(1, "", "0.00", 1, 0, {desc:""});
+        addItemRow(1, "", "0.00", 1, 0, {desc:"", cost:0.00});
         // focus on qty
         $("#itemtable")
             .children('tr :last')
@@ -205,11 +205,11 @@ function WPOSItems() {
         // check if a priced item is already present in the sale and if so increment it's qty
         if (item.price==""){
             // insert item into table
-            addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description, alt_name:item.alt_name});
+            addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description, cost:item.cost, alt_name:item.alt_name});
         } else {
             if (!isItemAdded(item.id, true)){
                 // insert item into table
-                addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description, alt_name:item.alt_name});
+                addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description, cost:item.cost, alt_name:item.alt_name});
             }
         }
         $("#codeinput").val('');
@@ -235,6 +235,7 @@ function WPOSItems() {
         var data = itemrow.find('.itemid').data('options');
         //console.log(data);
         $("#itemdesc").val(data.desc);
+        $("#itemcost").val(data.cost);
         $("#itemaltname").val(data.alt_name);
         // get stored item mods
         var itemid = itemrow.find('.itemid').val();
@@ -365,6 +366,7 @@ function WPOSItems() {
         });
         var data = itemrow.find('.itemid').data('options');
         data.desc = $("#itemdesc").val();
+        data.cost = $("#itemcost").val();
         if (moddata.items.length>0) data.mod = moddata;
         itemrow.find('.itemid').data('options', data);
         WPOS.sales.updateSalesTotal();
@@ -722,11 +724,11 @@ function WPOSSales() {
     }
 
     function getNumSalesItems(){
-        return $("#itemtable .valid").length;
+        return $("#itemtable").children(".valid").length;
     }
 
     function validateSalesItems(){
-        var qty,name, unit, mod, tempprice;
+        var qty,name, unit, mod, tempprice, tempcost;
         var numinvalid = 0;
         var allow_negative = WPOS.getConfigTable().pos.negative_items;
         $("#itemtable").children(".item_row").each(function (index, element) {
@@ -739,9 +741,10 @@ function WPOSSales() {
                 if (qty > 0 && name != "" && (unit>0 || allow_negative)) {
                     // add item modification total to unit price & calculate item total
                     tempprice = qty * (unit + mod);
+                    tempcost = qty * itemdata.cost;
                     // calculate item tax
                     var taxruleid = $(element).find(".itemtax").val();
-                    var taxdata = WPOS.util.calcTax(taxruleid, tempprice);
+                    var taxdata = WPOS.util.calcTax(taxruleid, tempprice, tempcost);
                     if (!taxdata.inclusive) {
                         tempprice += taxdata.total;
                     }
@@ -1165,7 +1168,7 @@ function WPOSSales() {
         var date = new Date().getTime();
         var items = [];
         var taxtotals = {};
-        var taxdata, itemdata, taxruleid, tempqty, numitems = 0;
+        var taxdata, itemdata, taxruleid, tempqty, numitems = 0, totalcost = 0;
         var orders = {};
         var oldorders = {};
         var neworderid = null;
@@ -1196,7 +1199,7 @@ function WPOSSales() {
                     taxtotals[i] += taxdata.values[i];
                 }
                 // add # items to total
-                tempqty = parseInt($(element).find(".itemqty").val());
+                tempqty = parseFloat($(element).find(".itemqty").val());
                 numitems += tempqty;
                 // add item to the array
                 var data = {
@@ -1213,6 +1216,8 @@ function WPOSSales() {
                 for (var x in itemdata) {
                     data[x] = itemdata[x];
                 }
+                if (data.cost>0)
+                    totalcost += (data.cost*data.qty);
                 items.push(data);
 
                 if (WPOS.isOrderTerminal()){
@@ -1277,6 +1282,7 @@ function WPOSSales() {
         salesobj.notes = $("#salenotes").val();
         salesobj.discount = $("#salediscount").val();
         salesobj.rounding = curround.toFixed(2);
+        salesobj.cost = parseFloat(totalcost).toFixed(2);
         salesobj.subtotal = cursubtotal.toFixed(2);
         salesobj.total = parseFloat(curgrandtotal).toFixed(2);
         salesobj.numitems = numitems;

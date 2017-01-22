@@ -47,7 +47,7 @@ class WposAdminItems {
     public function addStoredItem($result)
     {
         // validate input
-        $jsonval = new JsonValidate($this->data, '{"code":"","qty":1, "name":"", "taxid":1, "price":-1,"type":""}');
+        $jsonval = new JsonValidate($this->data, '{"code":"","qty":1, "name":"", "taxid":1, "cost":-1, "price":-1,"type":""}');
         if (($errors = $jsonval->validate()) !== true) {
             $result['error'] = $errors;
             return $result;
@@ -84,7 +84,7 @@ class WposAdminItems {
     public function updateStoredItem($result)
     {
         // validate input
-        $jsonval = new JsonValidate($this->data, '{"id":1, "code":"", "qty":1, "name":"", "taxid":1, "price":-1}');
+        $jsonval = new JsonValidate($this->data, '{"id":1, "code":"", "qty":1, "name":"", "taxid":1, "cost":-1, "price":-1}');
         if (($errors = $jsonval->validate()) !== true) {
             $result['error'] = $errors;
             return $result;

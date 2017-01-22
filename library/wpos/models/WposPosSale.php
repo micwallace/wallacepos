@@ -231,7 +231,7 @@ class WposPosSale {
      */
     public function insertTransaction($result)
     {
-        $jsonval = new JsonValidate($this->jsonobj, '{"ref":"", "userid":1, "devid":1, "locid":1, "items":"[", "payments":"[", "total":1, "processdt":1}');
+        $jsonval = new JsonValidate($this->jsonobj, '{"ref":"", "userid":1, "devid":1, "locid":1, "items":"[", "payments":"[", "cost":1, "total":1, "processdt":1}');
         if (($errors = $jsonval->validate())!==true){
             $result['error'] = $errors;
             return $result;
@@ -415,13 +415,13 @@ class WposPosSale {
     private function insertTransactionRecord($status, $orderid)
     {
         if ($orderid==0){
-            if (($gid = $this->salesMdl->create($this->ref, json_encode($this->jsonobj), $status, $this->jsonobj->userid, $this->jsonobj->devid, $this->jsonobj->locid, $this->jsonobj->custid, $this->jsonobj->discount, $this->jsonobj->rounding, $this->jsonobj->total, $this->jsonobj->processdt))) {
+            if (($gid = $this->salesMdl->create($this->ref, json_encode($this->jsonobj), $status, $this->jsonobj->userid, $this->jsonobj->devid, $this->jsonobj->locid, $this->jsonobj->custid, $this->jsonobj->discount, $this->jsonobj->rounding, $this->jsonobj->cost, $this->jsonobj->total, $this->jsonobj->processdt))) {
                 return $gid;
             } else {
                 return false;
             }
         } else {
-            if ($this->salesMdl->edit($orderid, null, json_encode($this->jsonobj), $status, $this->jsonobj->userid, $this->jsonobj->devid, $this->jsonobj->locid, $this->jsonobj->custid, $this->jsonobj->discount, $this->jsonobj->total, $this->jsonobj->processdt)!==false){
+            if ($this->salesMdl->edit($orderid, null, json_encode($this->jsonobj), $status, $this->jsonobj->userid, $this->jsonobj->devid, $this->jsonobj->locid, $this->jsonobj->custid, $this->jsonobj->discount, $this->jsonobj->rounding, $this->jsonobj->cost, $this->jsonobj->total, $this->jsonobj->processdt)!==false){
                 return $orderid;
             }
         }
@@ -497,7 +497,7 @@ class WposPosSale {
         //$stockMdl = new StockModel();
         $wposStock = new WposAdminStock();
         foreach ($this->jsonobj->items as $key=>$item) {
-            if (!$res=$itemsMdl->create($this->id, $item->sitemid, $item->ref, $item->qty, $item->name, $item->desc, $item->taxid, $item->tax, $item->unit, $item->price)) {
+            if (!$res=$itemsMdl->create($this->id, $item->sitemid, $item->ref, $item->qty, $item->name, $item->desc, $item->taxid, $item->tax, $item->cost, $item->unit, $item->price)) {
                 $this->itemErr = $itemsMdl->errorInfo;
                 return false;
             }

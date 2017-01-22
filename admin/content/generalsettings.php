@@ -176,6 +176,11 @@
                     </div>
                     <div class="space-4"></div>
                     <div class="form-group">
+                        <div class="col-sm-5"><label>Transaction ID:</label></div>
+                        <div class="col-sm-5"><input type="text" id="altlabel_transaction-id" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
                         <div class="col-sm-5"><label>Sale Time:</label></div>
                         <div class="col-sm-5"><input type="text" id="altlabel_sale-time" /></div>
                     </div>

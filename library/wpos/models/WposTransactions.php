@@ -109,20 +109,29 @@ class WposTransactions {
      * @return mixed
      */
     public function getTransaction($result){
-        if (!isset($this->data->id) && !isset($this->data->ref)){
-            $result['error'] = "Transaction id or ref must be provided";
+        if (!isset($this->data->id) && (!isset($this->data->ref) && !isset($this->data->refs))){
+            $result['error'] = "Transaction id or refs must be provided";
             return $result;
         }
         $transMdl = new TransactionsModel();
-        if (isset($this->data->id)){
+        if (isset($this->data->id) && !isset($this->data->refs)){
             $qres = $transMdl->getById($this->data->id);
         } else {
-            $qres = $transMdl->getByRef($this->data->ref);
+            $qres = $transMdl->getByRef((isset($this->data->refs) ? $this->data->refs : $this->data->ref));
         }
         if ($qres===false){
             $result['error'] = $transMdl->errorInfo;
         } else {
-            $result['data'][$qres[0]['ref']] = json_decode($qres[0]['data']);
+            if (count($qres) > 1){
+                $sales = [];
+                foreach ($qres as $sale) {
+                    $jsonObj = json_decode($sale['data'], true);
+                    $sales[$sale['ref']] = $jsonObj;
+                }
+                $result['data'] = $sales;
+            } else {
+                $result['data'][$qres[0]['ref']] = json_decode($qres[0]['data']);
+            }
         }
         return $result;
     }

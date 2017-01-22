@@ -626,6 +626,8 @@ function WPOSPrint(kitchenMode) {
         // transdetails
         cmd += (ltr ? esc_a_l : esc_a_r);
         cmd += getEscTableRow(formatLabel(translateLabel("Transaction Ref"), true, 1), record.ref, false, false, false);
+        if (WPOS.getConfigTable().pos.recprintid)
+            cmd += getEscTableRow(formatLabel(translateLabel("Transaction ID"), true, 1), record.id, false, false, false);
         cmd += getEscTableRow(formatLabel(translateLabel("Sale Time"), true, 7), WPOS.util.getDateFromTimestamp(record.processdt), false, false, false) + "\n";
         // items
         var item;
@@ -1141,6 +1143,7 @@ function WPOSPrint(kitchenMode) {
             return;
         }
         var temp_data = {
+            sale_id: record.id,
             sale_ref: record.ref,
             sale_dt: WPOS.util.getDateFromTimestamp(record.processdt),
             sale_items: record.items,

@@ -97,6 +97,7 @@ class WposTemplateData
         $this->Utils = new WposAdminUtilities();
         $this->Utils->setCurrencyFormat($config['general']->currencyformat);
 
+        $this->sale_id = $data->id;
         $this->sale_ref = $data->ref;
         $this->sale_dt = $this->Utils->getDateFromTimestamp($data->processdt, $config['general']->dateformat);
         $this->sale_items = $data->items;

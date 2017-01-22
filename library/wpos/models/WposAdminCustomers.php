@@ -48,7 +48,7 @@ class WposAdminCustomers {
      */
     public function addCustomer($result)
     {
-        $jsonval = new JsonValidate($this->data, '{"postcode":-1}');
+        $jsonval = new JsonValidate($this->data, '{"postcode":""}');
         if (($errors = $jsonval->validate()) !== true) {
             $result['error'] = $errors;
             return $result;

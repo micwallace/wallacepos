@@ -232,7 +232,7 @@ class InvoicesModel extends TransactionsModel
      * @param null $custid
      * @return bool|int Returns false on failure or number of rows affected on success
      */
-    public function edit($saleid=null, $saleref=null, $data, $status = null, $discount=null, $total=null, $balance=null, $processdt=null, $duedt=null, $userid=null, $devid=null, $locid=null, $custid=null){
+    public function edit($saleid=null, $saleref=null, $data, $status = null, $discount=null, $cost=null, $total=null, $balance=null, $processdt=null, $duedt=null, $userid=null, $devid=null, $locid=null, $custid=null){
         if (!is_numeric($saleid) && ($saleref==null || $saleref=="")){ return false; }
         $sql = "UPDATE sales SET data= :data";
         $sqlcond = ""; // conditions to preprend
@@ -276,6 +276,10 @@ class InvoicesModel extends TransactionsModel
         if ($discount !== null) {
             $sql .= ', discount= :discount';
             $placeholders[':discount'] = $discount;
+        }
+        if ($cost !== null) {
+            $sql .= ', cost= :cost';
+            $placeholders[':cost'] = $cost;
         }
         if ($total !== null) {
             $sql .= ', total= :total';

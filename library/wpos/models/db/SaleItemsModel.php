@@ -55,9 +55,9 @@ class SaleItemsModel extends DbConfig
      *
      * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
      */
-    public function create($saleid, $sitemid, $saleitemid, $qty, $name, $desc, $taxid, $tax, $unit, $price)
+    public function create($saleid, $sitemid, $saleitemid, $qty, $name, $desc, $taxid, $tax, $cost, $unit, $price)
     {
-        $sql = "INSERT INTO sale_items (saleid, storeditemid, saleitemid, qty, name, description, taxid, tax, unit, price, refundqty) VALUES (:saleid, :sitemid, :saleitemid, :qty, :name, :description, :taxid, :tax, :unit, :price, 0)";
+        $sql = "INSERT INTO sale_items (saleid, storeditemid, saleitemid, qty, name, description, taxid, tax, cost, unit, price, refundqty) VALUES (:saleid, :sitemid, :saleitemid, :qty, :name, :description, :taxid, :tax, :cost, :unit, :price, 0)";
         $placeholders = [
             ':saleid'        => $saleid,
             ':sitemid'       => $sitemid,
@@ -67,6 +67,7 @@ class SaleItemsModel extends DbConfig
             ':description'   => $desc,
             ':taxid' => $taxid,
             ':tax' => json_encode($tax),
+            ':cost'     => $cost,
             ':unit'     => $unit,
             ':price'   => $price
         ];
@@ -89,9 +90,9 @@ class SaleItemsModel extends DbConfig
      *
      * @return bool|string Returns false on an unexpected failure, returns -1 if a unique constraint in the database fails, or the new rows id if the insert is successful
      */
-    public function import($id, $saleid, $sitemid, $saleitemid, $qty, $name, $desc, $taxid, $tax, $unit, $price)
+    public function import($id, $saleid, $sitemid, $saleitemid, $qty, $name, $desc, $taxid, $tax, $cost, $unit, $price)
     {
-        $sql = "INSERT INTO sale_items (id, saleid, storeditemid, saleitemid, qty, name, description, taxid, tax, unit, price, refundqty) VALUES (:id, :saleid, :sitemid, :saleitemid, :qty, :name, :description, :taxid, :tax, :unit, :price, 0)";
+        $sql = "INSERT INTO sale_items (id, saleid, storeditemid, saleitemid, qty, name, description, taxid, tax, cost, unit, price, refundqty) VALUES (:id, :saleid, :sitemid, :saleitemid, :qty, :name, :description, :taxid, :tax, :cost, :unit, :price, 0)";
         $placeholders = [
             ':id'        => $id,
             ':saleid'        => $saleid,
@@ -101,6 +102,7 @@ class SaleItemsModel extends DbConfig
             ':name'     => $name,
             ':description'   => $desc,
             ':taxid' => $taxid,
+            ':cost' => $cost,
             ':tax' => $tax,
             ':unit'     => $unit,
             ':price'   => $price
@@ -165,9 +167,9 @@ class SaleItemsModel extends DbConfig
      * @param $price
      * @return array|bool Returns false on an unexpected failure or the rows found by the statement. Returns an empty array when nothing is found
      */
-    public function edit($itemid, $sitemid, $saleitemid=0, $qty, $name, $desc, $taxid, $tax, $unit, $price){
-        $sql = 'UPDATE sale_items SET storeditemid=:sitemid, saleitemid=:saleitemid, qty=:qty, name=:name, description=:desc, taxid=:taxid, tax=:tax, unit=:unit, price=:price WHERE id= :id';
-        $placeholders = [":id"=>$itemid, ":sitemid"=>$sitemid, ":saleitemid"=>$saleitemid, ":qty"=>$qty, ":name"=>$name, ":desc"=>$desc, ":taxid"=>$taxid, ":tax"=>json_encode($tax), ":unit"=>$unit, ":price"=>$price];
+    public function edit($itemid, $sitemid, $saleitemid=0, $qty, $name, $desc, $taxid, $tax, $cost, $unit, $price){
+        $sql = 'UPDATE sale_items SET storeditemid=:sitemid, saleitemid=:saleitemid, qty=:qty, name=:name, description=:desc, taxid=:taxid, tax=:tax, cost=:cost, unit=:unit, price=:price WHERE id= :id';
+        $placeholders = [":id"=>$itemid, ":sitemid"=>$sitemid, ":saleitemid"=>$saleitemid, ":qty"=>$qty, ":name"=>$name, ":desc"=>$desc, ":taxid"=>$taxid, ":tax"=>json_encode($tax), ":cost"=>$cost, ":unit"=>$unit, ":price"=>$price];
 
         return $this->update($sql, $placeholders);
     }

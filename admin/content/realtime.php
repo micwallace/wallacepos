@@ -190,7 +190,29 @@
 
                 <div class="infobox-data">
                     <span id="rttakings" class="infobox-data-number">-</span>
-                    <div class="infobox-content">Takings</div>
+                    <div class="infobox-content">Revenue</div>
+                </div>
+            </div><br/>
+
+            <div class="infobox infobox-orange infobox-cost">
+                <div class="infobox-icon">
+                    <i class="icon-dollar"></i>
+                </div>
+
+                <div class="infobox-data">
+                    <span id="rtcost" class="infobox-data-number">-</span>
+                    <div class="infobox-content">Cost</div>
+                </div>
+            </div>
+
+            <div class="infobox infobox-green infobox-profit">
+                <div class="infobox-icon">
+                    <i class="icon-dollar"></i>
+                </div>
+
+                <div class="infobox-data">
+                    <span id="rtprofit" class="infobox-data-number">-</span>
+                    <div class="infobox-content">Profit</div>
                 </div>
             </div>
         </div>
@@ -310,6 +332,7 @@ function processIncomingSale(saleobj) {
             // sale does not have any void/refund so no need to check anything else
             totals.salenum = parseInt(totals.salenum) + 1;
             totals.saletotal = parseFloat(totals.saletotal) + parseFloat(saleobj.total);
+            totals.cost = parseFloat(totals.cost) + parseFloat(saleobj.cost);
         } else {
             if (saleobj.hasOwnProperty("voiddata")) { // If sale had void data, add it the totals
                 totals.voidnum = parseInt(totals.voidnum) + 1;
@@ -317,6 +340,7 @@ function processIncomingSale(saleobj) {
                 if (sales.hasOwnProperty(saleobj.ref)){ // If the sale was processed today, remove from the sales total
                     totals.salenum -= 1;
                     totals.saletotal = parseFloat(totals.saletotal) - parseFloat(saleobj.total);
+                    totals.cost = parseFloat(totals.cost) - parseFloat(saleobj.cost);
                 }
             } else {
                 if (!sales.hasOwnProperty(saleobj.ref)){ // If the sale has not been processed (ie, refund only)
@@ -342,6 +366,7 @@ function processIncomingSale(saleobj) {
         }
         // update total takings and populate the stats widget
         totals.totaltakings = parseFloat(totals.saletotal) - parseFloat(totals.refundtotal);
+        totals.profit = totals.totaltakings - parseFloat(totals.cost);
         populateTodayStats();
         // Update sales chart
         reloadGraph();
@@ -407,7 +432,7 @@ function updateSalesTable(saleobj) {
     // preprend insert the new row with zero height
     $("#nosalesrow").remove();
     // TODO: If refund get the amount refunded
-    $("#recentsalestable").prepend('<tr id="sr-' + saleobj.ref + '"><td>' + WPOS.util.getDateFromTimestamp(saleobj.processdt) + '</td><td>' + getStatusLabel(getSaleStatus(saleobj)) + '</td><td>' + WPOS.devices[saleobj.devid].name + '/' + WPOS.locations[saleobj.locid].name + '</td><td>' + getTotalItems(saleobj) + '</td><td>' + saleobj.total + '</td></tr>');
+    $("#recentsalestable").prepend('<tr id="sr-' + saleobj.ref + '"><td>' + WPOS.util.getDateFromTimestamp(saleobj.processdt) + '</td><td>' + getStatusLabel(getSaleStatus(saleobj)) + '</td><td>' + WPOS.devices[saleobj.devid].name + '/' + WPOS.locations[saleobj.locid].name + '</td><td>' + getTotalItems(saleobj) + '</td><td>' + WPOS.util.currencyFormat(saleobj.total) + '</td></tr>');
     // animate does not work for table rows so as a workaround we temporarily wrap in a div
     $("#sr" + saleobj.ref).find('td').wrapInner('<div style="display: block;" />').parent().find('td > div')
         .slideUp(1000, function(){
@@ -465,6 +490,8 @@ function populateTodayStats() {
     $("#rtvoidnum").text(totals.voidnum);
     $("#rtvoidtotal").text(WPOS.util.currencyFormat(totals.voidtotal));
     $("#rttakings").text(WPOS.util.currencyFormat(totals.totaltakings, true));
+    $("#rtcost").text(WPOS.util.currencyFormat(totals.cost, true));
+    $("#rtprofit").text(WPOS.util.currencyFormat(totals.profit, true));
     // Set onclicks
     $(".infobox-sales").on('click', function(){ WPOS.transactions.openTransactionList(totals.salerefs); });
     $(".infobox-refunds").on('click', function(){ WPOS.transactions.openTransactionList(totals.refundrefs); });
