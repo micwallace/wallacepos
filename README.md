@@ -110,7 +110,9 @@ To deploy WallacePOS on dokku:
 3. Commit deploy in the usual manner.
 
 4. Setup persistent storage by running:
+
    `dokku storage:mount %APP_NAME% /var/lib/dokku/data/storage/%APP_NAME%:/app/docs`
+   
    WARINING: Failure to do so will lead to data loss during subsequent upgrades.
 
 5. Access /installer/?install from the web browser to install the database schema & templates
