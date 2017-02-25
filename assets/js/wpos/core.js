@@ -80,7 +80,7 @@ function WPOS() {
                 console.log("Appcache update finished, reloading...");
                 setLoadingBar(100, "Loading...");
                 appCache.swapCache();
-                location.reload();
+                location.reload(true);
             });
             appCache.addEventListener('noupdate', function(e) {
                 console.log("No appcache update found");
@@ -100,7 +100,7 @@ function WPOS() {
                 console.log("Appcache update finished, reloading...");
                 setLoadingBar(100, "Loading...");
                 appCache.swapCache();
-                location.reload();
+                location.reload(true);
             }
     };
     // Check for device UUID & present Login, initial setup is triggered if the device UUID is not present
@@ -1741,8 +1741,11 @@ $(function () {
     });
 
     // dev/demo quick login
-    if (document.location.host=="alpha.wallacepos.com"){
-        $("#logindiv").append('<button class="btn btn-primary btn-sm" onclick="$(\'#username\').val(\'admin\');$(\'#password\').val(\'admin\'); WPOS.userLogin();">Dev Login</button><button class="btn btn-primary btn-sm" onclick="$(\'#loginmodal\').hide();">Hide Login</button>');
+    if (document.location.host=="demo.wallacepos.com" || document.location.host=="alpha.wallacepos.com"){
+        var login = $("#logindiv");
+        login.append('<button class="btn btn-primary btn-sm" onclick="$(\'#username\').val(\'admin\');$(\'#password\').val(\'admin\'); WPOS.userLogin();">Demo Login</button>');
+        if (document.location.host=="alpha.wallacepos.com")
+            login.append('<button class="btn btn-primary btn-sm" onclick="$(\'#loginmodal\').hide();">Hide Login</button>');
     }
 
     // window size

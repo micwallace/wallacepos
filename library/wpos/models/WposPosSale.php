@@ -233,8 +233,13 @@ class WposPosSale {
     {
         $jsonval = new JsonValidate($this->jsonobj, '{"ref":"", "userid":1, "devid":1, "locid":1, "items":"[", "payments":"[", "cost":1, "total":1, "processdt":1}');
         if (($errors = $jsonval->validate())!==true){
-            $result['error'] = $errors;
-            return $result;
+            // fix for offline sales not containing cost field and getting stuck
+            if (strpos($errors, "cost must be specified")!==false){
+                $this->jsonobj->cost = 0.00;
+            } else {
+                $result['error'] = $errors;
+                return $result;
+            }
         }
         // check for existing record, if record exists (it's an order), we need to clear the old data to add the most current.
         if (($sale=$this->salesMdl->getByRef($this->ref))===false){
@@ -497,6 +502,9 @@ class WposPosSale {
         //$stockMdl = new StockModel();
         $wposStock = new WposAdminStock();
         foreach ($this->jsonobj->items as $key=>$item) {
+            // fix for offline sales not containing cost field and getting stuck
+            if (!isset($item->cost)) $item->cost = 0.00;
+
             if (!$res=$itemsMdl->create($this->id, $item->sitemid, $item->ref, $item->qty, $item->name, $item->desc, $item->taxid, $item->tax, $item->cost, $item->unit, $item->price)) {
                 $this->itemErr = $itemsMdl->errorInfo;
                 return false;

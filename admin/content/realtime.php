@@ -311,17 +311,26 @@ function populateOnlineDevices(devices) {
     devtable.html('');
     devselect.html('');
 
+    devselect.append("<option value='all' selected>All</option>");
+
     if (Object.keys(devices).length > 1) { // devices will always have the admin dash
         for (var i in devices) {
             if (i != 0) { // do not include admin dash
-                devtable.append("<tr><td><i class='icon-lightbulb green icon-large'></i>&nbsp;&nbsp;" + devices[i].username + " / " + WPOS.devices[i].name + " / " + WPOS.devices[i].locationname + "</td></tr>");
-                devselect.append("<option value='" + i + "'>" + devices[i].username + " / " + WPOS.devices[i].name + " / " + WPOS.devices[i].locationname + "</option>");
+                var devname, locname;
+                if (WPOS.devices.hasOwnProperty(i)){
+                    devname = WPOS.devices[i].name;
+                    locname = WPOS.devices[i].locationname;
+                } else {
+                    devname = "Unknown";
+                    locname = "Unknown";
+                }
+                devtable.append("<tr><td><i class='icon-lightbulb green icon-large'></i>&nbsp;&nbsp;" + devices[i].username + " / " + devname + " / " + locname + "</td></tr>");
+                devselect.append("<option value='" + i + "'>" + devices[i].username + " / " + devname + " / " + locname + "</option>");
             }
         }
     } else {
         devtable.append("<tr><td>There are no online devices.</td></tr>");
     }
-    devselect.append("<option value='all' selected>All</option>");
 }
 
 function processIncomingSale(saleobj) {

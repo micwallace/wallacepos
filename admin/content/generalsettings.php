@@ -52,10 +52,10 @@
                             <option value="₣">₣ Franc</option>
                             <option value="₤">₤ Lira</option>
                             <option value="﷼">﷼ Saudi Riyal</option>
-                            <!--<option value="₧">₧ Peseta</option> ! Encoding issues -->
-                            <!--<option value="₹">₹ Indian Rupee</option> ! Encoding issues -->
-                            <!--<option value="₨">₨ Rupee</option> ! Encoding issues -->
-                            <!--<option value="₩">₩ Won</option> ! Encoding issues -->
+                            <option value="₧">₧ Peseta</option>
+                            <option value="₹">₹ Indian Rupee</option>
+                            <option value="₨">₨ Rupee</option>
+                            <option value="₩">₩ Won</option>
                             <option value="₴">₴ Hryvnia</option>
                             <option value="₯">₯ Drachma</option>
                             <option value="₮">₮ Tugrik</option>
@@ -66,7 +66,7 @@
                             <option value="₭">₭ Kip</option>
                             <option value="₪">₪ New Sheqel</option>
                             <option value="₫">₫ Dong</option>
-                            <!--<option value="៛">៛ Riel</option> ! Encoding issues -->
+                            <option value="៛">៛ Riel</option>
                             <option value="Rp">Rp Rupiah</option>
                             <option value="kr">kr Krone/Kroon/Krona</option>
                             <option value="Kč">Kč Koruna</option>

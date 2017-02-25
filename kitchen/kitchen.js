@@ -56,7 +56,7 @@ function WPOSKitchen() {
         window.applicationCache.addEventListener('updateready', function(e) {
             console.log("Appcache update finished, reloading...");
             setLoadingBar(100, "Loading...");
-            location.reload();
+            location.reload(true);
         });
         window.applicationCache.addEventListener('noupdate', function(e) {
             console.log("No appcache update found");
@@ -75,7 +75,7 @@ function WPOSKitchen() {
         if (window.applicationCache.status == window.applicationCache.UPDATEREADY){
             console.log("Appcache update finished, reloading...");
             setLoadingBar(100, "Loading...");
-            location.reload();
+            location.reload(true);
         }
     };
     // Check for device UUID & present Login, initial setup is triggered if the device UUID is not present
@@ -1388,7 +1388,7 @@ $(function () {
     });
 
     // dev/demo quick login
-    if (document.location.host=="alpha.wallacepos.com"){
-        $("#logindiv").append('<button class="btn btn-primary btn-sm" onclick="$(\'#username\').val(\'admin\');$(\'#password\').val(\'admin\'); WPOS.userLogin();">Dev Login</button>');
+    if (document.location.host=="demo.wallacepos.com" || document.location.host=="alpha.wallacepos.com"){
+        $("#logindiv").append('<button class="btn btn-primary btn-sm" onclick="$(\'#username\').val(\'admin\');$(\'#password\').val(\'admin\'); WPOS.userLogin();">Demo Login</button>');
     }
 });

@@ -201,7 +201,9 @@ function WPOSItems() {
      * @param {Object} item
      */
     function addItem(item) {
-        // remove last row from table if its invalid.
+        // Item cost may be null if we're adding stored items that were created in a previous version, explicitly set the cost in this case.
+        if (!item.hasOwnProperty('cost')) item.cost = 0.00;
+        // TODO: remove last row from table if its invalid?
         // check if a priced item is already present in the sale and if so increment it's qty
         if (item.price==""){
             // insert item into table

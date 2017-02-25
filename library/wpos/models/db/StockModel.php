@@ -82,7 +82,7 @@ class StockModel extends DbConfig
      * @return bool|int|string Returns false on failure, number of rows affected or a newly inserted id.
      */
     public function incrementStockLevel($storeditemid, $locationid, $amount, $decrement = false){
-        $sql = "UPDATE stock_levels SET `stocklevel`= GREATEST(`stocklevel` ".($decrement==true?'-':'+')." :stocklevel, 0) WHERE `storeditemid`=:storeditemid AND `locationid`=:locationid";
+        $sql = "UPDATE stock_levels SET `stocklevel`= (`stocklevel` ".($decrement==true?'-':'+')." :stocklevel) WHERE `storeditemid`=:storeditemid AND `locationid`=:locationid";
         $placeholders = [":storeditemid"=>$storeditemid, ":locationid"=>$locationid, ":stocklevel"=>$amount];
 
         $result = $this->update($sql, $placeholders);
