@@ -109,6 +109,12 @@ To deploy WallacePOS on dokku:
 
 3. Commit deploy in the usual manner.
 
-4. Access /installer/?install from the web browser to install the database schema & templates
+4. Setup persistent storage by running:
 
-5. Login to the admin dashboard at /admin using credentials admin:admin & change the default passwords in Settings -> Staff & Admins!
+   `dokku storage:mount %APP_NAME% /var/lib/dokku/data/storage/%APP_NAME%:/app/docs`
+   
+   WARINING: Failure to do so will lead to data loss during subsequent upgrades.
+
+5. Access /installer/?install from the web browser to install the database schema & templates
+
+6. Login to the admin dashboard at /admin using credentials admin:admin & change the default passwords in Settings -> Staff & Admins!
