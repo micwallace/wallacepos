@@ -1379,10 +1379,10 @@ function WPOSSales() {
                 for (var key1 in ritems){
                     // when ritem does not have id but ref
                     if(!ritems[key1].id && ritems[key1].ref){
-                        refnum += (ritems[key1].ref == items[i].ref?1:0);
+                        refnum += (ritems[key1].ref == items[i].ref?(parseInt(ritems[key1].numreturned) || 1):0);
                         continue;
                     }
-                    refnum += (ritems[key1].id == itemid?1:0);
+                    refnum += (ritems[key1].id == itemid?(parseInt(ritems[key1].numreturned) || 1):0);
                 }
             }
             refitems.append('<tr>' +
