@@ -1377,7 +1377,12 @@ function WPOSSales() {
                 var ritems = sale.refunddata[key].items;
                 // loop through items of the refund and add to total if the id equals
                 for (var key1 in ritems){
-                    refnum += (ritems[key1].id == itemid?1:0);
+                    // when ritem does not have id but ref
+                    if(!ritems[key1].id && ritems[key1].ref){
+                        refnum += (ritems[key1].ref == items[i].ref?(parseInt(ritems[key1].numreturned) || 1):0);
+                        continue;
+                    }
+                    refnum += (ritems[key1].id == itemid?(parseInt(ritems[key1].numreturned) || 1):0);
                 }
             }
             refitems.append('<tr>' +
