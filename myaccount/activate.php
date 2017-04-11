@@ -14,11 +14,11 @@
 ?>
 <html>
 <head>
-    <title>Account Activation -</title>
+    <title>Account Activation</title>
     <link rel="stylesheet" href="/assets/ace.form.css"/>
     <script>
         function redirect(){
-            document.location.href = "<?php echo(isset($_REQUEST['redirect'])?$_REQUEST['redirect']:'/'); ?>";
+            document.location.href = "<?php echo(isset($_REQUEST['redirect'])?htmlspecialchars($_REQUEST['redirect'], ENT_QUOTES, 'UTF-8'):'/'); ?>";
         }
     </script>
 </head>

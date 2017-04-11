@@ -243,7 +243,10 @@
 
         data['xeroenabled'] = $("#xeroenabled").is(":checked")?1:0;
         data['name'] = "accounting";
-        WPOS.sendJsonData("settings/set", JSON.stringify(data));
+        var result = WPOS.sendJsonData("settings/set", JSON.stringify(data));
+        if (result !== false){
+            WPOS.setConfigSet('accounting', result);
+        }
         // hide loader
         WPOS.util.hideLoader();
     }

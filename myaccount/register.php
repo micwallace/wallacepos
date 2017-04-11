@@ -2,7 +2,7 @@
 header("Access-Control-Allow-Origin: *");
 ?>
 <div style="text-align: center; background-color: #fff; padding: 5px;">
-    <img style="width: 200px; height: 80px;" src="/assets/images/receipt-logo.png"/><h3 class="smaller" style="margin-top: 5px;">Register with WallaceIT</h3>
+    <img style="width: 200px; height: 80px;" src="/assets/images/receipt-logo.png"/><h3 class="smaller" style="margin-top: 5px;">Register an Account</h3>
     <table>
         <tr>
             <td style="text-align: right;"><label>Name:&nbsp;</label></td>

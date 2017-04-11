@@ -21,7 +21,7 @@
                     <table id="customertable" class="table table-striped table-bordered table-hover dt-responsive" style="width: 100%;">
                         <thead>
                         <tr>
-                            <th data-priority="0"  class="center noexport">
+                            <th data-priority="0" class="center">
                                 <label>
                                     <input type="checkbox" class="ace" />
                                     <span class="lbl"></span>
@@ -61,8 +61,10 @@
         datatable = $('#customertable').dataTable({
             "bProcessing": true,
             "aaData": itemarray,
+            "aaSorting": [[ 1, "asc" ]],
+            "aLengthMenu": [ 10, 25, 50, 100, 200],
             "aoColumns": [
-                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', "bSortable": false, sClass:"noexport" },
+                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false },
                 { "mData":"id" },
                 { "mData":"name" },
                 { "mData":"email" },
@@ -70,7 +72,7 @@
                 { "mData":"mobile" },
                 { "mData":"suburb" },
                 { "mData":"postcode" },
-                { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.customers.openCustomerDialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.customers.deleteCustomer($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
+                { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.customers.openCustomerDialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.customers.deleteCustomer($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', bSortable: false }
             ],
             "columns": [
                 {},
@@ -137,10 +139,31 @@
         datatable.api().draw(false);
     }
     function exportCustomers(){
-        var data  = WPOS.table2CSV($("#customertable"));
+
         var filename = "customers-"+WPOS.util.getDateFromTimestamp(new Date());
         filename = filename.replace(" ", "");
-        WPOS.initSave(filename, data);
+        var customers = WPOS.customers.getCustomers();
+
+        var data = {};
+        var ids = datatable.api().rows('.selected').data().map(function(row){ return row.id }).join(',').split(',');
+
+        if (ids && ids.length > 0 && ids[0]!='') {
+            for (var i = 0; i < ids.length; i++) {
+                var id = ids[i];
+                if (customers.hasOwnProperty(id))
+                    data[id] = customers[id];
+            }
+        } else {
+            data = customers;
+        }
+
+        var csv = WPOS.data2CSV(
+            ['ID', 'Name', 'Email', 'Phone', 'Mobile', 'Address', 'Suburb', 'Postcode', 'State', 'Country', 'Notes', 'Contacts'],
+            ['id', 'name', 'email', 'phone', 'mobile', 'address', 'suburb', 'postcode', 'state', 'country', 'notes', 'contacts'],
+            data
+        );
+
+        WPOS.initSave(filename, csv);
     }
 </script>
 <style type="text/css">

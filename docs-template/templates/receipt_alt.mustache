@@ -37,10 +37,10 @@
 {{/thermalprint}}
 {{^thermalprint}}
     <style type="text/css">
-        @import url(/admin/assets/css/bootstrap.min.css);
-        @import url(/admin/assets/css/font-awesome.min.css);
-        @import url(/admin/assets/css/ace-fonts.css);
-        @import url(/admin/assets/css/ace.min.css);
+        @import url(/assets/css/bootstrap.min.css);
+        @import url(/assets/css/font-awesome.min.css);
+        @import url(/assets/css/ace-fonts.css);
+        @import url(/assets/css/ace.min.css);
 
         body {
             background-color: #FFFFFF;
@@ -85,6 +85,12 @@
             <td>Transaction Ref:</td>
             <td>{{sale_ref}}</td>
         </tr>
+        {{#print_id}}
+            <tr>
+                <td>Transaction ID:</td>
+                <td>{{sale_id}}</td>
+            </tr>
+        {{/print_id}}
         <tr>
             <td>Sale Time: </td>
             <td>{{sale_dt}}</td>
@@ -94,6 +100,9 @@
     <table>
         {{#sale_items}}
             <tr><td>{{qty}} x </td><td>{{#alt_name}}<bdi>{{alt_name}}</bdi>{{/alt_name}}{{^alt_name}}{{name}}{{/alt_name}} ({{#currency}}{{unit}}{{/currency}})</td><td style="text-align: right; vertical-align: top;">{{#currency}}{{price}}{{/currency}}</td></tr>
+            {{#print_desc}}
+                <tr><td></td><td>{{desc}}</td><td></td></tr>
+            {{/print_desc}}
             {{#mod.items}}
                 <tr><td></td><td>{{#qty}}+ {{qty}} {{/qty}}{{name}}{{#value}} {{value}}: {{/value}} ({{#currency}}{{price}}{{/currency}})</td><td></td></tr>
             {{/mod.items}}

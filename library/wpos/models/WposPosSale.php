@@ -504,8 +504,8 @@ class WposPosSale {
         foreach ($this->jsonobj->items as $key=>$item) {
             // fix for offline sales not containing cost field and getting stuck
             if (!isset($item->cost)) $item->cost = 0.00;
-
-            if (!$res=$itemsMdl->create($this->id, $item->sitemid, $item->ref, $item->qty, $item->name, $item->desc, $item->taxid, $item->tax, $item->cost, $item->unit, $item->price)) {
+            $unit_original = (isset($item->unit_original) ? $item->unit_original : $item->unit);
+            if (!$res=$itemsMdl->create($this->id, $item->sitemid, $item->ref, $item->qty, $item->name, $item->desc, $item->taxid, $item->tax, $item->cost, $item->unit, $item->price, $unit_original)) {
                 $this->itemErr = $itemsMdl->errorInfo;
                 return false;
             }

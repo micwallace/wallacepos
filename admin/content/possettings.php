@@ -42,6 +42,13 @@
                     </div>
                     <div class="space-4"></div>
                     <div class="form-group">
+                        <label class="col-sm-5">Print Item Description:</label>
+                        <div class="col-sm-5">
+                            <input type="checkbox" id="recprintdesc" /><br/>
+                        </div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
                         <label class="col-sm-5">Receipt Printer Logo:</label>
                         <div class="col-sm-5">
                             <input type="text" id="reclogo" /><br/>
@@ -151,6 +158,16 @@
                         </div>
                         <div class="space-4"></div>
                         <div class="form-group">
+                            <div class="col-sm-5"><label>Allow Changing Stored Item Tax:</label></div>
+                            <div class="col-sm-5">
+                                <select id="taxedit">
+                                    <option value="no">No</option>
+                                    <option value="always">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="space-4"></div>
+                        <div class="form-group">
                             <div class="col-sm-5"><label>Cash rounding:</label></div>
                             <div class="col-sm-5">
                                 <select id="cashrounding">
@@ -192,10 +209,10 @@
                     data[$(this).prop('id')] = $(this).val();
                 }
             });
-            // fix for checkbox
-            //data.recprintlogo = $("#recprintlogo").is(":checked")?true:false;
-            //data.negative_items = $("#negative_items").is(":checked")?true:false;
-            WPOS.sendJsonData("settings/pos/set", JSON.stringify(data));
+            var result = WPOS.sendJsonData("settings/pos/set", JSON.stringify(data));
+            if (result !== false){
+                WPOS.setConfigSet('pos', result);
+            }
             refreshPreviewImages();
             // hide loader
             WPOS.util.hideLoader();

@@ -230,8 +230,9 @@ class WposAdminItems {
                 }
             }
 
-            // remove currency symbol from price
+            // remove currency symbol from price & cost
             $item->price = preg_replace("/([^0-9\\.])/i", "", $item->price);
+            $item->cost = preg_replace("/([^0-9\\.])/i", "", $item->cost);
 
             // Match tax id with name
             if (!$item->tax_name){

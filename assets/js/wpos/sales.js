@@ -28,7 +28,7 @@ function WPOSItems() {
      */
     this.addManualItemRow = function () {
         // add the row
-        addItemRow(1, "", "0.00", 1, 0, {desc:"", cost:0.00});
+        addItemRow(1, "", "0.00", 1, 0, {desc:"", cost:0.00, unit_original:0.00});
         // focus on qty
         $("#itemtable")
             .children('tr :last')
@@ -149,21 +149,22 @@ function WPOSItems() {
      * Adds a html row into the sales table, if sitem id is greater than 0, all fields that are filled are disabled to prevent modification.
      * @param {Number} qty
      * @param {String} name
-     * @param {String} desc
      * @param {String} unit
      * @param {Number} taxid
      * @param {Number} sitemid ; the stored item id to keep track of inventory sales
+     * @param data
      */
     function addItemRow(qty, name, unit, taxid, sitemid, data) {
         sitemid = (sitemid>0?sitemid:0);
         var disable = (sitemid>0); // disable fields that are filled by the stored item
         var disableprice = (sitemid>0 && WPOS.getConfigTable().pos.priceedit!="always");
+        var disabletax = (!WPOS.getConfigTable().pos.hasOwnProperty('taxedit') || WPOS.getConfigTable().pos.taxedit=='no');
         var row = $('<tr class="item_row">' +
             '<td><input class="itemid" type="hidden" value="' + sitemid + '" data-options=\''+JSON.stringify(data)+'\' /><input onChange="WPOS.sales.updateSalesTotal();" style="width:50px;" type="text" class="itemqty numpad" value="' + qty + '" /></td>' +
-            '<td><input '+((disable==true && name!="")?"disabled":"")+' style="width: 100%; min-width: 100px;" type="text" class="itemname" value="' + name + '" onChange="WPOS.sales.updateSalesTotal();" /></td>' +
+            '<td><input '+((disable==true && name!="")?"disabled":"")+' style="width: 100%; min-width: 100px;" type="text" class="itemname" value="' + name + '" onChange="WPOS.sales.updateSalesTotal();" /><div class="itemmodtxt"></div></td>' +
             '<td><input '+((disableprice==true && unit!="")?"disabled":"")+' onChange="WPOS.sales.updateSalesTotal();" style="max-width:50px;" type="text" class="itemunit numpad" value="' + unit + '" /></td>' +
             '<td><button onclick="WPOS.items.openItemModDialog(this);" class="btn btn-primary btn-xs"><i class="icon-list-ul"></i></button><div class="itemmodtext"></div></td>' +
-            '<td><select '+((disable==true && taxid!=null)?"disabled":"")+' onChange="WPOS.sales.updateSalesTotal();" style="max-width:110px;" class="itemtax" value="'+taxid+'">' +getTaxSelectHTML(taxid)+ '</select><input class="itemtaxval" type="hidden" value="0.00" /></td>' +
+            '<td><select '+((disabletax==true && taxid!=null)?"disabled":"")+' onChange="WPOS.sales.updateSalesTotal();" style="max-width:110px;" class="itemtax">' +getTaxSelectHTML(taxid)+ '</select><input class="itemtaxval" type="hidden" value="0.00" /></td>' +
             '<td><input style="max-width:50px;" type="text" class="itemprice" value="0.00" disabled /></td>' +
             '<td style="text-align: center;"><button class="btn btn-sm btn-danger" onclick="WPOS.items.removeItem($(this));">X</button></td>' +
             '</tr>');
@@ -207,11 +208,11 @@ function WPOSItems() {
         // check if a priced item is already present in the sale and if so increment it's qty
         if (item.price==""){
             // insert item into table
-            addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description, cost:item.cost, alt_name:item.alt_name});
+            addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description, cost:item.cost, unit_original:item.price, alt_name:item.alt_name});
         } else {
             if (!isItemAdded(item.id, true)){
                 // insert item into table
-                addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description, cost:item.cost, alt_name:item.alt_name});
+                addItemRow(1, item.name, item.price, item.taxid, item.id, {desc:item.description, cost:item.cost, unit_original:item.price, alt_name:item.alt_name});
             }
         }
         $("#codeinput").val('');
@@ -221,7 +222,12 @@ function WPOSItems() {
     function isItemAdded(itemid, addqty){
         var found = false;
         $("#itemtable").children(".valid").each(function(index, element) {
-            if ($(element).find(".itemid").val()==itemid){
+            var itemfield = $(element).find(".itemid");
+            if (itemfield.val()==itemid){
+                // check for item modifiers, a new line item must be added if a modifier is used
+                if (itemfield.data('options').hasOwnProperty('mod') && itemfield.data('options').mod.items.length>0){
+                    return true;
+                }
                 if (addqty) $(element).find(".itemqty").val(parseInt($(element).find(".itemqty").val())+1);
                 found = true;
                 return false;
@@ -237,7 +243,8 @@ function WPOSItems() {
         var data = itemrow.find('.itemid').data('options');
         //console.log(data);
         $("#itemdesc").val(data.desc);
-        $("#itemcost").val(data.cost);
+        var disableprice = (itemrow.find('.itemid').val()>0 && WPOS.getConfigTable().pos.priceedit!="always");
+        $("#itemcost").val(data.cost).prop('disabled', (disableprice && data.cost!=""));
         $("#itemaltname").val(data.alt_name);
         // get stored item mods
         var itemid = itemrow.find('.itemid').val();
@@ -269,7 +276,6 @@ function WPOSItems() {
                             costelem.data('modprice', mod.price);
                             costelem.text(WPOS.util.currencyFormat(mod.price));
                         } else {
-                            console.log(mod);
                             row.find('.modselect').val(mod.value);
                             costelem.data('modprice', mod.price);
                             costelem.text(WPOS.util.currencyFormat(mod.price));
@@ -288,9 +294,9 @@ function WPOSItems() {
     function insertSimpleModRow(mod){
         modtable.append('<tr id="mod-'+mod.name.replace(/\s/g, "")+'">' +
             '<td><span class="modname">'+mod.name+'</span></td>' +
-            '<td><button onclick="WPOS.items.incrementModQty(this, false);" class="btn btn-primary btn-xs" style="margin-right: 4px;"><i class="icon-arrow-down"></i></button><button onclick="WPOS.items.incrementModQty(this, true);" class="btn btn-primary btn-xs" style="margin-right: 5px;"><i class="icon-arrow-up"></i></button>' +
+            '<td><button onclick="WPOS.items.incrementModQty(this, true);" class="btn btn-primary btn-xs" style="margin-right: 5px;"><i class="icon-arrow-up"></i></button><button onclick="WPOS.items.incrementModQty(this, false);" class="btn btn-primary btn-xs" style="margin-right: 4px;"><i class="icon-arrow-down"></i></button>' +
             '<span data-min="'+mod.minqty+'" data-max="'+mod.maxqty+'" data-default="'+mod.qty+'" data-price="'+mod.price+'" class="modqty">'+mod.qty+'</span></td>' +
-            '<td><span data-modqty="0" data-modprice="0" class="modcost">'+zerostr+'</span></td></tr>');
+            '<td><span data-moddefault="'+mod.qty+'" data-modqty="0" data-modprice="0" class="modcost">'+zerostr+'</span></td></tr>');
     }
     this.incrementModQty = function(elem, positive){
         var row = $(elem).parent().parent();
@@ -349,12 +355,13 @@ function WPOSItems() {
 
     this.saveItemMods = function(){
         var moddata = {total:$("#itemmodtotal").data('modtotal'), items:[]};
+        var modtxt = "";
         modtable.children('tr').each(function(){
             var dataelem = $(this).find('.modcost');
             var modqty = dataelem.data('modqty');
             var moddefault = dataelem.data('moddefault');
             var modval = $(this).find('.modselect').val();
-            if ((!isNaN(modqty) && modqty!=0) || moddefault!=modval){
+            if ((!isNaN(modqty) && modqty!=0) || (!dataelem.attr('data-modqty') && moddefault!=modval)){
                 var mod = {};
                 mod.name = $(this).find('.modname').text();
                 mod.price = dataelem.data('modprice');
@@ -364,12 +371,18 @@ function WPOSItems() {
                     mod.value = modval;
                 }
                 moddata.items.push(mod);
+                modtxt+= (mod.hasOwnProperty('qty')?(mod.qty>0?'+ ':'')+mod.qty:'')+' '+mod.name+(mod.hasOwnProperty('value')?': '+mod.value:'')+' ('+WPOS.util.currencyFormat(mod.price)+')<br/>';
             }
         });
+        itemrow.find('.itemmodtxt').html(modtxt);
         var data = itemrow.find('.itemid').data('options');
         data.desc = $("#itemdesc").val();
         data.cost = $("#itemcost").val();
-        if (moddata.items.length>0) data.mod = moddata;
+        if (moddata.items.length>0){
+            data.mod = moddata;
+        } else {
+            delete data.mod;
+        }
         itemrow.find('.itemid').data('options', data);
         WPOS.sales.updateSalesTotal();
     };
@@ -1377,7 +1390,11 @@ function WPOSSales() {
                 var ritems = sale.refunddata[key].items;
                 // loop through items of the refund and add to total if the id equals
                 for (var key1 in ritems){
-                    refnum += (ritems[key1].id == itemid?1:0);
+                    if(!ritems[key1].id && ritems[key1].ref){
+                        refnum += (ritems[key1].ref == items[i].ref?(parseInt(ritems[key1].numreturned) || 1):0);
+                        continue;
+                    }
+                    refnum += (ritems[key1].id == itemid?(parseInt(ritems[key1].numreturned) || 1):0);
                 }
             }
             refitems.append('<tr>' +
@@ -1425,7 +1442,7 @@ function WPOSSales() {
             }
             return true;
         });
-        $("#refundamount").val(refundamt);
+        $("#refundamount").val(refundamt.toFixed(2));
         return true;
     };
 
@@ -1629,8 +1646,6 @@ function WPOSSales() {
     }
 
     function removeSalesRecord(ref){
-        // add to java object
-        WPOS.trans.removeFromSalesTable(ref);
         // remove from local storage
         var jsonsales;
         if (localStorage.getItem("wpos_csales") !== null) {

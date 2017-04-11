@@ -26,6 +26,12 @@
                     <table id="salestable" class="table table-striped table-bordered table-hover dt-responsive" style="width:100%;">
                         <thead>
                             <tr>
+                                <th data-priority="0" class="center">
+                                    <label>
+                                        <input type="checkbox" class="ace" />
+                                        <span class="lbl"></span>
+                                    </label>
+                                </th>
                                 <th data-priority="1">ID</th>
                                 <th data-priority="7">Ref</th>
                                 <th data-priority="8">User</th>
@@ -148,47 +154,74 @@
 
     function exportCurrentSales(){
         var sales = WPOS.transactions.getTransactions();
-        var csv = "ID, Reference, User, Device, Location, Customer Email, Items, #Items, Payments, Subtotal, Discount, Total, Sale Time, Process Time, Status, Void Data, Refund Data\n"; // Set header
-        var sale;
-        for (var i in sales){
-            sale = sales[i];
-            // join items
-            var itemstr = "";
-            var itemqty = 0;
-            for (var i2 in sale.items){
-                itemqty += parseInt(sale.items[i2].qty);
-                itemstr += "("+sale.items[i2].qty+"x "+sale.items[i2].name+"-"+sale.items[i2].desc+" @ "+WPOS.util.currencyFormat(sale.items[i2].unit)+(sale.items[i2].tax.inclusive?" tax incl. ":" tax excl. ")+WPOS.util.currencyFormat(sale.items[i2].tax.total)+" = "+WPOS.util.currencyFormat(sale.items[i2].price)+") ";
+        WPOS.customers.loadCustomers();
+        var customers = WPOS.customers.getCustomers();
+
+        var data = {};
+        var refs = datatable.api().rows('.selected').data().map(function(row){ return row.ref }).join(',').split(',');
+
+        if (refs && refs.length > 0 && refs[0]!='') {
+            for (var i = 0; i < refs.length; i++) {
+                var ref = refs[i];
+                if (sales.hasOwnProperty(ref))
+                    data[ref] = sales[ref];
             }
-            // join payments
-            var paystr = "";
-            for (i2 in sale.payments){
-                paystr += "("+sale.payments[i2].method+"-"+WPOS.util.currencyFormat(sale.payments[i2].amount)+") ";
-            }
-            var status = getTransactionStatus(sales[i]);
-            var voidstr = "";
-            var refstr = "";
-            if (status !== 1){
-                // join void
-                if (sale.hasOwnProperty("voiddata")){
-                    voidstr += WPOS.util.getDateFromTimestamp(sale.voiddata.reason)+" - "+sale.voiddata.reason;
-                }
-                // join refunds
-                if (sale.hasOwnProperty("refunddata")){
-                    for (i2 in sale.refunddata){
-                        var ritems = JSON.stringify(sale.refunddata[i2].items);
-                        // TODO: get returned item string
-                        refstr += "(" + WPOS.util.getDateFromTimestamp(sale.refunddata[i2].processdt) + " - "+sale.refunddata[i2].reason+" - "+sale.refunddata[i2].method+" - "+WPOS.util.currencyFormat(sale.refunddata[i2].amount)+" - items: "+ritems+") ";
-                    }
-                }
-            }
-            switch (status){
-                case 1: status = "Complete"; break;
-                case 2: status = "Void"; break;
-                case 3: status = "Refunded"; break;
-            }
-            csv+=sale.id+","+sale.ref+","+WPOS.getConfigTable().users[sale.userid].username+","+WPOS.getConfigTable().devices[sale.devid].name+","+WPOS.getConfigTable().locations[sale.locid].name+","
-                +sale.custemail+","+itemstr+","+itemqty+","+paystr+","+WPOS.util.currencyFormat(sale.subtotal)+","+sale.discount+"%,"+WPOS.util.currencyFormat(sale.total)+","+WPOS.util.getDateFromTimestamp(sale.processdt)+","+sale.dt+","+status+","+voidstr+","+refstr+"\n";
+        } else {
+            data = sales;
         }
+
+        var csv = WPOS.data2CSV(
+            ['ID', 'Reference', 'User', 'Device', 'Location', 'Customer ID', 'Customer Email', 'Items', '# Items', 'Payments', 'Subtotal', 'Discount', 'Total', 'Sale DT', 'Created DT', 'Status', 'JSON Data'],
+            [
+                'id', 'ref',
+                {key:'userid', func: function(value){
+                    return WPOS.users.hasOwnProperty(value) ? WPOS.users[value].username : 'Unknown';
+                }},
+                {key:'devid', func: function(value){
+                    return WPOS.devices.hasOwnProperty(value) ? WPOS.devices[value].name : 'Unknown';
+                }},
+                {key:'locid', func: function(value){
+                    return WPOS.locations.hasOwnProperty(value) ? WPOS.locations[value].name : 'Unknown';
+                }},
+                'custid',
+                {key:'custid', func: function(value){
+                    return customers.hasOwnProperty(value) ? customers[value].email : '';
+                }},
+                {key:'items', func: function(value){
+                    var itemstr = '';
+                    for (var i in value){
+                        itemstr += value[i].qty+"x "+value[i].name+"-"+value[i].desc+" @ "+WPOS.util.currencyFormat(value[i].unit)+(value[i].tax.inclusive?" tax incl. ":" tax excl. ")+WPOS.util.currencyFormat(value[i].tax.total)+" = "+WPOS.util.currencyFormat(value[i].price)+" \n";
+                    }
+                    return itemstr;
+                }},
+                'numitems',
+                {key:'payments', func: function(value){
+                    var paystr = '';
+                    for (var i in value){
+                        paystr += value[i].method+" "+WPOS.util.currencyFormat(value[i].amount)+" ";
+                    }
+                    return paystr;
+                }},
+                'subtotal', 'discount', 'total',
+                {key:'processdt', func: function(value){
+                    return WPOS.util.getDateFromTimestamp(value, 'Y-m-d');
+                }},
+                'dt',
+                {key:'status', func: function(value){
+                    var status;
+                    switch (value){
+                        case 1: status = "Complete"; break;
+                        case 2: status = "Void"; break;
+                        case 3: status = "Refunded"; break;
+                    }
+                    return status;
+                }},
+                {key:'id', func: function(value, record){
+                    return record;
+                }}
+            ],
+            data
+        );
 
         WPOS.initSave("sales-"+WPOS.util.getDateFromTimestamp(stime)+"-"+WPOS.util.getDateFromTimestamp(etime), csv);
     }
@@ -207,8 +240,9 @@
         datatable = $('#salestable').dataTable({
             "bProcessing": true,
             "aaData": itemarray,
-            "aaSorting": [[ 0, "desc" ]],
+            "aaSorting": [[ 1, "desc" ]],
             "aoColumns": [
+                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false },
                 { "mData":"id" },
                 { "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
                 { "mData":function(data, type, val){ var users = WPOS.getConfigTable().users; if (users.hasOwnProperty(data.userid)){ return users[data.userid].username; } return 'N/A'; } },
@@ -220,6 +254,7 @@
                 { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.transactions.openTransactionDialog($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'));"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.transactions.deleteTransaction($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'))"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
             ],
             "columns": [
+                {},
                 {type: "numeric"},
                 {type: "string"},
                 {type: "string"},
@@ -229,7 +264,40 @@
                 {type: "currency"},
                 {type: "html"},
                 {}
-            ]
+            ],
+            "fnInfoCallback": function( oSettings, iStart, iEnd, iMax, iTotal, sPre ) {
+                // Add selected row count to footer
+                var selected = this.api().rows('.selected').count();
+                return sPre+(selected>0 ? '<br/>'+selected+' row(s) selected':'');
+            }
+        });
+
+        // row selection checkboxes
+        datatable.find("tbody").on('click', '.dt-select-cb', function(e){
+            var row = $(this).parents().eq(3);
+            if (row.hasClass('selected')) {
+                row.removeClass('selected');
+            } else {
+                row.addClass('selected');
+            }
+            datatable.api().draw(false);
+            e.stopPropagation();
+        });
+
+        $('table.dataTable th input:checkbox').on('change' , function(){
+            var that = this;
+            $(this).closest('table.dataTable').find('tr > td:first-child input:checkbox')
+                .each(function(){
+                    var row = $(this).parents().eq(3);
+                    if ($(that).is(":checked")) {
+                        row.addClass('selected');
+                        $(this).prop('checked', true);
+                    } else {
+                        row.removeClass('selected');
+                        $(this).prop('checked', false);
+                    }
+                });
+            datatable.api().draw(false);
         });
 
         // add controls

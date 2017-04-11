@@ -21,7 +21,7 @@
 <table id="stocktable" class="table table-striped table-bordered table-hover dt-responsive" style="width:100%;">
     <thead>
         <tr>
-            <th data-priority="0" class="center noexport">
+            <th data-priority="0" class="center">
                 <label>
                     <input type="checkbox" class="ace" />
                     <span class="lbl"></span>
@@ -123,13 +123,14 @@
         datatable = $('#stocktable').dataTable({"bProcessing": true,
             "aaData": stockarray,
             "aaSorting": [[ 2, "asc" ]],
+            "aLengthMenu": [ 10, 25, 50, 100, 200],
             "aoColumns": [
-                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false, sClass:"noexport" },
+                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false },
                 { mData:function(data,type,val){return (data.name==null?"Unknown":data.name) } },
                 { mData:"supplier" },
                 { mData:function(data,type,val){return (data.locationid!=='0'?(WPOS.locations.hasOwnProperty(data.locationid)?WPOS.locations[data.locationid].name:'Unknown'):'Warehouse');} },
                 { mData:"stocklevel" },
-                { mData:function(data,type,val){return '<div class="action-buttons"><a class="green" onclick="openEditStockDialog('+data.id+');"><i class="icon-pencil bigger-130"></i></a><a class="blue" onclick="openTransferStockDialog('+data.id+')"><i class="icon-arrow-right bigger-130"></i></a><a class="red" onclick="getStockHistory('+data.storeditemid+', '+data.locationid+');"><i class="icon-time bigger-130"></i></a></div>'; }, "bSortable": false, sClass: "noexport" }
+                { mData:function(data,type,val){return '<div class="action-buttons"><a class="green" onclick="openEditStockDialog('+data.id+');"><i class="icon-pencil bigger-130"></i></a><a class="blue" onclick="openTransferStockDialog('+data.id+')"><i class="icon-arrow-right bigger-130"></i></a><a class="red" onclick="getStockHistory('+data.storeditemid+', '+data.locationid+');"><i class="icon-time bigger-130"></i></a></div>'; }, "bSortable": false }
             ],
             "columns": [
                 {},
@@ -394,10 +395,30 @@
         datatable.api().draw(false);
     }
     function exportStock(){
-        var data  = WPOS.table2CSV($("#stocktable"));
+        //var data  = WPOS.table2CSV($("#stocktable"));
         var filename = "stock-"+WPOS.util.getDateFromTimestamp(new Date());
         filename = filename.replace(" ", "");
-        WPOS.initSave(filename, data);
+
+        var data = {};
+        var ids = datatable.api().rows('.selected').data().map(function(row){ return row.id }).join(',').split(',');
+
+        if (ids && ids.length > 0 && ids[0]!='') {
+            for (var i = 0; i < ids.length; i++) {
+                var id = ids[i];
+                if (stock.hasOwnProperty(id))
+                    data[id] = stock[id];
+            }
+        } else {
+            data = stock;
+        }
+
+        var csv = WPOS.data2CSV(
+            ['ID', 'Name', 'Supplier', 'Location', 'Qty'],
+            ['id', 'name', 'supplier', {key:'locationid', func: function(value){ return WPOS.locations.hasOwnProperty(value) ? WPOS.locations[value].name : 'Unknown'; }}, 'stocklevel'],
+            data
+        );
+
+        WPOS.initSave(filename, csv);
     }
 </script>
 <style type="text/css">

@@ -384,7 +384,7 @@ function WPOSPrint(kitchenMode) {
                 alert("QZ-Print integration is no longer available, switch to the new webprint applet");
                 break;
             case "wp":
-                html = '<html><head><title>Wpos Report</title><link media="all" href="/admin/assets/css/bootstrap.min.css" rel="stylesheet"/><link media="all" rel="stylesheet" href="/admin/assets/css/font-awesome.min.css"/><link media="all" rel="stylesheet" href="/admin/assets/css/ace-fonts.css"/><link media="all" rel="stylesheet" href="admin/assets/css/ace.min.css"/></head><body style="background-color: #FFFFFF;">' + $("#reportcontain").html() + '</body></html>';
+                html = '<html><head><title>Wpos Report</title><link media="all" href="/assets/css/bootstrap.min.css" rel="stylesheet"/><link media="all" rel="stylesheet" href="/assets/css/font-awesome.min.css"/><link media="all" rel="stylesheet" href="/assets/css/ace-fonts.css"/><link media="all" rel="stylesheet" href="/assets/css/ace.min.css"/></head><body style="background-color: #FFFFFF;">' + $("#reportcontain").html() + '</body></html>';
                 webprint.printHtml(html, printer);
         }
     }
@@ -626,8 +626,8 @@ function WPOSPrint(kitchenMode) {
         // transdetails
         cmd += (ltr ? esc_a_l : esc_a_r);
         cmd += getEscTableRow(formatLabel(translateLabel("Transaction Ref"), true, 1), record.ref, false, false, false);
-        if (WPOS.getConfigTable().pos.recprintid)
-            cmd += getEscTableRow(formatLabel(translateLabel("Transaction ID"), true, 1), record.id, false, false, false);
+        if (record.hasOwnProperty('id') && WPOS.getConfigTable().pos.recprintid)
+            cmd += getEscTableRow(formatLabel(translateLabel("Transaction ID"), true, 2), record.id, false, false, false);
         cmd += getEscTableRow(formatLabel(translateLabel("Sale Time"), true, 7), WPOS.util.getDateFromTimestamp(record.processdt), false, false, false) + "\n";
         // items
         var item;
@@ -644,6 +644,9 @@ function WPOSPrint(kitchenMode) {
             cmd += getEscTableRow(itemlabel, WPOS.util.currencyFormat(item.price, false, true), false, false, true);
             if (lang=="mixed" && item.alt_name!=""){
                 cmd += (ltr?'    ':'') + convertUnicodeCharacters(item.alt_name, getGlobalPrintSetting('alt_charset'), getGlobalPrintSetting('alt_codepage')) + (!ltr?'    ':'') + "\n";
+            }
+            if (item.desc!="" && WPOS.getConfigTable().pos.hasOwnProperty('recprintdesc') && WPOS.getConfigTable().pos.recprintdesc){
+                cmd += (ltr?'    ':'') + convertUnicodeCharacters(item.desc, getGlobalPrintSetting('alt_charset'), getGlobalPrintSetting('alt_codepage')) + (!ltr?'    ':'') + "\n";
             }
             if (item.hasOwnProperty('mod')){
                 for (var x=0; x<item.mod.items.length; x++){
@@ -1161,6 +1164,8 @@ function WPOSPrint(kitchenMode) {
             logo_url: document.location.protocol+"//"+document.location.host+config.pos.recemaillogo,
             footer: config.pos.recfooter,
             thermalprint: escpprint,
+            print_id: config.pos.recprintid,
+            print_desc: config.pos.recprintdesc,
             qrcode_url: config.pos.recqrcode!=""?document.location.protocol+"//"+document.location.host+"/docs/qrcode.png":null,
             currency: function() {
                 return function (text, render) {

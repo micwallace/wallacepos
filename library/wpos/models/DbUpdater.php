@@ -105,7 +105,9 @@ class DbUpdater {
         '1.2'=>['name'=>'1.2', 'db'=>true, 'script'=>true],
         '1.3'=>['name'=>'1.3', 'db'=>true, 'script'=>true],
         '1.4.0'=>['name'=>'1.4.0', 'db'=>true, 'script'=>true],
-        '1.4.1'=>['name'=>'1.4.1', 'db'=>true, 'script'=>true]
+        '1.4.1'=>['name'=>'1.4.1', 'db'=>true, 'script'=>true],
+        '1.4.2'=>['name'=>'1.4.2', 'db'=>false, 'script'=>true],
+        '1.4.3'=>['name'=>'1.4.3', 'db'=>true, 'script'=>true]
     ];
 
     public static function getLatestVersionName(){
@@ -131,7 +133,9 @@ class DbUpdater {
             $version = self::getLatestVersionName();
         } else {
             if (!isset(self::$versions[$version])){
-                return "Target version not found";
+                if (!isset($_REQUEST['use_latest']))
+                    return "Target version not found";
+                $version = self::getLatestVersionName();
             }
         }
 
@@ -207,6 +211,12 @@ class DbUpdater {
                     case "1.4.1":
                         $this->upgradeVersion1_4_1();
                         break;
+                    case "1.4.2":
+                        $this->upgradeVersion1_4_2();
+                        break;
+                    case "1.4.3":
+                        $this->upgradeVersion1_4_3();
+                        break;
                     default:
                         return "Update script referred to in schema but not found.\n";
                 }
@@ -226,6 +236,30 @@ class DbUpdater {
         $labels = WposAdminSettings::getSettingsObject('general')->altlabels;
         $labels->{"transaction-id"} = "Transaction ID";
         WposAdminSettings::putValue('general', 'altlabels', $labels);
+        return true;
+    }
+
+    private function upgradeVersion1_4_2(){
+        // set tax setting
+        WposAdminSettings::putValue('pos', 'taxedit', 'no');
+        WposAdminSettings::putValue('pos', 'recprintdesc', false);
+        return true;
+    }
+
+    private function upgradeVersion1_4_3(){
+        // copy new templates
+        copy($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/templates/receipt.mustache', $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/receipt.mustache');
+        copy($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/templates/receipt_alt.mustache', $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/receipt_alt.mustache');
+        copy($_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs-template/templates/receipt_mixed.mustache', $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT'].'docs/receipt_mixed.mustache');
+        // extract data for new sale_items fields
+        $itemsMdl = new SaleItemsModel();
+        $items = $itemsMdl->get();
+        foreach ($items as $item){
+            $taxData = json_decode($item['tax']);
+            $sql = "UPDATE `sale_items` SET `tax_incl`=:tax_incl, `tax_total`=:tax_total WHERE `id`=:id";
+            $this->db->update($sql, [":tax_incl"=>($taxData->inclusive ? 1 : 0), ":tax_total"=>$taxData->total, ":id"=>$item['id']]);
+        }
+
         return true;
     }
 

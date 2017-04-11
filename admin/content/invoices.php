@@ -27,6 +27,12 @@
                     <table id="invoicestable" class="table table-striped table-bordered table-hover table-responsive">
                         <thead>
                         <tr>
+                            <th data-priority="0" class="center">
+                                <label>
+                                    <input type="checkbox" class="ace" />
+                                    <span class="lbl"></span>
+                                </label>
+                            </th>
                             <th data-priority="1">ID</th>
                             <th data-priority="8">Ref</th>
                             <th data-priority="3">Customer</th>
@@ -186,49 +192,78 @@
 
     function exportCurrentInvoices(){
         var invoices = WPOS.transactions.getTransactions();
-        var csv = "ID, Reference, User, Device, Location, Customer Email, Items, #Items, Payments, Subtotal, Discount, Total, Invoice Time, Process Time, Status, Void Data, Refund Data\n"; // Set header
-        var invoice;
-        for (var i in invoices){
-            invoice = invoices[i];
-            // join items
-            var itemstr = "";
-            var itemqty = 0;
-            for (var i2 in invoice.items){
-                itemqty += parseInt(invoice.items[i2].qty);
-                itemstr += "("+invoice.items[i2].qty+"x "+invoice.items[i2].name+"-"+invoice.items[i2].desc+" @ "+WPOS.util.currencyFormat(invoice.items[i2].unit)+(invoice.items[i2].tax.inclusive?" tax incl. ":" tax excl. ")+WPOS.util.currencyFormat(invoice.items[i2].tax.total)+" = "+WPOS.util.currencyFormat(invoice.items[i2].price)+") \n";
+        var customers = WPOS.customers.getCustomers();
+
+        var data = {};
+        var refs = datatable.api().rows('.selected').data().map(function(row){ return row.ref }).join(',').split(',');
+
+        if (refs && refs.length > 0 && refs[0]!='') {
+            for (var i = 0; i < refs.length; i++) {
+                var ref = refs[i];
+                if (invoices.hasOwnProperty(ref))
+                    data[ref] = invoices[ref];
             }
-            // join payments
-            var paystr = "";
-            for (i2 in invoice.payments){
-                paystr += "("+invoice.payments[i2].method+"-"+WPOS.util.currencyFormat(invoice.payments[i2].amount)+") ";
-            }
-            var status = getTransactionStatus(invoices[i]);
-            var voidstr = "";
-            var refstr = "";
-            if (status !== 1){
-                // join void
-                if (invoice.hasOwnProperty("voiddata")){
-                    voidstr += WPOS.util.getDateFromTimestamp(invoice.voiddata.reason)+" - "+invoice.voiddata.reason;
-                }
-                // join refunds
-                if (invoice.hasOwnProperty("refunddata")){
-                    for (i2 in invoice.refunddata){
-                        var ritems = JSON.stringify(invoice.refunddata[i2].items);
-                        // TODO: get returned item string
-                        refstr += "(" + WPOS.util.getDateFromTimestamp(invoice.refunddata[i2].processdt) + " - "+invoice.refunddata[i2].reason+" - "+invoice.refunddata[i2].method+" - "+WPOS.util.currencyFormat(invoice.refunddata[i2].amount)+" - items: "+ritems+") ";
-                    }
-                }
-            }
-            switch (status){
-                case -2: status = "Overdue"; break;
-                case -1: status = "Open"; break;
-                case 1: status = "Closed"; break;
-                case 2: status = "Void"; break;
-                case 3: status = "Refunded"; break;
-            }
-            csv+=invoice.id+","+invoice.ref+","+WPOS.getConfigTable().users[invoice.userid].username+","+WPOS.getConfigTable().devices[invoice.devid].name+","+WPOS.getConfigTable().locations[invoice.locid].name+","
-                +invoice.custemail+","+itemstr+","+itemqty+","+paystr+","+WPOS.util.currencyFormat(invoice.subtotal)+","+invoice.discount+"%,"+WPOS.util.currencyFormat(invoice.total)+","+WPOS.util.getDateFromTimestamp(invoice.processdt)+","+invoice.dt+","+status+","+voidstr+","+refstr+"\n";
+        } else {
+            data = invoices;
         }
+
+        var csv = WPOS.data2CSV(
+            ['ID', 'Reference', 'User', 'Device', 'Location', 'Customer ID', 'Customer Email', 'Items', '# Items', 'Payments', 'Subtotal', 'Discount', 'Total', 'Balance', 'Invoice DT', 'Due DT', 'Created DT', 'Status', 'JSON Data'],
+            [
+                'id', 'ref',
+                {key:'userid', func: function(value){
+                    return WPOS.users.hasOwnProperty(value) ? WPOS.users[value].username : 'Unknown';
+                }},
+                {key:'devid', func: function(value){
+                    return WPOS.devices.hasOwnProperty(value) ? WPOS.devices[value].name : 'Unknown';
+                }},
+                {key:'locid', func: function(value){
+                    return WPOS.locations.hasOwnProperty(value) ? WPOS.locations[value].name : 'Unknown';
+                }},
+                'custid',
+                {key:'custid', func: function(value){
+                    return customers.hasOwnProperty(value) ? customers[value].email : '';
+                }},
+                {key:'items', func: function(value){
+                    var itemstr = '';
+                    for (var i in value){
+                        itemstr += value[i].qty+"x "+value[i].name+"-"+value[i].desc+" @ "+WPOS.util.currencyFormat(value[i].unit)+(value[i].tax.inclusive?" tax incl. ":" tax excl. ")+WPOS.util.currencyFormat(value[i].tax.total)+" = "+WPOS.util.currencyFormat(value[i].price)+" \n";
+                    }
+                    return itemstr;
+                }},
+                'numitems',
+                {key:'payments', func: function(value){
+                    var paystr = '';
+                    for (var i in value){
+                        paystr += value[i].method+" "+WPOS.util.currencyFormat(value[i].amount)+" ";
+                    }
+                    return paystr;
+                }},
+                'subtotal', 'discount', 'total', 'balance',
+                {key:'processdt', func: function(value){
+                    return WPOS.util.getDateFromTimestamp(value, 'Y-m-d');
+                }},
+                {key:'duedt', func: function(value){
+                    return WPOS.util.getDateFromTimestamp(value, 'Y-m-d');
+                }},
+                'dt',
+                {key:'status', func: function(value){
+                    var status;
+                    switch (value){
+                        case -2: status = "Overdue"; break;
+                        case -1: status = "Open"; break;
+                        case 1: status = "Closed"; break;
+                        case 2: status = "Void"; break;
+                        case 3: status = "Refunded"; break;
+                    }
+                    return status;
+                }},
+                {key:'id', func: function(value, record){
+                    return record;
+                }}
+            ],
+            data
+        );
 
         WPOS.initSave("invoices-"+WPOS.util.getDateFromTimestamp(stime)+"-"+WPOS.util.getDateFromTimestamp(etime), csv);
     }
@@ -256,8 +291,9 @@
         datatable = $('#invoicestable').dataTable({
             "bProcessing": true,
             "aaData": itemarray,
-            "aaSorting": [[8, "desc"],[ 0, "desc" ]],
+            "aaSorting": [[8, "desc"],[ 1, "desc" ]],
             "aoColumns": [
+                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false },
                 { "sType": "numeric", "mData":"id" },
                 { "sType": "string", "mData":function(data, type, val){ return '<a class="reflabel" title="'+data.ref+'" href="">'+data.ref.split("-")[2]+'</a>'; } },
                 { "sType": "string", "mData":function(data, type, val){ return (customers.hasOwnProperty(data.custid)?customers[data.custid].name:"N/A");} },
@@ -270,6 +306,7 @@
                 { "sType": "html", mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="WPOS.transactions.openTransactionDialog($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'));"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="WPOS.transactions.deleteTransaction($(this).closest(\'tr\').find(\'.reflabel\').attr(\'title\'))"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
             ],
             "columns": [
+                {},
                 {type: "numeric"},
                 {type: "string"},
                 {type: "string"},
@@ -280,7 +317,40 @@
                 {type: "currency"},
                 {type: "html"},
                 {}
-            ]
+            ],
+            "fnInfoCallback": function( oSettings, iStart, iEnd, iMax, iTotal, sPre ) {
+                // Add selected row count to footer
+                var selected = this.api().rows('.selected').count();
+                return sPre+(selected>0 ? '<br/>'+selected+' row(s) selected':'');
+            }
+        });
+
+        // row selection checkboxes
+        datatable.find("tbody").on('click', '.dt-select-cb', function(e){
+            var row = $(this).parents().eq(3);
+            if (row.hasClass('selected')) {
+                row.removeClass('selected');
+            } else {
+                row.addClass('selected');
+            }
+            datatable.api().draw(false);
+            e.stopPropagation();
+        });
+
+        $('table.dataTable th input:checkbox').on('change' , function(){
+            var that = this;
+            $(this).closest('table.dataTable').find('tr > td:first-child input:checkbox')
+                .each(function(){
+                    var row = $(this).parents().eq(3);
+                    if ($(that).is(":checked")) {
+                        row.addClass('selected');
+                        $(this).prop('checked', true);
+                    } else {
+                        row.removeClass('selected');
+                        $(this).prop('checked', false);
+                    }
+                });
+            datatable.api().draw(false);
         });
 
         // add controls

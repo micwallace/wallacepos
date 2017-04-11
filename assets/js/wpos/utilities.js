@@ -23,9 +23,10 @@
 
 function WPOSUtil() {
     // DATE
-    this.getDateFromTimestamp = function (timestamp) {
+    this.getDateFromTimestamp = function (timestamp, format) {
         // get the config if available
-        var format = WPOS.getConfigTable().general.dateformat;
+        if (!format)
+            format = WPOS.getConfigTable().general.dateformat;
         var date = new Date(timestamp);
         var year = date.getFullYear();
         var month = date.getMonth() + 1;
@@ -46,7 +47,7 @@ function WPOSUtil() {
         if (format == "d/m/y" || format == "m/d/y") {
             datestr = (format == "d/m/y" ? day + "/" + month : month + "/" + day   ) + "/" + year.toString().substring(2, 4) + " " + hour + ":" + min + ":" + sec;
         } else {
-            datestr = year + "/" + month + "/" + day + " " + hour + ":" + min + ":" + sec;
+            datestr = year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec;
         }
         return datestr;
     };

@@ -386,6 +386,7 @@ function WPOSTransactions() {
             $('#transitemid').val(0);
             $('#transitemsitemid').val(0);
             $('#transitemcost').val("0.00");
+            $('#transitemunit').data("unit_original", 0.00);
             $('#transitemprice').text(WPOS.util.currencyFormat(0.00));
             itemdialog.dialog('option', 'title', 'Add Item');
         }
@@ -397,11 +398,13 @@ function WPOSTransactions() {
     function setDisabledItemFields() {
         if ($('#transitemsitemid').val() != 0) {
             $('#transitemname').prop("disabled", true);
-            $('#transitemtaxid').prop("disabled", true);
+            $('#transitemtaxid').prop("disabled", (!WPOS.getConfigTable().pos.hasOwnProperty('taxedit') || WPOS.getConfigTable().pos.taxedit=='no'));
             var unitfield = $('#transitemunit');
-            if (unitfield.val() !== "") {
-                unitfield.prop("disabled", true);
-            }
+            var disableedit = (unitfield.val() !== "" && (!WPOS.getConfigTable().pos.hasOwnProperty('priceedit') || WPOS.getConfigTable().pos.priceedit=='blank'));
+            unitfield.prop("disabled", disableedit);
+            unitfield = $('#transitemcost');
+            disableedit = (unitfield.val() !== "" && (!WPOS.getConfigTable().pos.hasOwnProperty('priceedit') || WPOS.getConfigTable().pos.priceedit=='blank'));
+            unitfield.prop("disabled", disableedit);
         } else {
             $('#transitemname').prop("disabled", false);
             $('#transitemtaxid').prop("disabled", false);
@@ -555,6 +558,7 @@ function WPOSTransactions() {
         var data = {id: curid, sitemid: $("#transitemsitemid").val(), qty: $("#transitemqty").val(), name: $('#transitemname').val(), alt_name: $('#transitemaltname').val(), desc: $('#transitemdesc').val(), cost: $('#transitemcost').val(), unit: $('#transitemunit').val(), taxid: $('#transitemtaxid').val(), tax: JSON.parse($('#transitemtaxval').val()), price: $('#transitempriceval').val()};
         if (itemid == 0) {
             action = "invoices/items/add";
+            data.unit_original = $('#transitemunit').data("unit_original");
         } else {
             action = "invoices/items/edit";
             data.itemid = itemid;
@@ -1050,7 +1054,7 @@ function WPOSTransactions() {
                     $('#transitemdesc').val(ui.item.description);
                     $('#transitemqty').val(ui.item.qty);
                     $('#transitemcost').val(ui.item.cost);
-                    $('#transitemunit').val(ui.item.price);
+                    $('#transitemunit').val(ui.item.price).data("unit_original", ui.item.price);
                     $('#transitemtaxid').val(ui.item.taxid);
                     // lock fields
                     setDisabledItemFields();

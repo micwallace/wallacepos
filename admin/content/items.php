@@ -22,7 +22,7 @@
 <table id="itemstable" class="table table-striped table-bordered table-hover dt-responsive" style="width:100%;">
 <thead>
 <tr>
-    <th data-priority="0" class="center noexport">
+    <th data-priority="0" class="center">
         <label>
             <input type="checkbox" class="ace" />
             <span class="lbl"></span>
@@ -244,8 +244,9 @@
             "bProcessing": true,
             "aaData": itemarray,
             "aaSorting": [[ 2, "asc" ]],
+            "aLengthMenu": [ 10, 25, 50, 100, 200],
             "aoColumns": [
-                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false, sClass:"noexport" },
+                { mData:null, sDefaultContent:'<div style="text-align: center"><label><input class="ace dt-select-cb" type="checkbox"><span class="lbl"></span></label><div>', bSortable: false },
                 { "mData":"id" },
                 { "mData":"name" },
                 { "mData":"description" },
@@ -255,7 +256,7 @@
                 { "mData":"code" },
                 { "mData":function(data,type,val){return (categories.hasOwnProperty(data.categoryid)?categories[data.categoryid].name:'None'); } },
                 { "mData":function(data,type,val){return (suppliers.hasOwnProperty(data.supplierid)?suppliers[data.supplierid].name:'None'); } },
-                { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="openEditDialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="removeItem($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false, sClass: "noexport" }
+                { mData:null, sDefaultContent:'<div class="action-buttons"><a class="green" onclick="openEditDialog($(this).closest(\'tr\').find(\'td\').eq(1).text());"><i class="icon-pencil bigger-130"></i></a><a class="red" onclick="removeItem($(this).closest(\'tr\').find(\'td\').eq(1).text())"><i class="icon-trash bigger-130"></i></a></div>', "bSortable": false }
             ],
             "columns": [
                 {},
@@ -581,10 +582,34 @@
         datatable.api().draw(false);
     }
     function exportItems(){
-        var data  = WPOS.table2CSV($("#itemstable"));
+
         var filename = "items-"+WPOS.util.getDateFromTimestamp(new Date());
         filename = filename.replace(" ", "");
-        WPOS.initSave(filename, data);
+
+        var data = {};
+        var ids = datatable.api().rows('.selected').data().map(function(row){ return row.id }).join(',').split(',');
+
+        if (ids && ids.length > 0 && ids[0]!='') {
+            for (var i = 0; i < ids.length; i++) {
+                var id = ids[i];
+                if (stock.hasOwnProperty(id))
+                    data[id] = stock[id];
+            }
+        } else {
+            data = stock;
+        }
+
+        var csv = WPOS.data2CSV(
+            ['ID', 'Stock Code', 'Name', 'Description', 'Default Qty', 'Unit Cost', 'Unit Price', 'Tax Rule Name', 'Category Name', 'Supplier Name'],
+            ['id', 'code', 'name', 'description', 'qty', 'cost', 'price',
+                {key:'taxid', func: function(value){ var taxtable = WPOS.getTaxTable().rules; return taxtable.hasOwnProperty(value) ? taxtable[value].name : 'Unknown'; }},
+                {key:'categoryid', func: function(value){ return categories.hasOwnProperty(value) ? categories[value].name : 'Unknown'; }},
+                {key:'supplierid', func: function(value){ return suppliers.hasOwnProperty(value) ? suppliers[value].name : 'Unknown'; }}
+            ],
+            data
+        );
+
+        WPOS.initSave(filename, csv);
     }
 
     var importdialog = null;

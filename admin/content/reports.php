@@ -64,7 +64,7 @@
                 populateTakings("Takings Count", "Method");
                 break;
             case "stats/itemselling":
-                populateSelling("Item Sales");
+                populateItems("Item Sales");
                 break;
             case "stats/categoryselling":
                 populateSelling("Category Sales");
@@ -137,6 +137,20 @@
         for (var i in repdata){
             rowdata = repdata[i];
             html += '<tr><td><a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refs+'\');">'+rowdata.name+'</a></td><td>'+rowdata.soldqty+'</td><td>'+WPOS.util.currencyFormat(rowdata.soldtotal)+'</td><td>'+rowdata.refundqty+'</td><td>'+WPOS.util.currencyFormat(rowdata.refundtotal)+'</td><td>'+WPOS.util.currencyFormat(rowdata.balance)+'</td></tr>';
+        }
+
+        html += "</tbody></table>";
+
+        $("#reportcontain").html(html);
+    }
+
+    function populateItems(title){
+        var html = getReportHeader(title);
+        html += "<table class='table table-stripped' style='width: 100%'><thead><tr><td>Name</td><td># Sold</td><td>Discounts</td><td>Tax</td><td>Total</td><td># Refunded</td><td>Total</td><td>Balance</td></tr></thead><tbody>";
+        var rowdata;
+        for (var i in repdata){
+            rowdata = repdata[i];
+            html += '<tr><td><a onclick="WPOS.transactions.openTransactionList(\''+rowdata.refs+'\');">'+rowdata.name+'</a></td><td>'+rowdata.soldqty+'</td><td>'+WPOS.util.currencyFormat(rowdata.discounttotal)+'</td><td>'+WPOS.util.currencyFormat(rowdata.taxtotal)+'</td><td>'+WPOS.util.currencyFormat(rowdata.soldtotal)+'</td><td>'+rowdata.refundqty+'</td><td>'+WPOS.util.currencyFormat(rowdata.refundtotal)+'</td><td>'+WPOS.util.currencyFormat(rowdata.balance)+'</td></tr>';
         }
 
         html += "</tbody></table>";

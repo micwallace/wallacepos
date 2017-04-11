@@ -90,7 +90,10 @@
         });
         data['payinst'] = $("#payinst").html();
         data['emailmsg'] = $("#emailmsg").html();
-        WPOS.sendJsonData("settings/invoice/set", JSON.stringify(data));
+        var result = WPOS.sendJsonData("settings/invoice/set", JSON.stringify(data));
+        if (result !== false){
+            WPOS.setConfigSet('invoice', result);
+        }
         // hide loader
         WPOS.util.hideLoader();
     }

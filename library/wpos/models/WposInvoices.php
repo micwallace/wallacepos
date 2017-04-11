@@ -174,7 +174,8 @@ class WposInvoices {
         if (isset($this->invoice->items) && sizeof($this->invoice->items)>0){
             $itemMdl = new SaleItemsModel();
             foreach ($this->invoice->items as $key => $item){
-                $itemid = $itemMdl->create($this->id, $item->sitemid, 0, $item->qty, $item->name, $item->desc, $item->taxid, $item->tax, $item->cost, $item->unit, $item->price);
+                $unit_original = (isset($item->unit_original) ? $item->unit_original : $item->unit);
+                $itemid = $itemMdl->create($this->id, $item->sitemid, 0, $item->qty, $item->name, $item->desc, $item->taxid, $item->tax, $item->cost, $item->unit, $item->price, $unit_original);
                 if ($itemid===false){
                     // Roll back transaction
                     $this->deleteInvoice();
@@ -345,7 +346,8 @@ class WposInvoices {
         }
         // insert item record
         $itemMdl = new SaleItemsModel();
-        if (($itemid = $itemMdl->create($this->data->id, $this->data->sitemid, 0, $this->data->qty, $this->data->name, $this->data->desc, $this->data->taxid, $this->data->tax, $this->data->cost, $this->data->unit, $this->data->price))===false){
+        $unit_original = (isset($this->data->unit_original) ? $this->data->unit_original : $this->data->unit);
+        if (($itemid = $itemMdl->create($this->data->id, $this->data->sitemid, 0, $this->data->qty, $this->data->name, $this->data->desc, $this->data->taxid, $this->data->tax, $this->data->cost, $this->data->unit, $this->data->price, $unit_original))===false){
             $result['error'] = "Could not insert item record: ".$itemMdl->errorInfo;
             return $result;
         }

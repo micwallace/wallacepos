@@ -209,6 +209,8 @@ class WposAdminStats {
                 }
                 $stats[$item['groupid']]->refs = $item['refs'];
                 $stats[$item['groupid']]->soldqty = $item['itemnum'];
+                $stats[$item['groupid']]->discounttotal = number_format($item['discounttotal'], 2, ".", "");
+                $stats[$item['groupid']]->taxtotal = number_format($item['taxtotal'], 2, ".", "");
                 $stats[$item['groupid']]->soldtotal = number_format($item['itemtotal'], 2, ".", "");
                 $stats[$item['groupid']]->refundqty = $item['refnum'];
                 $stats[$item['groupid']]->refundtotal = number_format($item['reftotal'], 2, ".", "");

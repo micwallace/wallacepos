@@ -15,7 +15,7 @@ $(function() {
         // the constructor
         _create: function() {
             var widget = this;
-            var html = '<input id="file_input" type="file" name="file" accept="text/csv" />';
+            var html = '<input id="file_input" type="file" name="file" accept=".csv, text/csv, text/x-csv, text/plain" />';
             html += '<label for="column_headers">CSV includes column header</label><br/>';
             var cb = $('<br/><input id="column_headers" type="checkbox" '+(this.options.csvHasHeader ? 'checked="checked"' : '')+'/>');
             cb.on('click', function(){
@@ -78,8 +78,6 @@ $(function() {
 
             file_input.ezdz({
                 validators: {
-                    maxWidth: 600,
-                    maxHeight: 400,
                     maxSize: 10000000
                 },
                 accept: function(file) {
@@ -93,8 +91,12 @@ $(function() {
                     });
                     $(".ezdz-accept div").append(remove_btn);
                 },
-                reject: function() {
-                    alert("Only CSV files less than 10mb can be imported.");
+                reject: function(filname, errors) {
+                    if (errors.maxSize) {
+                        alert("Only CSV files less than 10mb can be imported.");
+                        return;
+                    }
+                    alert("There was an error loading the file: "+JSON.stringify(errors));
                 }
             });
 

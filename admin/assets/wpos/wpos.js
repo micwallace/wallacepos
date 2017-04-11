@@ -643,6 +643,10 @@ function WPOSAdmin(){
         return configtable;
     };
 
+    this.setConfigSet = function (key, data) {
+        configtable[key] = data;
+    };
+
     this.getTaxTable = function () {
         if (configtable == null) {
             return false;
@@ -676,7 +680,6 @@ function WPOSAdmin(){
     this.table2CSV = function(el) {
 
         var csvData = [];
-        var headerArr = [];
 
         //header
         var tmpRow = []; // construct header avalible array
@@ -693,31 +696,71 @@ function WPOSAdmin(){
             $(this).find('td').each(function() {
                 if (!$(this).hasClass('noexport')) tmpRow[tmpRow.length] = formatData($(this).text());
             });
-            row2CSV(tmpRow);
+            tmpRow = row2CSV(tmpRow);
+            if (tmpRow!=null)
+                csvData[csvData.length] = tmpRow;
         });
 
-        var mydata = csvData.join('\n');
-        return mydata;
+        return csvData.join('\n');
+    };
 
-        function row2CSV(tmpRow) {
-            var tmp = tmpRow.join(''); // to remove any blank rows
-            // alert(tmp);
-            if (tmpRow.length > 0 && tmp != '') {
-                var mystr = tmpRow.join(",");
-                csvData[csvData.length] = mystr;
+    this.data2CSV = function(headers, fields, data) {
+
+        var csvData = [];
+
+        //header
+        csvData[csvData.length] = row2CSV(headers);
+
+        for (var i in data){
+            if (data.hasOwnProperty(i)) {
+                var record = data[i];
+                var tmpRow = [];
+                for (var x = 0; x < fields.length; x++) {
+                    var key = fields[x];
+                    if (typeof key === 'object'){
+                        tmpRow[tmpRow.length] = formatData(key.func(record[key.key], record));
+                    } else {
+                        if (record.hasOwnProperty(key)) {
+                            tmpRow[tmpRow.length] = formatData(record[key]);
+                        } else {
+                            tmpRow[tmpRow.length] = '';
+                        }
+                    }
+                }
+                tmpRow = row2CSV(tmpRow);
+                if (tmpRow!=null)
+                    csvData[csvData.length] = tmpRow;
             }
         }
-        function formatData(input) {
-            // replace " with â€œ
-            var regexp = new RegExp(/["]/g);
-            var output = input.replace(regexp, "â€œ");
-            //HTML
-            var regexp = new RegExp(/\<[^\<]+\>/g);
-            var output = output.replace(regexp, "");
-            if (output == "") return '';
-            return '"' + output + '"';
-        }
+
+        return csvData.join('\n');
+
     };
+
+    function row2CSV(tmpRow) {
+        var tmp = tmpRow.join(''); // to remove any blank rows
+        // alert(tmp);
+        if (tmpRow.length > 0 && tmp != '') {
+            return tmpRow.join(",");
+        }
+        return null;
+    }
+
+    function formatData(input) {
+        if (typeof input === 'number')
+            return input;
+
+        if (typeof input === 'object')
+            input = JSON.stringify(input);
+        // replace " with â€œ
+        var regexp = new RegExp(/["]/g);
+        var output = input.replace(regexp, '""');
+        //HTML
+        regexp = new RegExp(/\<[^\<]+\>/g);
+        output = output.replace(regexp, "");
+        if (output == "") return '';
+        return '"' + output + '"';
+    }
 
     // Load globally accessable objects
     this.util = new WPOSUtil();

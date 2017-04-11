@@ -392,7 +392,10 @@
         data['altlabels'] = altlabels;
         data['gcontact'] = $("#gcontact").is(":checked")?1:0;
         data['email_tls'] = $("#email_tls").is(":checked");
-        WPOS.sendJsonData("settings/general/set", JSON.stringify(data));
+        var result = WPOS.sendJsonData("settings/general/set", JSON.stringify(data));
+        if (result !== false){
+            WPOS.setConfigSet('general', result);
+        }
         // hide loader
         WPOS.util.hideLoader();
     }

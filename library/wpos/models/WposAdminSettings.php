@@ -238,6 +238,15 @@ class WposAdminSettings {
 
                     // Success; log data
                     Logger::write("System configuration updated:".$this->name, "CONFIG", json_encode($conf));
+
+                    // Return config including server side value; remove sensitive tokens
+                    if ($this->name=="general"){
+                        unset($this->curconfig);
+                    } else if ($this->name=="accounting"){
+                        unset($this->curconfig);
+                    }
+
+                    $result['data'] = $this->curconfig;
                 }
             } else {
                 // if current settings are null, create a new record with the specified name

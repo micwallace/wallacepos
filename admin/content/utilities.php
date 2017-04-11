@@ -29,6 +29,9 @@
                         <button id="noderestartbtn" class="btn btn-warning hidden" onclick="restartNode();">Restart</button>
                 </div>
                 <br/>
+                <?php
+                    if ($_SERVER['SERVER_NAME']!='demo.wallacepos.com'){
+                ?>
                 <form class="form-horizontal">
                     <div class="space-4"></div>
                     <div class="form-group">
@@ -52,6 +55,7 @@
                 <div class="text-center">
                     <button class="btn btn-success" onclick="saveFeedSettings();"><i class="icon-save"></i> Save</button>
                 </div>
+                <?php } ?>
             </div>
         </div>
     </div>

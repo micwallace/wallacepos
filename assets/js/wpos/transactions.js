@@ -315,8 +315,8 @@ function WPOSTransactions() {
         $("#transreftime").text(WPOS.util.getDateFromTimestamp(record.processdt));
         var config = WPOS.getConfigTable();
         $("#transrefuser").text((config.users.hasOwnProperty(record.userid) ? config.users[record.userid].username : 'NA'));
-        $("#transrefdev").text((config.devices.hasOwnProperty(record.devid) ? config.devices[record.devid].name : 'NA'));
-        $("#transrefloc").text((config.locations.hasOwnProperty(record.locid) ? config.locations[record.locid].name : 'NA'));
+        $("#transrefdev").text((config.devices.hasOwnProperty(record.deviceid) ? config.devices[record.deviceid].name : 'NA'));
+        $("#transrefloc").text((config.locations.hasOwnProperty(record.locationid) ? config.locations[record.locationid].name : 'NA'));
         $("#transrefreason").text(record.reason);
     }
 
@@ -353,7 +353,7 @@ function WPOSTransactions() {
         var dtlbtn = $("#refpaydtlbtn");
         if (record.hasOwnProperty('paydata')){
             dtlbtn.removeClass('hide');
-            console.log(record.paydata);
+            //console.log(record.paydata);
             dtlbtn.data('paydata', record.paydata);
         } else {
             dtlbtn.addClass('hide');
