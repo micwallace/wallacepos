@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
+    'PHPMailer\\PHPMailer\\' => array($vendorDir . '/phpmailer/phpmailer/src'),
     'Ifsnop\\' => array($vendorDir . '/ifsnop/mysqldump-php/src/Ifsnop'),
     'ElephantIO\\' => array($vendorDir . '', $vendorDir . '/wisembly/elephant.io/src', $vendorDir . '/wisembly/elephant.io/test'),
 );
