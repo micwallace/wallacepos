@@ -305,6 +305,11 @@
                     </div>
                     <div class="space-4"></div>
                     <div class="form-group">
+                        <div class="col-sm-5"><label>SMTP Auth Required:</label></div>
+                        <div class="col-sm-5"><input type="checkbox" id="smtp_auth" /></div>
+                    </div>
+                    <div class="space-4"></div>
+                    <div class="form-group">
                         <div class="col-sm-5"><label>SMTP Username:</label></div>
                         <div class="col-sm-5"><input type="text" id="email_user" /></div>
                     </div>
@@ -392,6 +397,7 @@
         data['altlabels'] = altlabels;
         data['gcontact'] = $("#gcontact").is(":checked")?1:0;
         data['email_tls'] = $("#email_tls").is(":checked");
+	data['smtp_auth'] = $("#smtp_auth").is(":checked");
         var result = WPOS.sendJsonData("settings/general/set", JSON.stringify(data));
         if (result !== false){
             WPOS.setConfigSet('general', result);
@@ -420,6 +426,7 @@
             }
         }
         $("#email_tls").prop('checked', options.email_tls);
+	$("#smtp_auth").prop('checked', options.smtp_auth);
         setGoogleUI();
         $("#bizlogoprev").attr("src", options.bizlogo);
     }

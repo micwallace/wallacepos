@@ -56,6 +56,9 @@ class WposMail {
         if ($config->email_tls==true)
             $mail->SMTPSecure = 'tls'; // Enable encryption, 'ssl' also accepted
 
+        if ($config->smtp_auth==true)
+            $mail->SMTPAuth = true; // Require SMTP authorization
+
         if ($config->email_user!="") {
             $mail->Username = $config->email_user;
             $mail->Password = $config->email_pass;
