@@ -36,7 +36,7 @@ class WposMail {
             $this->genconfig = $this->configMdl->getSettingsObject("general");
         }
         // Initialize mail object
-        include $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/PHPMailerAutoload.php";
+        include $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/autoload.php";
         $this->mail = new PHPMailer();
     }
 
