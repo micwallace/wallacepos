@@ -21,6 +21,7 @@
  * @author     Michael B Wallace <micwallace@gmx.com>
  * @since      File available since 12/04/14 3:44 PM
  */
+use PHPMailer\PHPMailer\PHPMailer;
 class WposMail {
     private $mail;
     private $configMdl;
