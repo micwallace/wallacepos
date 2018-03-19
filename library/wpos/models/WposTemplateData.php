@@ -57,6 +57,7 @@ class WposTemplateData
     public $business_number;
     public $invoice_duedt;
     public $customer = false;
+    public $invoice_notes;
 
     public $Utils;
 
@@ -165,6 +166,7 @@ class WposTemplateData
             $this->invoice_duedt = $this->Utils->getDateFromTimestamp($data->duedt, $config['general']->dateformat);
             $this->invoice_paid = $data->total - $data->balance;
             $this->invoice_balance = $data->balance;
+	    $this->invoice_notes = $data->notes;
             if (isset($data->custid) && $data->custid>0) {
                 $custMdl = new WposAdminCustomers();
                 $this->customer = $custMdl->getCustomerData($data->custid);
