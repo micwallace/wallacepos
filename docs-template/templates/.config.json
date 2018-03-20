@@ -3,6 +3,7 @@
   "email_host":"127.0.0.1",
   "email_port":"25",
   "email_tls":true,
+  "smtp_auth":true,
   "email_user":"",
   "email_pass":"",
   "feedserver_port":8080,

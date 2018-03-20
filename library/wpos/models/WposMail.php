@@ -21,6 +21,7 @@
  * @author     Michael B Wallace <micwallace@gmx.com>
  * @since      File available since 12/04/14 3:44 PM
  */
+use PHPMailer\PHPMailer\PHPMailer;
 class WposMail {
     private $mail;
     private $configMdl;
@@ -35,7 +36,7 @@ class WposMail {
             $this->genconfig = $this->configMdl->getSettingsObject("general");
         }
         // Initialize mail object
-        include $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/PHPMailerAutoload.php";
+        include $_SERVER['DOCUMENT_ROOT'].$_SERVER['APP_ROOT']."library/autoload.php";
         $this->mail = new PHPMailer();
     }
 
@@ -54,6 +55,9 @@ class WposMail {
 
         if ($config->email_tls==true)
             $mail->SMTPSecure = 'tls'; // Enable encryption, 'ssl' also accepted
+
+        if ($config->smtp_auth==true)
+            $mail->SMTPAuth = true; // Require SMTP authorization
 
         if ($config->email_user!="") {
             $mail->Username = $config->email_user;
