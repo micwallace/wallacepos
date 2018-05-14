@@ -18,9 +18,9 @@ function create_manifest() {
     $hashes = "";
     $list = "";
     // add the main app file
-    $masterfile = "index.html";
+    $masterfile = "index.php";
     // Add masterfile into manifest as /, this is what the client should request.
-    $list.= "/index.html\n";
+    $list.= "/index.php\n";
     $hashes.= md5_file($_SERVER['DOCUMENT_ROOT'].$masterfile);
     // Iterate through assets
     $dir = new RecursiveDirectoryIterator("assets");
