@@ -1,5 +1,5 @@
 # WallacePOS
-## An intuitive & modern web based POS system
+## An Intuitive Modern Web based POS System
 ![logo](https://wallacepos.com/images/wallacepos_logo_600.png)
 
 WallacePOS uses the power of the modern web to provide an easy to use & extensible POS system.
