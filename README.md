@@ -1,3 +1,5 @@
+### Note: WallacePOS is not longer actively maintained. If you would like to become a maintainer of this project please let me know.
+
 # WallacePOS
 ## An intuitive & modern web based POS system
 ![logo](https://wallacepos.com/images/wallacepos_logo_600.png)
