@@ -277,6 +277,12 @@ function WPOS() {
                     // set current user will possibly get passed additional data from server in the future but for now just username and pass is enough
                     setCurrentUser(response);
                     updateAuthTable(response);
+
+                    $.ajaxSetup({
+                        beforeSend: function(xhr, settings) {
+                            xhr.setRequestHeader("anti-csrf-token", (currentuser ? currentuser.csrf_token : ""));
+                        }
+                    });
                 }
                 if (callback)
                     callback(response!==false);
@@ -294,6 +300,12 @@ function WPOS() {
             // set current user will possibly get passed additional data from server in the future but for now just username and pass is enough
             setCurrentUser(response);
             updateAuthTable(response);
+
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    xhr.setRequestHeader("anti-csrf-token", (currentuser ? currentuser.csrf_token : ""));
+                }
+            });
             return true;
         } else {
             return false;

@@ -13,7 +13,8 @@
     "require": {
         "php": ">=5.4.0",
         "wisembly/elephant.io": "~3.0",
-        "ifsnop/mysqldump-php":"2.*"
+        "ifsnop/mysqldump-php":"2.*",
+        "ezyang/htmlpurifier": "^4.10"
     },
     "autoload": {
         "psr-4": {

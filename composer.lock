@@ -4,9 +4,55 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "6362c55ce67f05f2b64127eaa9c8bb4c",
-    "content-hash": "b1ceb2e65a55c70803f47206b70bd67a",
+    "content-hash": "8b0f0ebece34c5a993d02d48c5b3df74",
     "packages": [
+        {
+            "name": "ezyang/htmlpurifier",
+            "version": "v4.10.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ezyang/htmlpurifier.git",
+                "reference": "d85d39da4576a6934b72480be6978fb10c860021"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ezyang/htmlpurifier/zipball/d85d39da4576a6934b72480be6978fb10c860021",
+                "reference": "d85d39da4576a6934b72480be6978fb10c860021",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.2"
+            },
+            "require-dev": {
+                "simpletest/simpletest": "^1.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "HTMLPurifier": "library/"
+                },
+                "files": [
+                    "library/HTMLPurifier.composer.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL"
+            ],
+            "authors": [
+                {
+                    "name": "Edward Z. Yang",
+                    "email": "admin@htmlpurifier.org",
+                    "homepage": "http://ezyang.com"
+                }
+            ],
+            "description": "Standards compliant HTML filter written in PHP",
+            "homepage": "http://htmlpurifier.org/",
+            "keywords": [
+                "html"
+            ],
+            "time": "2018-02-23T01:58:20+00:00"
+        },
         {
             "name": "ifsnop/mysqldump-php",
             "version": "v2.2",
@@ -57,7 +103,7 @@
                 "pdo",
                 "sqlite"
             ],
-            "time": "2016-09-07 06:56:07"
+            "time": "2016-09-07T06:56:07+00:00"
         },
         {
             "name": "psr/log",
@@ -104,7 +150,7 @@
                 "psr",
                 "psr-3"
             ],
-            "time": "2016-10-10 12:19:37"
+            "time": "2016-10-10T12:19:37+00:00"
         },
         {
             "name": "wisembly/elephant.io",
@@ -170,7 +216,7 @@
                 "real time",
                 "websocket"
             ],
-            "time": "2016-10-25 07:52:01"
+            "time": "2016-10-25T07:52:01+00:00"
         }
     ],
     "packages-dev": [],

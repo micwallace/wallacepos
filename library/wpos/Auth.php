@@ -74,13 +74,24 @@ class Auth{
      */
     public function getUser(){
         if (isset($_SESSION['userId'])) {
-            $user = ["id"=>$_SESSION['userId'], "username"=>$_SESSION['username'], "isadmin"=>$_SESSION['isadmin'], "sections"=>$_SESSION['permissions']['sections']];
+            $user = ["id"=>$_SESSION['userId'], "username"=>$_SESSION['username'], "isadmin"=>$_SESSION['isadmin'], "sections"=>$_SESSION['permissions']['sections'], "csrf_token"=>$_SESSION['csrf_token']];
             // add auth tokens if set
             if ($this->authTokens!==null){
                 $user = array_merge($user, $this->authTokens);
             }
             return $user;
         }
+        return null;
+    }
+
+    /**
+     * @return null user id or null on failure
+     */
+    public function getCsrfToken(){
+        if (isset($_SESSION['csrf_token'])) {
+            return $_SESSION['csrf_token'];
+        }
+
         return null;
     }
 
@@ -187,6 +198,13 @@ class Auth{
             $_SESSION['isadmin']  = $user['admin'];
             $_SESSION['permissions']  = json_decode($user['permissions'], true);
 
+            // CSRF Token
+            if (function_exists('mcrypt_create_iv')) {
+                $_SESSION['csrf_token'] = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));
+            } else {
+                $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+            }
+
             if ($getToken!==false)
                 $this->setNewSessionToken($user['id'], $user['hash']);
 
@@ -237,6 +255,14 @@ class Auth{
                 $_SESSION['userId']   = $user['id'];
                 $_SESSION['isadmin']  = $user['admin'];
                 $_SESSION['permissions']  = json_decode($user['permissions'], true);
+
+                // CSRF Token
+                if (function_exists('mcrypt_create_iv')) {
+                    $_SESSION['csrf_token'] = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));
+                } else {
+                    $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+                }
+
                 //$this->hash = $user['hash'];
                 $this->setNewSessionToken($user['id'], $user['hash']);
                 // log data

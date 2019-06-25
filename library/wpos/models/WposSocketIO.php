@@ -77,7 +77,7 @@ class WposSocketIO {
             $this->elephant->close();
         } catch(Exception $e){
             restore_error_handler();
-            return false;
+            return $e->getMessage();
         }
         restore_error_handler();
         return true;

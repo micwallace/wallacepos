@@ -144,7 +144,15 @@ function WPOSAdmin(){
         getLoginStatus(function(user){
             if (user!=false){
                 if (user.isadmin==1 || (user.sections!=null && user.sections.access!='no')){
+
                     curuser = user;
+
+                    $.ajaxSetup({
+                        beforeSend: function(xhr, settings) {
+                            xhr.setRequestHeader("anti-csrf-token", (curuser ? curuser.csrf_token : ""));
+                        }
+                    });
+
                     WPOS.initAdmin();
                 } else {
                     alert("You do not have permission to enter this area");
@@ -211,7 +219,15 @@ function WPOSAdmin(){
         WPOS.sendJsonDataAsync("auth", JSON.stringify({username: username, password: password}), function(user){
             if (user!==false){
                 if (user.isadmin==1 || (user.sections!=null && user.sections.access!='no')){
+
                     curuser = user;
+
+                    $.ajaxSetup({
+                        beforeSend: function(xhr, settings) {
+                            xhr.setRequestHeader("anti-csrf-token", (curuser ? curuser.csrf_token : ""));
+                        }
+                    });
+
                     WPOS.initAdmin();
                 } else {
                     alert("You do not have permission to enter this area");

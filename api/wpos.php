@@ -25,6 +25,7 @@
 $_SERVER['APP_ROOT'] = "/";
 
 require($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/config.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/autoload.php');
 // setup api error handling
 set_error_handler("errorHandler", E_ERROR | E_PARSE);
 set_error_handler("warningHandler", E_WARNING);
@@ -91,9 +92,23 @@ if (!$auth->isLoggedIn()) {
     $result['error'] = "Access Denied!";
     returnResult($result);
 }
+
+if ($_SERVER['HTTP_ANTI_CSRF_TOKEN'] != $auth->getCsrfToken()) {
+    $result['errorCode'] = "auth";
+    $result['error'] = "CSRF token invalid. Please try reloading the page.";
+    returnResult($result);
+}
+
 // Decode JSON data if provided
 if (isset($_REQUEST['data']) && $_REQUEST['data']!=""){
-    if (($requests=json_decode($_REQUEST['data']))==false){
+
+    // Easier to sanitize in JSON format all at once.
+    $config = HTMLPurifier_Config::createDefault();
+    $purifier = new HTMLPurifier($config);
+    $cleanData = $purifier->purify($_REQUEST['data']);
+
+    if (($requests=json_decode($cleanData))==false){
+        $result['errorCode'] = "request";
         $result['error'] = "Could not parse the provided json request";
         returnResult($result);
     }
@@ -696,8 +711,19 @@ function routeApiCall($action, $data, $result) {
 
         case "file/upload":
             if (isset($_FILES['file'])) {
+
                 $uploaddir = 'docs';
+
+                $file_type = $_FILES['foreign_character_upload']['type']; //returns the mimetype
+
+                $allowed = array("image/jpeg", "image/gif", "image/png", "application/pdf");
+                if(!in_array($file_type, $allowed)) {
+                    $result['error'] = 'Only jpg, gif, and pdf files are allowed.';
+                    break;
+                }
+
                 $newpath = $uploaddir . DIRECTORY_SEPARATOR . basename($_FILES['file']['name']);
+
                 if (move_uploaded_file($_FILES['file']['tmp_name'], $_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . $newpath) !== false) {
                     $result['data'] = ["path" => "/" . $newpath];
                 } else {
