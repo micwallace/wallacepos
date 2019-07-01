@@ -1,0 +1,847 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-05-14 14:12-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: index.php:80 index.php:190
+msgid "Till"
+msgstr "Caja"
+
+#: index.php:81 index.php:289
+msgid "Sales"
+msgstr "Ventas"
+
+#: index.php:82
+msgid "Reports"
+msgstr "Reportes"
+
+#: index.php:83
+msgid "Settings"
+msgstr "Configuración"
+
+#: index.php:84
+msgid "Logout"
+msgstr "Salir"
+
+#: index.php:86
+msgid "Admin"
+msgstr "Admin"
+
+#: index.php:87
+msgid "Lock"
+msgstr "Bloquear"
+
+#: index.php:99
+msgid "Stock Code"
+msgstr "Código de inventario"
+
+#: index.php:100
+msgid "Add"
+msgstr "Agregar"
+
+#: index.php:104
+msgid "Stock Search"
+msgstr "Buscar producto"
+
+#: index.php:116 index.php:1071
+msgid "Qty"
+msgstr "Cant"
+
+#: index.php:117 index.php:970 index.php:1072 index.php:1205
+msgid "Name"
+msgstr "Nombre"
+
+#: index.php:118 index.php:1073
+msgid "Unit"
+msgstr "Unidad"
+
+#: index.php:119
+msgid "Options"
+msgstr "Opciones"
+
+#: index.php:120 index.php:151 index.php:1074
+msgid "Tax"
+msgstr "Impuesto"
+
+#: index.php:121 index.php:1075
+msgid "Price"
+msgstr "Precio"
+
+#: index.php:127
+msgid "New Order"
+msgstr "Nueva Orden"
+
+#: index.php:133
+msgid "Invalid items marked in red will not be added to the sale"
+msgstr "Los artículos no válidos marcados en rojo no se agregarán a la venta"
+
+#: index.php:135
+msgid "Add Item"
+msgstr "Agregar producto"
+
+#: index.php:141 index.php:1042
+msgid "Subtotal"
+msgstr "Sub total"
+
+#: index.php:145 index.php:1045
+msgid "Discount"
+msgstr "Descuento"
+
+#: index.php:155 index.php:226 index.php:1046
+msgid "Total"
+msgstr "Total"
+
+#: index.php:160
+msgid "Take Away"
+msgstr "Para llevar"
+
+#: index.php:161
+msgid "Eat In"
+msgstr "Comer en"
+
+#: index.php:162
+msgid "Table"
+msgstr "Mesa"
+
+#: index.php:166
+msgid "Customer Email"
+msgstr "Correo de cliente"
+
+#: index.php:170 index.php:1021 index.php:1113
+msgid "Details"
+msgstr "Detalles"
+
+#: index.php:174
+msgid "Email Receipt"
+msgstr "Recibo por Correo"
+
+#: index.php:180 index.php:998
+msgid "Notes"
+msgstr "Notas"
+
+#: index.php:188 index.php:1185
+msgid "Process"
+msgstr "Procesar"
+
+#: index.php:189
+msgid "Abort"
+msgstr "Cancelar"
+
+#: index.php:191
+msgid "Recall"
+msgstr "Última venta"
+
+#: index.php:195
+msgid "Transactions"
+msgstr "Transacciones"
+
+#: index.php:214
+msgid "Global Ref Lookup"
+msgstr "Búsqueda de venta"
+
+#: index.php:215 index.php:1224
+msgid "Reference"
+msgstr "Referencia"
+
+#: index.php:216
+msgid "Go"
+msgstr "Ir"
+
+#: index.php:224
+msgid "Device / Location"
+msgstr "Dispositivo / Ubicación"
+
+#: index.php:225 index.php:1027 index.php:1067
+msgid "Items"
+msgstr "Productos"
+
+#: index.php:227
+msgid "Sale Time"
+msgstr "Hora de venta"
+
+#: index.php:228 index.php:986
+msgid "Status"
+msgstr "Estado"
+
+#: index.php:249
+msgid "Takings Count"
+msgstr "Conteo de Ventas"
+
+#: index.php:250
+msgid "What's Selling"
+msgstr "Productos Vendidos"
+
+#: index.php:251
+msgid "Seller Report"
+msgstr "Reporte por Usuario"
+
+#: index.php:255
+msgid "Summary"
+msgstr "Resumen"
+
+#: index.php:256
+msgid "Detailed"
+msgstr "Detallado"
+
+#: index.php:258
+msgid "Tyro Report"
+msgstr "Tyro Report"
+
+#: index.php:263 index.php:1012 index.php:1231 index.php:1235
+msgid "Print"
+msgstr "Imprimir"
+
+#: index.php:278
+msgid "Today's Takings"
+msgstr "Ventas de Hoy"
+
+#: index.php:301
+msgid "Refunds"
+msgstr "Devoluciones"
+
+#: index.php:314
+msgid "Voids"
+msgstr "Anulaciones"
+
+#: index.php:326
+msgid "Takings"
+msgstr "Ventas"
+
+#: index.php:336
+msgid "Cash Reconciliation"
+msgstr "Cuadratura de caja"
+
+#: index.php:379
+msgid "Takings - Float"
+msgstr "Ventas"
+
+#: index.php:383
+msgid "Balance"
+msgstr "Saldo"
+
+#: index.php:399 index.php:424 index.php:487
+msgid "General"
+msgstr "General"
+
+#: index.php:406
+msgid "Printing"
+msgstr "Impresión"
+
+#: index.php:428
+msgid "Use On-screen keypad"
+msgstr "Usar teclado en pantalla"
+
+#: index.php:433
+msgid "Registration"
+msgstr "Registro"
+
+#: index.php:439
+msgid "Device ID"
+msgstr "Terminal ID"
+
+#: index.php:443
+msgid "Device Name"
+msgstr "Nombre Terminal"
+
+#: index.php:447
+msgid "Location Name"
+msgstr "Nombre de ubicación"
+
+#: index.php:451
+msgid "Registration ID"
+msgstr "ID Registro"
+
+#: index.php:455
+msgid "Registration UUID"
+msgstr "UUID Registro"
+
+#: index.php:459
+msgid "Registration DT"
+msgstr "Registro Desde"
+
+#: index.php:463
+msgid "Backup Offline Sales"
+msgstr "Respaldar Ventas Locales"
+
+#: index.php:464
+msgid "Reset Local Config"
+msgstr "Reiniciar Configuración Local"
+
+#: index.php:465
+msgid "Clear Local Data"
+msgstr "Borrar Datos Locales"
+
+#: index.php:466
+msgid "Refresh Remote Data"
+msgstr "Traer Datos Remotos"
+
+#: index.php:467
+msgid "Remove Device Registration"
+msgstr "Olvidar Terminal"
+
+#: index.php:476
+msgid "Receipt Printing"
+msgstr "Impresión de recibos"
+
+#: index.php:493
+msgid "Ask to print"
+msgstr "Preguntar por impresión"
+
+#: index.php:494 index.php:850 index.php:855
+msgid "Always Ask"
+msgstr "Preguntar siempre"
+
+#: index.php:495
+msgid "Ask if not emailed"
+msgstr "Preguntar si no enviado"
+
+#: index.php:496 index.php:851 index.php:856
+msgid "Always Print"
+msgstr "Siempre imprimir"
+
+#: index.php:507
+msgid "Connection"
+msgstr "Conexión"
+
+#: index.php:513 index.php:709 index.php:797 index.php:944 index.php:1089
+#: index.php:1112
+msgid "Method"
+msgstr "Método"
+
+#: index.php:516 index.php:800
+msgid "browser printing"
+msgstr "Impresión del navegador"
+
+#: index.php:519 index.php:712
+msgid "Web Print ESCP"
+msgstr "Impresora conectada en red"
+
+#: index.php:526 index.php:721
+msgid "Serial"
+msgstr "Serial"
+
+#: index.php:529 index.php:724
+msgid "Raw"
+msgstr "Bruto"
+
+#: index.php:532 index.php:727
+msgid "Raw TCP"
+msgstr "TCP Bruto"
+
+#: index.php:539 index.php:732
+msgid "Printer IP"
+msgstr "IP de impresora"
+
+#: index.php:542 index.php:735
+msgid "Printer Port"
+msgstr "Puerto de impresora"
+
+#: index.php:547 index.php:740 index.php:808
+msgid "Printer"
+msgstr "Impresora"
+
+#: index.php:555 index.php:748 index.php:825
+msgid "Port"
+msgstr "Puerto"
+
+#: index.php:581 index.php:776
+msgid "Parity"
+msgstr "Paridad"
+
+#: index.php:583 index.php:590 index.php:621
+msgid "None"
+msgstr "Ninguno"
+
+#: index.php:584
+msgid "Even"
+msgstr "Par"
+
+#: index.php:585
+msgid "Odd"
+msgstr "Impar"
+
+#: index.php:588
+msgid "Flow Control"
+msgstr "Control de flujo"
+
+#: index.php:591
+msgid "XON/XOFF"
+msgstr "XON/XOFF"
+
+#: index.php:592
+msgid "RTS/CTS"
+msgstr "RTS/CTS"
+
+#: index.php:598 index.php:616 index.php:786
+msgid "Test"
+msgstr "Prueba"
+
+#: index.php:599
+msgid "Print QR"
+msgstr "Imprimir QR"
+
+#: index.php:609
+msgid "Cashdraw, Cutter & Page Feed"
+msgstr "Caja registradora, Guillotina & Alimentación de página"
+
+#: index.php:615
+msgid "Cash Draw Connected"
+msgstr "Caja registradora conectada"
+
+#: index.php:619
+msgid "Cutter Command"
+msgstr "Comando de guillotina"
+
+#: index.php:622
+msgid "GS full cut"
+msgstr "GS corte completo"
+
+#: index.php:623
+msgid "GS partial cut"
+msgstr "GS corte parcial"
+
+#: index.php:624
+msgid "ESC full cut"
+msgstr "ESC corte completo"
+
+#: index.php:625
+msgid "ESC partial cut"
+msgstr "ESC corte parcial"
+
+#: index.php:628
+msgid "Page Feed"
+msgstr "Alimentación de página"
+
+#: index.php:640
+msgid "Format & Layout"
+msgstr "Formato y Diseño"
+
+#: index.php:646
+msgid "ESCP Receipt Mode"
+msgstr "Modo de recibo ESCP"
+
+#: index.php:647
+msgid "Text"
+msgstr "Texto"
+
+#: index.php:648
+msgid "Bitmap (Unicode support)"
+msgstr "Mapa de bits(soporte Unicode)"
+
+#: index.php:653
+msgid "Receipt Template"
+msgstr "Plantilla de Recibo"
+
+#: index.php:655
+msgid "Invoice Template"
+msgstr "Plantilla de Factura"
+
+#: index.php:657
+msgid "Print Invoices By Default"
+msgstr "Imprimir Facturas Por Defecto"
+
+#: index.php:660
+msgid "Language"
+msgstr "Idioma"
+
+#: index.php:662
+msgid "Primary"
+msgstr "Primario"
+
+#: index.php:663
+msgid "Mixed"
+msgstr "Mixto"
+
+#: index.php:664
+msgid "Alternate"
+msgstr "Alterno"
+
+#: index.php:667
+msgid "Orientation"
+msgstr "Orientación"
+
+#: index.php:669
+msgid "Left to Right"
+msgstr "De izquierda a derecha"
+
+#: index.php:670
+msgid "Right to Left"
+msgstr "De derecha a izquierda"
+
+#: index.php:675
+msgid "Alternate Charset & codepage"
+msgstr "Juego de caracteres alternativo y página de códigos"
+
+#: index.php:684
+msgid "Override currency character"
+msgstr "Anular el carácter de moneda"
+
+#: index.php:688
+msgid "Currency Codepage"
+msgstr "Página de códigos de moneda"
+
+#: index.php:692
+msgid "Currency Codes"
+msgstr "Códigos de moneda"
+
+#: index.php:705
+msgid "Order Ticket Printing"
+msgstr "Solicitar la impresión de boletos"
+
+#: index.php:718 index.php:1054
+msgid "Type"
+msgstr "Tipo"
+
+#: index.php:754
+msgid "Baud"
+msgstr "Baudios"
+
+#: index.php:764
+msgid "Data Bits"
+msgstr "Bits de datos"
+
+#: index.php:770
+msgid "Stop Bits"
+msgstr "Bits de parada"
+
+#: index.php:778
+msgid "none"
+msgstr "ninguno"
+
+#: index.php:779
+msgid "even"
+msgstr "par"
+
+#: index.php:780
+msgid "odd"
+msgstr "impar"
+
+#: index.php:793
+msgid "Report Printing"
+msgstr "Impresión de Reporte"
+
+#: index.php:803
+msgid "Web Print"
+msgstr "Impresión en Red"
+
+#: index.php:820
+msgid "Print Service options (WebPrint/Android)"
+msgstr "Opciones del servicio de impresión (WebPrint / Android)"
+
+#: index.php:824
+msgid "IP Address"
+msgstr "Dirección IP"
+
+#: index.php:836
+msgid "Integrated Eftpos"
+msgstr "Eftpos Integrado"
+
+#: index.php:841
+msgid "Provider"
+msgstr "Proveedor"
+
+#: index.php:845
+msgid "Enabled"
+msgstr "Activado"
+
+#: index.php:846
+msgid "Integrated Receipts"
+msgstr "Recibos Integrados"
+
+#: index.php:849
+msgid "Print Merchant Receipts"
+msgstr "Imprimir recibos de comerciantes"
+
+#: index.php:852 index.php:857
+msgid "Never"
+msgstr "Nunca"
+
+#: index.php:854
+msgid "Print Declined Customer Receipts"
+msgstr "Imprimir recibos de clientes rechazados"
+
+#: index.php:861
+msgid "Merchant ID"
+msgstr "ID Vendedor"
+
+#: index.php:862
+msgid "Terminal ID"
+msgstr "ID Terminal"
+
+#: index.php:863
+msgid "Start Tyro Pairing"
+msgstr "Iniciar Emparejamiento Tyro"
+
+#: index.php:864
+msgid "Open Terminal Config"
+msgstr "Abrir Configuración de Terminal"
+
+#: index.php:875
+msgid "Initializing"
+msgstr "Inicializando"
+
+#: index.php:879
+msgid "WPOS is Online"
+msgstr "POS está en línea"
+
+#: index.php:915
+msgid "Login"
+msgstr "Entrar"
+
+#: index.php:945 index.php:1090 index.php:1110
+msgid "Amount"
+msgstr "Cantidad"
+
+#: index.php:954
+msgid "Start Eftpos"
+msgstr "Iniciar Eftpos"
+
+#: index.php:957 index.php:1180
+msgid "Cash"
+msgstr "Efectivo"
+
+#: index.php:958 index.php:1181
+msgid "Credit"
+msgstr "Crédito"
+
+#: index.php:959
+msgid "Eftpos"
+msgstr "Eftpos"
+
+#: index.php:960 index.php:1182
+msgid "Cheque"
+msgstr "Cheque"
+
+#: index.php:961
+msgid "Add Payment"
+msgstr "Agregar Pago"
+
+#: index.php:964 index.php:1009
+msgid "Complete"
+msgstr "Completar"
+
+#: index.php:965
+msgid "Add Order"
+msgstr "Agregar Orden"
+
+#: index.php:966 index.php:1186
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: index.php:968
+msgid "Customer Details"
+msgstr "Detalles de cliente"
+
+#: index.php:971
+msgid "Phone"
+msgstr "Teléfono"
+
+#: index.php:972
+msgid "Mobile"
+msgstr "Celular"
+
+#: index.php:973
+msgid "Address"
+msgstr "Dirección"
+
+#: index.php:974
+msgid "Suburb"
+msgstr "Barrio"
+
+#: index.php:975
+msgid "Postcode"
+msgstr "Código Postal"
+
+#: index.php:976
+msgid "Country"
+msgstr "País"
+
+#: index.php:987
+msgid "ID"
+msgstr "ID"
+
+#: index.php:988
+msgid "Ref"
+msgstr "Ref"
+
+#: index.php:989
+msgid "Sale DT"
+msgstr "Venta desde"
+
+#: index.php:992
+msgid "Process DT"
+msgstr "Fecha de procesamiento"
+
+#: index.php:993 index.php:1105
+msgid "User"
+msgstr "Usuario"
+
+#: index.php:994 index.php:1106
+msgid "Device"
+msgstr "Dispositivo"
+
+#: index.php:995 index.php:1107
+msgid "Location"
+msgstr "Ubicación"
+
+#: index.php:1000
+msgid "Save"
+msgstr "Guardar"
+
+#: index.php:1005
+msgid "Void"
+msgstr "Anular"
+
+#: index.php:1006
+msgid "Refund"
+msgstr "Devolución"
+
+#: index.php:1010
+msgid "Remove"
+msgstr "Quitar"
+
+#: index.php:1033 index.php:1085
+msgid "Payments"
+msgstr "Pagos"
+
+#: index.php:1041
+msgid "Sale Totals"
+msgstr "Total de ventas"
+
+#: index.php:1050
+msgid "Void/Refunds"
+msgstr "Anular/Devoluciones"
+
+#: index.php:1055 index.php:1104
+msgid "Time"
+msgstr "Hora"
+
+#: index.php:1056
+msgid "View"
+msgstr "Ver"
+
+#: index.php:1108 index.php:1155 index.php:1160
+msgid "Reason"
+msgstr "Razón"
+
+#: index.php:1118
+msgid "Item ID"
+msgstr "ID Producto"
+
+#: index.php:1119 index.php:1165
+msgid "Returned"
+msgstr "Regresado"
+
+#: index.php:1130
+msgid "Select a device to merge with or enter a new device name"
+msgstr "Seleccione un dispositivo para fusionar o ingresar un nuevo nombre de dispositivo"
+
+#: index.php:1131
+msgid "Existing device"
+msgstr "Dispositivo existente"
+
+#: index.php:1136
+msgid "New device name"
+msgstr "Nuevo nombre de dispositivo"
+
+#: index.php:1140
+msgid "Select an existing location for the device or enter a new location"
+msgstr "Seleccione una ubicación existente para el dispositivo o ingrese una nueva ubicación"
+
+#: index.php:1141
+msgid "Existing location"
+msgstr "Ubicación existente"
+
+#: index.php:1145
+msgid "New location name"
+msgstr "Nuevo nombre de ubicación"
+
+#: index.php:1149
+msgid "Register"
+msgstr "Registrar"
+
+#: index.php:1166
+msgid "Item"
+msgstr "Producto"
+
+#: index.php:1173
+msgid "Refund Amount"
+msgstr "Cantidad devuelta"
+
+#: index.php:1176
+msgid "Start Eftpos Refund"
+msgstr "Iniciar devolución Eftpos"
+
+#: index.php:1178
+msgid "Refund Payment Type"
+msgstr "Tipo de devolución de pago"
+
+#: index.php:1190
+msgid "Description"
+msgstr "Descripción"
+
+#: index.php:1194
+msgid "Alt Name"
+msgstr "Nombre Alternativo"
+
+#: index.php:1198
+msgid "Cost"
+msgstr "Costo"
+
+#: index.php:1201
+msgid "Modifiers"
+msgstr "Modificadores"
+
+#: index.php:1206
+msgid "Qty/Selection"
+msgstr "Cant/Selección"
+
+#: index.php:1207
+msgid "Value"
+msgstr "Valor"
+
+#: index.php:1214
+msgid "Unit Mod Value"
+msgstr "Valor Unidad"
+
+#: index.php:1215
+msgid "New Unit Value"
+msgstr "Nuevo valor de unidad"
+
+#: index.php:1219
+msgid "Cashout"
+msgstr "Retiro"
+
+#: index.php:1225
+msgid "Card Type"
+msgstr "Tipo de tarjeta"
+
+#: index.php:1240
+msgid "The server has requested restart. This is usually to install an update"
+msgstr "El servidor ha solicitado reiniciar Esto usualmente es para instalar una actualización"
+
+#: index.php:1241
+msgid "The terminal will restart in"
+msgstr "La terminal se reiniciará en"
+
+#: index.php:1241
+msgid "seconds"
+msgstr "segundos"
+
+#: index.php:1242
+msgid "Press Ok to restart now or Cancel to prevent the restart"
+msgstr "Presione Ok para reiniciar ahora o Cancelar para evitar el reinicio"
