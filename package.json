@@ -13,6 +13,6 @@
     "socket.io": "~1.7.x"
   },
   "engines": {
-    "node": "~4.2.x"
+    "node": "18.x.x"
   }
 }
