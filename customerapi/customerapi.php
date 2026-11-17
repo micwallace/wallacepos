@@ -31,6 +31,7 @@ set_error_handler("warningHandler", E_WARNING);
 set_exception_handler("exceptionHandler");
 
 // load classes and start session
+require_once($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/autoload.php');
 require($_SERVER['DOCUMENT_ROOT'] . $_SERVER['APP_ROOT'] . 'library/wpos/AutoLoader.php'); //Autoload all the classes.
 $auth = new Auth();
 // enable cross origin requests
@@ -86,7 +87,13 @@ if ($_REQUEST['a'] == "hello") {
 }
 // Decode JSON data if provided
 if ($_REQUEST['data']!=""){
-    if (($requests=json_decode($_REQUEST['data']))==false){
+
+    // Easier to sanitize in JSON format all at once.
+    $config = HTMLPurifier_Config::createDefault();
+    $purifier = new HTMLPurifier($config);
+    $cleanData = $purifier->purify($_REQUEST['data']);
+
+    if (($requests=json_decode($cleanData))==false){
         $result['error'] = "Could not parse the provided json request";
         returnResult($result);
     }
